@@ -10,33 +10,150 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as EmergencyRouteImport } from './routes/emergency'
+import { Route as FirstAidRouteImport } from './routes/first-aid'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as ProfessionalRouteImport } from './routes/professional'
+import { Route as ResultsRouteImport } from './routes/results'
+import { Route as SymptomCheckerRouteImport } from './routes/symptom-checker'
+import { Route as FirstAidIndexRouteImport } from './routes/first-aid.index'
+import { Route as FirstAidSlugRouteImport } from './routes/first-aid.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmergencyRoute = EmergencyRouteImport.update({
+  id: '/emergency',
+  path: '/emergency',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FirstAidRoute = FirstAidRouteImport.update({
+  id: '/first-aid',
+  path: '/first-aid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfessionalRoute = ProfessionalRouteImport.update({
+  id: '/professional',
+  path: '/professional',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsRoute = ResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SymptomCheckerRoute = SymptomCheckerRouteImport.update({
+  id: '/symptom-checker',
+  path: '/symptom-checker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FirstAidIndexRoute = FirstAidIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FirstAidRoute,
+} as any)
+const FirstAidSlugRoute = FirstAidSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => FirstAidRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/emergency': typeof EmergencyRoute
+  '/first-aid': typeof FirstAidRouteWithChildren
+  '/library': typeof LibraryRoute
+  '/professional': typeof ProfessionalRoute
+  '/results': typeof ResultsRoute
+  '/symptom-checker': typeof SymptomCheckerRoute
+  '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/first-aid/': typeof FirstAidIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/emergency': typeof EmergencyRoute
+  '/library': typeof LibraryRoute
+  '/professional': typeof ProfessionalRoute
+  '/results': typeof ResultsRoute
+  '/symptom-checker': typeof SymptomCheckerRoute
+  '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/first-aid': typeof FirstAidIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/emergency': typeof EmergencyRoute
+  '/first-aid': typeof FirstAidRouteWithChildren
+  '/library': typeof LibraryRoute
+  '/professional': typeof ProfessionalRoute
+  '/results': typeof ResultsRoute
+  '/symptom-checker': typeof SymptomCheckerRoute
+  '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/first-aid/': typeof FirstAidIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/emergency'
+    | '/first-aid'
+    | '/library'
+    | '/professional'
+    | '/results'
+    | '/symptom-checker'
+    | '/first-aid/$slug'
+    | '/first-aid/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/account'
+    | '/emergency'
+    | '/library'
+    | '/professional'
+    | '/results'
+    | '/symptom-checker'
+    | '/first-aid/$slug'
+    | '/first-aid'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/emergency'
+    | '/first-aid'
+    | '/library'
+    | '/professional'
+    | '/results'
+    | '/symptom-checker'
+    | '/first-aid/$slug'
+    | '/first-aid/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  EmergencyRoute: typeof EmergencyRoute
+  FirstAidRoute: typeof FirstAidRouteWithChildren
+  LibraryRoute: typeof LibraryRoute
+  ProfessionalRoute: typeof ProfessionalRoute
+  ResultsRoute: typeof ResultsRoute
+  SymptomCheckerRoute: typeof SymptomCheckerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +165,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emergency': {
+      id: '/emergency'
+      path: '/emergency'
+      fullPath: '/emergency'
+      preLoaderRoute: typeof EmergencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/first-aid': {
+      id: '/first-aid'
+      path: '/first-aid'
+      fullPath: '/first-aid'
+      preLoaderRoute: typeof FirstAidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professional': {
+      id: '/professional'
+      path: '/professional'
+      fullPath: '/professional'
+      preLoaderRoute: typeof ProfessionalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results': {
+      id: '/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/symptom-checker': {
+      id: '/symptom-checker'
+      path: '/symptom-checker'
+      fullPath: '/symptom-checker'
+      preLoaderRoute: typeof SymptomCheckerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/first-aid/': {
+      id: '/first-aid/'
+      path: '/'
+      fullPath: '/first-aid/'
+      preLoaderRoute: typeof FirstAidIndexRouteImport
+      parentRoute: typeof FirstAidRoute
+    }
+    '/first-aid/$slug': {
+      id: '/first-aid/$slug'
+      path: '/$slug'
+      fullPath: '/first-aid/$slug'
+      preLoaderRoute: typeof FirstAidSlugRouteImport
+      parentRoute: typeof FirstAidRoute
+    }
   }
 }
 
+interface FirstAidRouteChildren {
+  FirstAidSlugRoute: typeof FirstAidSlugRoute
+  FirstAidIndexRoute: typeof FirstAidIndexRoute
+}
+
+const FirstAidRouteChildren: FirstAidRouteChildren = {
+  FirstAidSlugRoute: FirstAidSlugRoute,
+  FirstAidIndexRoute: FirstAidIndexRoute,
+}
+
+const FirstAidRouteWithChildren = FirstAidRoute._addFileChildren(
+  FirstAidRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  EmergencyRoute: EmergencyRoute,
+  FirstAidRoute: FirstAidRouteWithChildren,
+  LibraryRoute: LibraryRoute,
+  ProfessionalRoute: ProfessionalRoute,
+  ResultsRoute: ResultsRoute,
+  SymptomCheckerRoute: SymptomCheckerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
