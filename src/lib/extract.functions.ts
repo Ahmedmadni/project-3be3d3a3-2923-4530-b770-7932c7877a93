@@ -38,7 +38,7 @@ async function sha(s: string) {
 }
 
 export type ExtractResponse =
-  | { ok: true; raw: unknown }
+  | { ok: true; raw: string }
   | { ok: false; error: "RATE_LIMITED" | "UNAVAILABLE" | "NOT_CONFIGURED" };
 
 /**
@@ -105,7 +105,7 @@ export const extractSymptomsAI = createServerFn({ method: "POST" })
           } catch { /* ignore partial */ }
         }
       }
-      return { ok: true, raw: JSON.parse(out) };
+      JSON.parse(out); return { ok: true, raw: out };
     } catch {
       console.error("[extract] failed"); // never log the text
       return { ok: false, error: "UNAVAILABLE" };
