@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          entity_version: number | null
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          entity_version?: number | null
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          entity_version?: number | null
+          id?: string
+          metadata?: Json
+        }
+        Relationships: []
+      }
       condition_sources: {
         Row: {
           condition_id: string
@@ -94,132 +163,245 @@ export type Database = {
       }
       conditions: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           care_level: Database["public"]["Enums"]["care_level"]
           category: string | null
+          change_reason: string | null
           code: string
           created_at: string
+          created_by: string | null
           id: string
           is_active: boolean
           is_demo: boolean
           last_medical_review_at: string | null
           name_ar: string
           name_en: string | null
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
           review_status: Database["public"]["Enums"]["review_status"]
           reviewed_at: string | null
           reviewed_by: string | null
           specialty: string | null
+          submitted_at: string | null
           summary_ar: string | null
           summary_en: string | null
+          translation_status: Database["public"]["Enums"]["translation_status"]
           updated_at: string
           version: number
           when_to_seek_care_ar: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           care_level?: Database["public"]["Enums"]["care_level"]
           category?: string | null
+          change_reason?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
           last_medical_review_at?: string | null
           name_ar: string
           name_en?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialty?: string | null
+          submitted_at?: string | null
           summary_ar?: string | null
           summary_en?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
           version?: number
           when_to_seek_care_ar?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           care_level?: Database["public"]["Enums"]["care_level"]
           category?: string | null
+          change_reason?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
           last_medical_review_at?: string | null
           name_ar?: string
           name_en?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialty?: string | null
+          submitted_at?: string | null
           summary_ar?: string | null
           summary_en?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
           version?: number
           when_to_seek_care_ar?: string | null
+        }
+        Relationships: []
+      }
+      content_versions: {
+        Row: {
+          change_reason: string | null
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          snapshot: Json
+          source_ids: string[]
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          snapshot: Json
+          source_ids?: string[]
+          status?: string
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          snapshot?: Json
+          source_ids?: string[]
+          status?: string
+          updated_at?: string
+          version?: number
         }
         Relationships: []
       }
       emergency_contacts: {
         Row: {
+          available_24_7: boolean
           country_code: string
           id: string
           is_active: boolean
+          last_verified_at: string | null
           name_ar: string
           name_en: string | null
+          nationwide: boolean
           phone_number: string
           priority: number
           region_code: string | null
           service_type: Database["public"]["Enums"]["emergency_service_type"]
+          source_id: string | null
+          source_url: string | null
         }
         Insert: {
+          available_24_7?: boolean
           country_code: string
           id?: string
           is_active?: boolean
+          last_verified_at?: string | null
           name_ar: string
           name_en?: string | null
+          nationwide?: boolean
           phone_number: string
           priority?: number
           region_code?: string | null
           service_type: Database["public"]["Enums"]["emergency_service_type"]
+          source_id?: string | null
+          source_url?: string | null
         }
         Update: {
+          available_24_7?: boolean
           country_code?: string
           id?: string
           is_active?: boolean
+          last_verified_at?: string | null
           name_ar?: string
           name_en?: string | null
+          nationwide?: boolean
           phone_number?: string
           priority?: number
           region_code?: string | null
           service_type?: Database["public"]["Enums"]["emergency_service_type"]
+          source_id?: string | null
+          source_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       first_aid_sections: {
         Row: {
           content_ar: string | null
+          content_en: string | null
           id: string
           review_status: Database["public"]["Enums"]["review_status"]
           section_type: string
           sort_order: number
           title_ar: string
+          title_en: string | null
           topic_id: string
         }
         Insert: {
           content_ar?: string | null
+          content_en?: string | null
           id?: string
           review_status?: Database["public"]["Enums"]["review_status"]
           section_type: string
           sort_order?: number
           title_ar: string
+          title_en?: string | null
           topic_id: string
         }
         Update: {
           content_ar?: string | null
+          content_en?: string | null
           id?: string
           review_status?: Database["public"]["Enums"]["review_status"]
           section_type?: string
           sort_order?: number
           title_ar?: string
+          title_en?: string | null
           topic_id?: string
         }
         Relationships: [
@@ -264,94 +446,178 @@ export type Database = {
       }
       first_aid_topics: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           category: string | null
+          change_reason: string | null
           code: string
           created_at: string
+          created_by: string | null
           icon: string | null
           id: string
           is_active: boolean
           is_critical: boolean
           last_reviewed_at: string | null
           priority: number
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
           review_status: Database["public"]["Enums"]["review_status"]
           reviewed_at: string | null
           reviewed_by: string | null
+          submitted_at: string | null
           summary_ar: string | null
           summary_en: string | null
           title_ar: string
           title_en: string | null
+          translation_status: Database["public"]["Enums"]["translation_status"]
           updated_at: string
           version: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
+          change_reason?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
           is_critical?: boolean
           last_reviewed_at?: string | null
           priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
+          submitted_at?: string | null
           summary_ar?: string | null
           summary_en?: string | null
           title_ar: string
           title_en?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
           version?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
+          change_reason?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
           is_critical?: boolean
           last_reviewed_at?: string | null
           priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
+          submitted_at?: string | null
           summary_ar?: string | null
           summary_en?: string | null
           title_ar?: string
           title_en?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
           version?: number
         }
         Relationships: []
       }
+      knowledge_releases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_demo: boolean
+          manifest: Json
+          notes: string | null
+          published_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_demo?: boolean
+          manifest?: Json
+          notes?: string | null
+          published_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_demo?: boolean
+          manifest?: Json
+          notes?: string | null
+          published_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       medical_sources: {
         Row: {
+          country: string | null
+          evidence_level: string | null
+          expires_review_at: string | null
           id: string
           is_active: boolean
+          language: string | null
           last_checked_at: string | null
+          last_verified_at: string | null
+          notes: string | null
           organization: string | null
+          organization_type: string | null
           publication_date: string | null
+          published_at: string | null
           source_type: Database["public"]["Enums"]["source_type"]
           title: string
           url: string | null
         }
         Insert: {
+          country?: string | null
+          evidence_level?: string | null
+          expires_review_at?: string | null
           id?: string
           is_active?: boolean
+          language?: string | null
           last_checked_at?: string | null
+          last_verified_at?: string | null
+          notes?: string | null
           organization?: string | null
+          organization_type?: string | null
           publication_date?: string | null
+          published_at?: string | null
           source_type?: Database["public"]["Enums"]["source_type"]
           title: string
           url?: string | null
         }
         Update: {
+          country?: string | null
+          evidence_level?: string | null
+          expires_review_at?: string | null
           id?: string
           is_active?: boolean
+          language?: string | null
           last_checked_at?: string | null
+          last_verified_at?: string | null
+          notes?: string | null
           organization?: string | null
+          organization_type?: string | null
           publication_date?: string | null
+          published_at?: string | null
           source_type?: Database["public"]["Enums"]["source_type"]
           title?: string
           url?: string | null
@@ -497,45 +763,114 @@ export type Database = {
           },
         ]
       }
+      question_sources: {
+        Row: {
+          question_id: string
+          source_id: string
+        }
+        Insert: {
+          question_id: string
+          source_id: string
+        }
+        Update: {
+          question_id?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_sources_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_sources_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           category: string | null
+          change_reason: string | null
           code: string
           created_at: string
+          created_by: string | null
           id: string
           is_active: boolean
           is_demo: boolean
+          published_at: string | null
+          published_by: string | null
           question_ar: string
           question_en: string | null
           question_type: Database["public"]["Enums"]["question_type"]
+          review_note: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
           sort_order: number
+          submitted_at: string | null
+          translation_status: Database["public"]["Enums"]["translation_status"]
           updated_at: string
+          version: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
+          change_reason?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
+          published_at?: string | null
+          published_by?: string | null
           question_ar: string
           question_en?: string | null
           question_type: Database["public"]["Enums"]["question_type"]
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
+          submitted_at?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
+          version?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
+          change_reason?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
+          published_at?: string | null
+          published_by?: string | null
           question_ar?: string
           question_en?: string | null
           question_type?: Database["public"]["Enums"]["question_type"]
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
+          submitted_at?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -600,51 +935,117 @@ export type Database = {
           },
         ]
       }
+      red_flag_sources: {
+        Row: {
+          red_flag_id: string
+          source_id: string
+        }
+        Insert: {
+          red_flag_id: string
+          source_id: string
+        }
+        Update: {
+          red_flag_id?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "red_flag_sources_red_flag_id_fkey"
+            columns: ["red_flag_id"]
+            isOneToOne: false
+            referencedRelation: "red_flags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "red_flag_sources_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       red_flags: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           care_level: Database["public"]["Enums"]["care_level"]
+          change_reason: string | null
           code: string
           created_at: string
+          created_by: string | null
           description_ar: string | null
           description_en: string | null
           id: string
           is_active: boolean
           is_demo: boolean
           priority: number
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
           review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_at: string | null
           title_ar: string
           title_en: string | null
+          translation_status: Database["public"]["Enums"]["translation_status"]
           updated_at: string
+          version: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           care_level: Database["public"]["Enums"]["care_level"]
+          change_reason?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           description_ar?: string | null
           description_en?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
           priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
           title_ar: string
           title_en?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
+          version?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           care_level?: Database["public"]["Enums"]["care_level"]
+          change_reason?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           description_ar?: string | null
           description_en?: string | null
           id?: string
           is_active?: boolean
           is_demo?: boolean
           priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
           title_ar?: string
           title_en?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -690,6 +1091,7 @@ export type Database = {
       session_results: {
         Row: {
           condition_id: string
+          condition_version: number | null
           created_at: string
           engine_version: string
           explanation_data: Json
@@ -697,10 +1099,12 @@ export type Database = {
           matching_level: Database["public"]["Enums"]["matching_level"]
           matching_score: number
           rank: number
+          ruleset_version: string | null
           session_id: string
         }
         Insert: {
           condition_id: string
+          condition_version?: number | null
           created_at?: string
           engine_version: string
           explanation_data?: Json
@@ -708,10 +1112,12 @@ export type Database = {
           matching_level: Database["public"]["Enums"]["matching_level"]
           matching_score: number
           rank: number
+          ruleset_version?: string | null
           session_id: string
         }
         Update: {
           condition_id?: string
+          condition_version?: number | null
           created_at?: string
           engine_version?: string
           explanation_data?: Json
@@ -719,6 +1125,7 @@ export type Database = {
           matching_level?: Database["public"]["Enums"]["matching_level"]
           matching_score?: number
           rank?: number
+          ruleset_version?: string | null
           session_id?: string
         }
         Relationships: [
@@ -795,6 +1202,8 @@ export type Database = {
           free_text_description: string | null
           guest_session_id: string | null
           id: string
+          knowledge_release_id: string | null
+          knowledge_release_version: string | null
           pregnancy_status: string | null
           sex: string | null
           started_at: string
@@ -809,6 +1218,8 @@ export type Database = {
           free_text_description?: string | null
           guest_session_id?: string | null
           id?: string
+          knowledge_release_id?: string | null
+          knowledge_release_version?: string | null
           pregnancy_status?: string | null
           sex?: string | null
           started_at?: string
@@ -823,20 +1234,34 @@ export type Database = {
           free_text_description?: string | null
           guest_session_id?: string | null
           id?: string
+          knowledge_release_id?: string | null
+          knowledge_release_version?: string | null
           pregnancy_status?: string | null
           sex?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["session_status"]
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "symptom_sessions_knowledge_release_id_fkey"
+            columns: ["knowledge_release_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_releases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       symptoms: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           body_system: string | null
           category: string | null
+          change_reason: string | null
           code: string
           created_at: string
+          created_by: string | null
           description_ar: string | null
           description_en: string | null
           id: string
@@ -845,14 +1270,27 @@ export type Database = {
           is_red_flag_candidate: boolean
           name_ar: string
           name_en: string | null
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
           sort_order: number
+          submitted_at: string | null
+          translation_status: Database["public"]["Enums"]["translation_status"]
           updated_at: string
+          version: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           body_system?: string | null
           category?: string | null
+          change_reason?: string | null
           code: string
           created_at?: string
+          created_by?: string | null
           description_ar?: string | null
           description_en?: string | null
           id?: string
@@ -861,14 +1299,27 @@ export type Database = {
           is_red_flag_candidate?: boolean
           name_ar: string
           name_en?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
+          submitted_at?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
+          version?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           body_system?: string | null
           category?: string | null
+          change_reason?: string | null
           code?: string
           created_at?: string
+          created_by?: string | null
           description_ar?: string | null
           description_en?: string | null
           id?: string
@@ -877,8 +1328,17 @@ export type Database = {
           is_red_flag_candidate?: boolean
           name_ar?: string
           name_en?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sort_order?: number
+          submitted_at?: string | null
+          translation_status?: Database["public"]["Enums"]["translation_status"]
           updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -905,6 +1365,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      audit_action_for: {
+        Args: { _from: string; _to: string }
+        Returns: string
+      }
+      can_transition: {
+        Args: { _from: string; _to: string; _uid: string }
+        Returns: boolean
+      }
+      consume_rate_limit: {
+        Args: { _bucket: string; _limit: number; _window_seconds: number }
+        Returns: boolean
+      }
+      content_visible: {
+        Args: { _is_demo: boolean; _status: string }
+        Returns: boolean
+      }
+      create_knowledge_release: {
+        Args: { _notes: string; _version: string }
+        Returns: string
+      }
+      has_any_role: {
+        Args: { _roles: string[]; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -912,10 +1396,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       owns_session: { Args: { _session_id: string }; Returns: boolean }
+      publish_content_version: {
+        Args: { _version_id: string }
+        Returns: number
+      }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "content_editor"
+        | "medical_reviewer"
+        | "super_admin"
       care_level: "emergency" | "urgent" | "routine" | "self_care"
       emergency_service_type:
         | "ambulance"
@@ -934,15 +1429,30 @@ export type Database = {
         | "severity"
         | "duration"
       relationship_type: "supports" | "weak_support" | "neutral" | "contradicts"
-      review_status: "draft" | "pending_review" | "reviewed" | "retired"
+      review_status:
+        | "draft"
+        | "pending_review"
+        | "reviewed"
+        | "retired"
+        | "in_review"
+        | "changes_requested"
+        | "approved"
+        | "published"
       session_status:
         | "in_progress"
         | "completed"
         | "emergency_redirected"
         | "abandoned"
       severity_level: "mild" | "moderate" | "severe"
-      source_type: "guideline" | "government" | "academic" | "reference"
+      source_type:
+        | "guideline"
+        | "government"
+        | "academic"
+        | "reference"
+        | "clinical_guideline"
+        | "systematic_review"
       symptom_pattern: "continuous" | "intermittent" | "unknown"
+      translation_status: "not_started" | "in_progress" | "reviewed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1070,7 +1580,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "content_editor",
+        "medical_reviewer",
+        "super_admin",
+      ],
       care_level: ["emergency", "urgent", "routine", "self_care"],
       emergency_service_type: [
         "ambulance",
@@ -1091,7 +1608,16 @@ export const Constants = {
         "duration",
       ],
       relationship_type: ["supports", "weak_support", "neutral", "contradicts"],
-      review_status: ["draft", "pending_review", "reviewed", "retired"],
+      review_status: [
+        "draft",
+        "pending_review",
+        "reviewed",
+        "retired",
+        "in_review",
+        "changes_requested",
+        "approved",
+        "published",
+      ],
       session_status: [
         "in_progress",
         "completed",
@@ -1099,8 +1625,16 @@ export const Constants = {
         "abandoned",
       ],
       severity_level: ["mild", "moderate", "severe"],
-      source_type: ["guideline", "government", "academic", "reference"],
+      source_type: [
+        "guideline",
+        "government",
+        "academic",
+        "reference",
+        "clinical_guideline",
+        "systematic_review",
+      ],
       symptom_pattern: ["continuous", "intermittent", "unknown"],
+      translation_status: ["not_started", "in_progress", "reviewed"],
     },
   },
 } as const
