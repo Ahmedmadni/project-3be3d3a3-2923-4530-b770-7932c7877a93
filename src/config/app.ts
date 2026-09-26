@@ -1,11 +1,23 @@
-// Central app config. Later loaded from Settings/Database.
+// Central app config. Emergency numbers here are only an offline fallback;
+// the source of truth is the emergency_contacts table.
 export const appConfig = {
   name: "مؤشر صحي",
   locale: "ar" as const,
   dir: "rtl" as const,
-  emergency: {
+  defaultCountry: "SA",
+  /** "development" allows demo (unreviewed) conditions; switch to "production" once content is reviewed. */
+  contentMode: "development" as "development" | "production",
+  emergencyFallback: {
     ambulance: { label: "الإسعاف", number: "997" },
-    general: { label: "الطوارئ", number: "911" },
+    healthConsultation: { label: "وزارة الصحة", number: "937" },
   },
 };
 export type AppConfig = typeof appConfig;
+
+export const firstAidSectionTypes = [
+  { key: "what_is_happening", title: "ما الذي يحدث؟" },
+  { key: "when_to_call", title: "متى أتصل بالطوارئ؟" },
+  { key: "do_now", title: "ماذا أفعل الآن؟" },
+  { key: "dont_do", title: "ماذا لا أفعل؟" },
+  { key: "while_waiting", title: "أثناء انتظار الإسعاف" },
+] as const;
