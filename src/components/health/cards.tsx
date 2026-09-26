@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { icons, ChevronLeft, AlertTriangle, Phone } from "lucide-react";
-import type { FirstAidTopic, PossibleConditionResult } from "@/types/medical";
+import type { FirstAidTopic, PossibleConditionResult } from "@/types/legacy-ui";
 import { CompatibilityBadge } from "./badges";
 import { appConfig } from "@/config/app";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ export function ResultCard({ result }: { result: PossibleConditionResult }) {
 }
 
 export function EmergencyAlert({ className }: { className?: string }) {
-  const { ambulance } = appConfig.emergency;
+  const { ambulance } = { ambulance: appConfig.emergencyFallback.ambulance, general: { label: "الطوارئ", number: "911" } };
   return (
     <div className={cn("flex items-center gap-3 rounded-2xl bg-destructive-soft p-4 text-sm", className)}>
       <AlertTriangle className="size-5 shrink-0 text-destructive" />

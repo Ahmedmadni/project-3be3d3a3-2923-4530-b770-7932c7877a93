@@ -1,4 +1,4 @@
-import type { Condition, PossibleConditionResult } from "@/types/medical";
+import type { Condition, PossibleConditionResult } from "@/types/legacy-ui";
 
 export const conditions: Condition[] = [
   { id: "anemia", name: "نقص الحديد / الأنيميا", summary: "انخفاض في مستوى الهيموغلوبين قد يسبب التعب والدوخة.", specialty: "طب الأسرة / الباطنية", whenToSeeDoctor: "إذا استمر التعب أو الدوخة لأكثر من أسبوعين أو لاحظت شحوبًا واضحًا.", careLevel: "routine" },

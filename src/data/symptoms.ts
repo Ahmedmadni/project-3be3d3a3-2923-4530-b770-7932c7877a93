@@ -1,4 +1,4 @@
-import type { Symptom } from "@/types/medical";
+import type { Symptom } from "@/types/legacy-ui";
 
 export const symptoms: Symptom[] = [
   { id: "headache", name: "صداع" },

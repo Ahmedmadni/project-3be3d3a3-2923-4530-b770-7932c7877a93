@@ -1,4 +1,4 @@
-import type { SymptomSession } from "@/types/medical";
+import type { SymptomSession } from "@/types/legacy-ui";
 import type { RedFlagOutput } from "./red-flag-engine";
 
 // Temporary client storage — swap for database persistence later.

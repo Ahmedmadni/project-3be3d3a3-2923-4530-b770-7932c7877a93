@@ -15,7 +15,7 @@ export const Route = createFileRoute("/emergency")({
 });
 
 function Emergency() {
-  const { ambulance, general } = appConfig.emergency;
+  const { ambulance, general } = { ambulance: appConfig.emergencyFallback.ambulance, general: { label: "الطوارئ", number: "911" } };
   return (
     <div className="mx-auto max-w-xl space-y-5 animate-rise">
       <div className="glass rounded-[2rem] p-6 text-center md:p-10">
