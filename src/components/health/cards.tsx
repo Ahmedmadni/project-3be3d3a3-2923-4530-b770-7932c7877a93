@@ -50,7 +50,7 @@ export function ResultCard({ result }: { result: PossibleConditionResult }) {
 }
 
 export function EmergencyAlert({ className }: { className?: string }) {
-  const { ambulance } = { ambulance: appConfig.emergencyFallback.ambulance, general: { label: "الطوارئ", number: "911" } };
+  const { ambulance } = appConfig.emergencyFallback;
   return (
     <div className={cn("flex items-center gap-3 rounded-2xl bg-destructive-soft p-4 text-sm", className)}>
       <AlertTriangle className="size-5 shrink-0 text-destructive" />

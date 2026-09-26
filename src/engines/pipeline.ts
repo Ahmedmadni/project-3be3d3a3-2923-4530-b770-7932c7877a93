@@ -1,4 +1,4 @@
-import type { PossibleConditionResult, SessionInput, TriageResult } from "@/types/medical";
+import type { CareLevel, PossibleConditionResult, SessionInput, TriageResult } from "@/types/medical";
 import type { ReferenceData } from "./reference";
 import { RedFlagEngine } from "./red-flag-engine";
 import { ConditionMatchingEngine, type MatchingOptions } from "./condition-matching-engine";
@@ -17,6 +17,7 @@ export function runSafetyPipeline(ref: ReferenceData, input: SessionInput, opts:
   if (triage.level === "emergency") return { triage, results: [] };
   const results = ConditionMatchingEngine.run(ref, input, opts);
   // results inform care level upward only
-  const level = results.reduce((l, r) => (r.careLevel === "emergency" ? l : maxCareLevel(l, r.careLevel)), triage.level);
+  let level: CareLevel = triage.level;
+  for (const r of results) if (r.careLevel !== "emergency") level = maxCareLevel(level, r.careLevel);
   return { triage: { ...triage, level }, results };
 }
