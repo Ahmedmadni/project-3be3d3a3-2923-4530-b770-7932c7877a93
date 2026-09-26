@@ -1,5 +1,5 @@
 import { Check, Search } from "lucide-react";
-import type { Question, Severity } from "@/types/legacy-ui";
+import type { QuestionWithOptions, Severity } from "@/types/medical";
 import { cn } from "@/lib/utils";
 
 export function ProgressStepper({ steps, current }: { steps: string[]; current: number }) {
@@ -80,11 +80,11 @@ export function OptionGroup({ options, value, onChange }: { options: { value: st
   );
 }
 
-export function QuestionCard({ question, value, onChange }: { question: Question; value: string; onChange: (v: string) => void }) {
+export function QuestionCard({ question, value, onChange }: { question: QuestionWithOptions; value: string; onChange: (v: string) => void }) {
   return (
     <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
-      <p className="mb-3 font-medium">{question.text}</p>
-      <OptionGroup options={question.options} value={value} onChange={onChange} />
+      <p className="mb-3 font-medium">{question.question_ar}</p>
+      <OptionGroup options={question.options.map((o) => ({ value: o.value, label: o.label_ar }))} value={value} onChange={onChange} />
     </div>
   );
 }
