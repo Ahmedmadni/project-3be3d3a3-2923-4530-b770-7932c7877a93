@@ -1,7 +1,7 @@
 # Roadmap — مؤشر صحي
 
-- [x] Design system: glassy, turquoise-blue, red for emergency/first aid, gray-white backgrounds, Lucide icons
-- [x] App shell (header, bottom nav, emergency button), RTL
-- [x] Home, symptom checker wizard, red-flag check, emergency, results, first aid (+details), library, account, professional
-- [x] Types, mock data, RedFlagEngine, configurable emergency numbers
-- [ ] Later: database, auth, AI symptom extraction, real scoring, English/LTR
+- [x] Phase 1: design system, shell, all pages, RTL
+- [x] Phase 2: Cloud schema + RLS + roles, auth (guest allowed), DB-driven engines, history/account, engine tests
+- [ ] Medical review of all content (all seeds are is_demo/draft) — blocked on medical reviewer
+- [ ] Real emergency numbers confirmation — blocked on user
+- [ ] Next: admin dashboard, AI symptom extraction, English/LTR
