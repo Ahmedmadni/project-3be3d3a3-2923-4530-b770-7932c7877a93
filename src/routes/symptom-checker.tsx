@@ -7,7 +7,7 @@ import { referenceQuery } from "@/lib/reference-data";
 import { DynamicQuestionEngine } from "@/engines/dynamic-question-engine";
 import { runSafetyPipeline } from "@/engines/pipeline";
 import { ENGINE_VERSION } from "@/engines/condition-matching-engine";
-import { symptomExtractor } from "@/engines/symptom-extraction";
+import { mockExtractor, selectableCandidates } from "@/engines/symptom-extraction";
 import { appConfig } from "@/config/app";
 import { resultStore, guestId } from "@/lib/session-store";
 import { saveSymptomSession } from "@/lib/sessions.functions";
@@ -94,7 +94,7 @@ function Wizard() {
     if (step === 0 && (!Number.isInteger(age) || age < 1 || age > 120 || !basic.sex)) return setError("يرجى إدخال العمر والجنس بشكل صحيح.");
     if (step === 1 && selected.length === 0) return setError("اختر عرضًا واحدًا على الأقل.");
     if (step === 2 && description.trim()) {
-      const c = await symptomExtractor.extract(description, symptoms);
+      const c = selectableCandidates(await mockExtractor.extract(description, symptoms));
       setSuggested(c.map((x) => x.symptomId).filter((id) => !selected.includes(id)));
     }
     if (step === 4 && DynamicQuestionEngine.missing(questions, answers).length) return setError("يرجى الإجابة عن جميع الأسئلة.");
