@@ -5,5 +5,5 @@ import { symptoms } from "@/data/symptoms";
  * Currently a naive keyword match.
  */
 export async function extractSymptoms(text: string): Promise<string[]> {
-  return symptoms.filter((s) => text.includes(s.name.split(" ")[0])).map((s) => s.id);
+  return symptoms.filter((s) => text.includes(s.name.split(" ")[0] ?? s.name)).map((s) => s.id);
 }
