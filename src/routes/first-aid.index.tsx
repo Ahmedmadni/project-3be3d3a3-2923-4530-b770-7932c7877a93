@@ -1,10 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Search } from "lucide-react";
-import { firstAidTopics } from "@/data/first-aid";
-import { FirstAidCard, PageHeader, EmergencyAlert } from "@/components/health/cards";
+import { supabase } from "@/integrations/supabase/client";
+import { FirstAidCard, PageHeader, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
+
+const topicsQuery = queryOptions({
+  queryKey: ["first-aid-topics"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("first_aid_topics").select("*").eq("is_active", true).order("priority");
+    if (error) throw error;
+    return data;
+  },
+});
 
 export const Route = createFileRoute("/first-aid/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(topicsQuery),
   head: () => ({
     meta: [
       { title: "الإسعافات الأولية — مؤشر صحي" },
@@ -13,12 +24,15 @@ export const Route = createFileRoute("/first-aid/")({
       { property: "og:description", content: "النزيف، الحروق، الاختناق، الإغماء وغيرها." },
     ],
   }),
+  pendingComponent: LoadingState,
+  errorComponent: () => <ErrorState />,
   component: FirstAid,
 });
 
 function FirstAid() {
+  const { data: topics } = useSuspenseQuery(topicsQuery);
   const [q, setQ] = useState("");
-  const list = firstAidTopics.filter((t) => t.title.includes(q.trim()));
+  const list = topics.filter((t) => t.title_ar.includes(q.trim()));
   return (
     <div>
       <PageHeader title="الإسعافات الأولية" subtitle="خطوات أولية واضحة حتى وصول المساعدة." />
@@ -31,7 +45,7 @@ function FirstAid() {
         <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">لا توجد نتائج مطابقة.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((t) => <FirstAidCard key={t.slug} topic={t} />)}
+          {list.map((t) => <FirstAidCard key={t.id} topic={t} />)}
         </div>
       )}
     </div>
