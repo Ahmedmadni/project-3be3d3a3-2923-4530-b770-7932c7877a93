@@ -63,7 +63,7 @@ export function EmergencyAlert({ className, number = appConfig.emergencyFallback
   );
 }
 
-export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: string; children?: React.ReactNode }) {
+export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: string | undefined; children?: React.ReactNode }) {
   return (
     <div className="mb-6 animate-rise">
       <h1 className="text-2xl font-extrabold md:text-3xl">{title}</h1>
