@@ -1,5 +1,5 @@
 import { Check, Search } from "lucide-react";
-import type { Question, Severity } from "@/types/medical";
+import type { Question, Severity } from "@/types/legacy-ui";
 import { cn } from "@/lib/utils";
 
 export function ProgressStepper({ steps, current }: { steps: string[]; current: number }) {

@@ -1,4 +1,4 @@
-import type { BasicInfo, CareLevel, SessionAnswer, Severity, SymptomDetail } from "@/types/medical";
+import type { BasicInfo, CareLevel, SessionAnswer, Severity, SymptomDetail } from "@/types/legacy-ui";
 
 export interface RedFlagInput {
   symptoms: string[];

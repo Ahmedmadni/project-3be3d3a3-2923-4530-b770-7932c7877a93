@@ -1,5 +1,5 @@
 import { BadgeCheck } from "lucide-react";
-import type { CareLevel, Compatibility } from "@/types/medical";
+import type { CareLevel, Compatibility } from "@/types/legacy-ui";
 import { cn } from "@/lib/utils";
 
 const compat: Record<Compatibility, [string, string]> = {

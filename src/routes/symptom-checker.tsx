@@ -4,7 +4,7 @@ import { symptoms, symptomName } from "@/data/symptoms";
 import { questionsFor } from "@/data/questions";
 import { RedFlagEngine, severityMap } from "@/lib/red-flag-engine";
 import { sessionStore } from "@/lib/session-store";
-import type { BasicInfo, SymptomDetail } from "@/types/medical";
+import type { BasicInfo, SymptomDetail } from "@/types/legacy-ui";
 import { ProgressStepper, SymptomChip, SymptomSearch, SeveritySelector, OptionGroup, QuestionCard, Field, inputCls } from "@/components/health/wizard-ui";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 

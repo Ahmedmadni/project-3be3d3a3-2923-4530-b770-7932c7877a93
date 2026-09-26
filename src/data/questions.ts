@@ -1,4 +1,4 @@
-import type { Question } from "@/types/medical";
+import type { Question } from "@/types/legacy-ui";
 
 const ynu = [
   { value: "yes", label: "نعم" },

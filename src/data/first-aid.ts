@@ -1,4 +1,4 @@
-import type { FirstAidTopic } from "@/types/medical";
+import type { FirstAidTopic } from "@/types/legacy-ui";
 
 // Content structure only — clinical protocols will be added after medical review.
 export const firstAidTopics: FirstAidTopic[] = [
