@@ -1,13 +1,21 @@
-import type { SymptomSession } from "@/types/legacy-ui";
-import type { RedFlagOutput } from "./red-flag-engine";
+import type { PossibleConditionResult, TriageResult } from "@/types/medical";
 
-// Temporary client storage — swap for database persistence later.
-const KEY = "mh.session";
-export interface StoredSession { session: SymptomSession; triage: RedFlagOutput }
+// Tab-scoped only (sessionStorage) — cleared when the tab closes. Never localStorage.
+const KEY = "mh.lastResult";
+const GUEST = "mh.guestId";
 
-export const sessionStore = {
-  save(v: StoredSession) { sessionStorage.setItem(KEY, JSON.stringify(v)); },
-  load(): StoredSession | null {
-    try { const r = sessionStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+export interface StoredResult { sessionId: string | null; triage: TriageResult; results: PossibleConditionResult[]; symptomIds: string[] }
+
+export const resultStore = {
+  save(v: StoredResult) { sessionStorage.setItem(KEY, JSON.stringify(v)); },
+  load(): StoredResult | null {
+    try { const r = sessionStorage.getItem(KEY); return r ? (JSON.parse(r) as StoredResult) : null; } catch { return null; }
   },
 };
+
+/** Random, per-tab guest identifier (crypto UUID). */
+export function guestId(): string {
+  let id = sessionStorage.getItem(GUEST);
+  if (!id) { id = crypto.randomUUID(); sessionStorage.setItem(GUEST, id); }
+  return id;
+}
