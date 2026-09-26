@@ -9,8 +9,8 @@ export const conditions: Condition[] = [
 
 // Mock output — replaced later by the analysis engine.
 export const mockResults: PossibleConditionResult[] = [
-  { condition: conditions[0], compatibility: "high", matchedSymptoms: ["دوخة", "إرهاق", "شحوب"], reason: "ظهرت هذه الحالة ضمن النتائج بسبب وجود بعض الأعراض المتوافقة معها." },
-  { condition: conditions[1], compatibility: "medium", matchedSymptoms: ["دوخة عند الوقوف"], reason: "قد تكون الأعراض مرتبطة بتغير الضغط عند تغيير الوضعية." },
-  { condition: conditions[2], compatibility: "medium", matchedSymptoms: ["دوخة", "تعب"], reason: "بعض الأعراض قد تتوافق مع نقص السوائل." },
-  { condition: conditions[3], compatibility: "low", matchedSymptoms: ["إرهاق"], reason: "توافق محدود مع الأعراض المدخلة." },
+  { condition: conditions[0]!, compatibility: "high", matchedSymptoms: ["دوخة", "إرهاق", "شحوب"], reason: "ظهرت هذه الحالة ضمن النتائج بسبب وجود بعض الأعراض المتوافقة معها." },
+  { condition: conditions[1]!, compatibility: "medium", matchedSymptoms: ["دوخة عند الوقوف"], reason: "قد تكون الأعراض مرتبطة بتغير الضغط عند تغيير الوضعية." },
+  { condition: conditions[2]!, compatibility: "medium", matchedSymptoms: ["دوخة", "تعب"], reason: "بعض الأعراض قد تتوافق مع نقص السوائل." },
+  { condition: conditions[3]!, compatibility: "low", matchedSymptoms: ["إرهاق"], reason: "توافق محدود مع الأعراض المدخلة." },
 ];
