@@ -6,7 +6,7 @@ export interface RedFlagInput {
   symptomIds: string[];
   answers: AnswerMap;
   severity: Record<string, Severity | "">;
-  age?: number;
+  age?: number | undefined;
 }
 
 /**

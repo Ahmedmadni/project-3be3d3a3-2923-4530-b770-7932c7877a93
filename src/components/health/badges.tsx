@@ -1,5 +1,5 @@
 import { BadgeCheck } from "lucide-react";
-import type { CareLevel, Compatibility } from "@/types/legacy-ui";
+import type { CareLevel, Compatibility } from "@/types/medical";
 import { cn } from "@/lib/utils";
 
 const compat: Record<Compatibility, [string, string]> = {
@@ -16,7 +16,7 @@ const care: Record<CareLevel, [string, string]> = {
   emergency: ["طوارئ", "bg-destructive-soft text-destructive"],
   urgent: ["رعاية عاجلة", "bg-warning-soft text-warning"],
   routine: ["مراجعة طبيب", "bg-primary-soft text-primary"],
-  "self-care": ["رعاية ذاتية", "bg-success-soft text-success"],
+  self_care: ["رعاية ذاتية", "bg-success-soft text-success"],
 };
 export function CareLevelBadge({ level }: { level: CareLevel }) {
   const [label, cls] = care[level];
