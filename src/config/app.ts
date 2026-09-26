@@ -7,6 +7,9 @@ export const appConfig = {
   defaultCountry: "SA",
   /** "development" allows demo (unreviewed) conditions; switch to "production" once content is reviewed. */
   contentMode: "development" as "development" | "production",
+  /** "real" = server-side AI extraction; "mock" = deterministic keyword matcher (no API key needed). */
+  symptomExtraction: "real" as "real" | "mock",
+  supportedLanguages: ["ar", "en"] as const,
   emergencyFallback: {
     ambulance: { label: "الإسعاف", number: "997" },
     healthConsultation: { label: "وزارة الصحة", number: "937" },
