@@ -14,11 +14,13 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as FirstAidRouteImport } from './routes/first-aid'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ProfessionalRouteImport } from './routes/professional'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SymptomCheckerRouteImport } from './routes/symptom-checker'
+import { Route as ConditionsConditionIdRouteImport } from './routes/conditions.$conditionId'
 import { Route as FirstAidIndexRouteImport } from './routes/first-aid.index'
 import { Route as FirstAidSlugRouteImport } from './routes/first-aid.$slug'
 
@@ -47,6 +49,11 @@ const FirstAidRoute = FirstAidRouteImport.update({
   path: '/first-aid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryRoute = LibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -72,6 +79,11 @@ const SymptomCheckerRoute = SymptomCheckerRouteImport.update({
   path: '/symptom-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConditionsConditionIdRoute = ConditionsConditionIdRouteImport.update({
+  id: '/conditions/$conditionId',
+  path: '/conditions/$conditionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FirstAidIndexRoute = FirstAidIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -89,11 +101,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/emergency': typeof EmergencyRoute
   '/first-aid': typeof FirstAidRouteWithChildren
+  '/history': typeof HistoryRoute
   '/library': typeof LibraryRoute
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
+  '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
   '/first-aid/': typeof FirstAidIndexRoute
 }
@@ -102,11 +116,13 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
   '/emergency': typeof EmergencyRoute
+  '/history': typeof HistoryRoute
   '/library': typeof LibraryRoute
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
+  '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
   '/first-aid': typeof FirstAidIndexRoute
 }
@@ -117,11 +133,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/emergency': typeof EmergencyRoute
   '/first-aid': typeof FirstAidRouteWithChildren
+  '/history': typeof HistoryRoute
   '/library': typeof LibraryRoute
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
+  '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
   '/first-aid/': typeof FirstAidIndexRoute
 }
@@ -133,11 +151,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/emergency'
     | '/first-aid'
+    | '/history'
     | '/library'
     | '/professional'
     | '/reset-password'
     | '/results'
     | '/symptom-checker'
+    | '/conditions/$conditionId'
     | '/first-aid/$slug'
     | '/first-aid/'
   fileRoutesByTo: FileRoutesByTo
@@ -146,11 +166,13 @@ export interface FileRouteTypes {
     | '/account'
     | '/auth'
     | '/emergency'
+    | '/history'
     | '/library'
     | '/professional'
     | '/reset-password'
     | '/results'
     | '/symptom-checker'
+    | '/conditions/$conditionId'
     | '/first-aid/$slug'
     | '/first-aid'
   id:
@@ -160,11 +182,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/emergency'
     | '/first-aid'
+    | '/history'
     | '/library'
     | '/professional'
     | '/reset-password'
     | '/results'
     | '/symptom-checker'
+    | '/conditions/$conditionId'
     | '/first-aid/$slug'
     | '/first-aid/'
   fileRoutesById: FileRoutesById
@@ -175,11 +199,13 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   EmergencyRoute: typeof EmergencyRoute
   FirstAidRoute: typeof FirstAidRouteWithChildren
+  HistoryRoute: typeof HistoryRoute
   LibraryRoute: typeof LibraryRoute
   ProfessionalRoute: typeof ProfessionalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResultsRoute: typeof ResultsRoute
   SymptomCheckerRoute: typeof SymptomCheckerRoute
+  ConditionsConditionIdRoute: typeof ConditionsConditionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FirstAidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/library': {
       id: '/library'
       path: '/library'
@@ -252,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/symptom-checker'
       fullPath: '/symptom-checker'
       preLoaderRoute: typeof SymptomCheckerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conditions/$conditionId': {
+      id: '/conditions/$conditionId'
+      path: '/conditions/$conditionId'
+      fullPath: '/conditions/$conditionId'
+      preLoaderRoute: typeof ConditionsConditionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/first-aid/': {
@@ -291,11 +331,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   EmergencyRoute: EmergencyRoute,
   FirstAidRoute: FirstAidRouteWithChildren,
+  HistoryRoute: HistoryRoute,
   LibraryRoute: LibraryRoute,
   ProfessionalRoute: ProfessionalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResultsRoute: ResultsRoute,
   SymptomCheckerRoute: SymptomCheckerRoute,
+  ConditionsConditionIdRoute: ConditionsConditionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
