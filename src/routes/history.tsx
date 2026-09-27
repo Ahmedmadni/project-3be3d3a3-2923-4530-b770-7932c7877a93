@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { PageHeader, LoadingState, ErrorState } from "@/components/health/cards";
 import { CareLevelBadge, CompatibilityBadge } from "@/components/health/badges";
+import { localized, useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
@@ -19,17 +20,16 @@ export const Route = createFileRoute("/history")({
   component: HistoryPage,
 });
 
-const statusLabel: Record<string, string> = { completed: "مكتمل", emergency_redirected: "تحويل للطوارئ", in_progress: "قيد التنفيذ", abandoned: "متروك" };
-
 function HistoryPage() {
   const { user, loading } = useAuth();
+  const { t, lang } = useI18n();
   const [open, setOpen] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["history", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase.from("symptom_sessions")
-        .select("id, created_at, status, care_level, session_symptoms(symptoms(name_ar)), session_results(rank, matching_level, conditions(id, name_ar))")
+        .select("id, created_at, status, care_level, session_symptoms(symptoms(name_ar,name_en)), session_results(rank, matching_level, conditions(id, name_ar, name_en))")
         .order("created_at", { ascending: false }).limit(50);
       if (error) throw error;
       return data;
@@ -39,40 +39,59 @@ function HistoryPage() {
   if (loading) return <LoadingState />;
   if (!user) return (
     <div className="glass mx-auto max-w-xl rounded-3xl p-8 text-center">
-      <p className="text-sm text-muted-foreground">سجّل الدخول لمشاهدة سجل فحوصاتك.</p>
-      <Link to="/auth" search={{ redirect: "/history" }} className="mt-4 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">تسجيل الدخول</Link>
+      <p className="text-sm text-muted-foreground">{t("history.loginHint")}</p>
+      <Link to="/auth" search={{ redirect: "/history" }} className="mt-4 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+        {t("history.login")}
+      </Link>
     </div>
   );
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="فحوصاتي السابقة" />
+      <PageHeader title={t("history.title")} />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState /> : !q.data?.length ? (
-        <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">لا توجد فحوصات محفوظة بعد.</p>
+        <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">{t("history.empty")}</p>
       ) : (
         <div className="space-y-3">
-          {q.data.map((s) => {
-            const syms = s.session_symptoms.map((x) => x.symptoms?.name_ar).filter(Boolean);
+          {q.data.map((session) => {
+            const symptoms = session.session_symptoms
+              .map((item) => item.symptoms
+                ? localized(item.symptoms as unknown as Record<string, unknown>, "name", lang) ?? t("common.notTranslated")
+                : null)
+              .filter((value): value is string => Boolean(value));
+            const statusKey = `history.status.${session.status}` as never;
+
             return (
-              <article key={s.id} className="glass rounded-3xl p-5">
+              <article key={session.id} className="glass rounded-3xl p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-bold">{syms[0] ?? "—"}</p>
-                  {s.care_level && <CareLevelBadge level={s.care_level} />}
+                  <p className="font-bold">{symptoms[0] ?? "—"}</p>
+                  {session.care_level && <CareLevelBadge level={session.care_level} />}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(s.created_at).toLocaleDateString("ar-SA")} · {syms.length} أعراض · {statusLabel[s.status]}
+                  {new Date(session.created_at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en")} · {t("history.symptomsCount", { count: symptoms.length })} · {t(statusKey)}
                 </p>
-                <button onClick={() => setOpen(open === s.id ? null : s.id)} className="mt-3 text-sm font-semibold text-primary">عرض التفاصيل</button>
-                {open === s.id && (
+                <button onClick={() => setOpen(open === session.id ? null : session.id)} className="mt-3 text-sm font-semibold text-primary">
+                  {t("history.details")}
+                </button>
+                {open === session.id && (
                   <div className="mt-3 space-y-2 text-sm">
-                    <p className="text-muted-foreground">الأعراض: {syms.join("، ")}</p>
-                    <p className="font-semibold">الحالات المحتملة التي ظهرت في هذا الفحص</p>
-                    {s.session_results.length ? [...s.session_results].sort((a, b) => a.rank - b.rank).map((r) => (
-                      <div key={r.rank} className="flex items-center justify-between rounded-xl bg-card p-3 ring-1 ring-border">
-                        {r.conditions ? <Link to="/conditions/$conditionId" params={{ conditionId: r.conditions.id }} className="text-primary">{r.conditions.name_ar}</Link> : "—"}
-                        <CompatibilityBadge level={r.matching_level} />
-                      </div>
-                    )) : <p className="text-muted-foreground">لا توجد نتائج محفوظة.</p>}
+                    <p className="text-muted-foreground">{t("history.symptoms")}: {symptoms.join(lang === "ar" ? "، " : ", ")}</p>
+                    <p className="font-semibold">{t("history.possible")}</p>
+                    {session.session_results.length ? [...session.session_results].sort((a, b) => a.rank - b.rank).map((result) => {
+                      const conditionName = result.conditions
+                        ? localized(result.conditions as unknown as Record<string, unknown>, "name", lang) ?? t("common.notTranslated")
+                        : "—";
+                      return (
+                        <div key={result.rank} className="flex items-center justify-between rounded-xl bg-card p-3 ring-1 ring-border">
+                          {result.conditions ? (
+                            <Link to="/conditions/$conditionId" params={{ conditionId: result.conditions.id }} className="text-primary">
+                              {conditionName}
+                            </Link>
+                          ) : "—"}
+                          <CompatibilityBadge level={result.matching_level} />
+                        </div>
+                      );
+                    }) : <p className="text-muted-foreground">{t("history.noResults")}</p>}
                   </div>
                 )}
               </article>
