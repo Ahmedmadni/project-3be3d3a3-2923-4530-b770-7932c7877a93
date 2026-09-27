@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
+import { SourceLinker } from "@/components/admin/SourceLinker";
 import { RedFlagRuleBuilder } from "@/components/admin/RedFlagRuleBuilder";
 export const Route = createFileRoute("/admin/red-flags")({ component: Page });
 function Page() {
@@ -13,5 +14,5 @@ function Page() {
       {key:"care_level",label:"مستوى الرعاية",type:"select",options:[{value:"urgent",label:"عاجل"},{value:"emergency",label:"طوارئ"}]},
       {key:"priority",label:"الأولوية",type:"number"},{key:"is_active",label:"نشط",type:"checkbox"},{key:"is_demo",label:"بيانات تجريبية",type:"checkbox"},
       {key:"translation_status",label:"حالة الترجمة",type:"select",options:[{value:"not_started",label:"لم تبدأ"},{value:"in_progress",label:"قيد الترجمة"},{value:"reviewed",label:"مراجعة"}]}
-    ]} /><RedFlagRuleBuilder /><ContentVersionsPanel entityType="red_flags" /></>;
+    ]} /><RedFlagRuleBuilder /><SourceLinker entityTable="red_flags" entityLabelField="title_ar" linkTable="red_flag_sources" entityForeignKey="red_flag_id" title="مصادر علامات الخطر" /><ContentVersionsPanel entityType="red_flags" /></>;
 }
