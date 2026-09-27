@@ -42,6 +42,13 @@ export const ar = {
   "home.feature.library.desc": "مكتبة مبسطة لفهم الأمراض والأعراض.",
   "home.professional": "الوضع المهني",
   "home.professionalDesc": "للأطباء والتمريض والمتخصصين الصحيين",
+  "library.title": "المكتبة الصحية",
+  "library.subtitle": "معلومات مبسطة لفهم الحالات الشائعة.",
+  "library.empty": "لا يوجد محتوى منشور ومتاح بهذه اللغة بعد.",
+  "library.specialty": "التخصص",
+  "professional.title": "الوضع المهني",
+  "professional.subtitle": "للأطباء والتمريض والمتخصصين الصحيين",
+  "professional.soon": "قريبًا",
 
   "extract.analyze": "تحليل الوصف",
   "extract.analyzing": "جارٍ تحليل الوصف...",
