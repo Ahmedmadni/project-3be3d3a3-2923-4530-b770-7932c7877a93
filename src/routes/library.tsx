@@ -4,6 +4,7 @@ import { referenceQuery } from "@/lib/reference-data";
 import { appConfig } from "@/config/app";
 import { PageHeader, LoadingState, ErrorState } from "@/components/health/cards";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
+import { localized, useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/library")({
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
@@ -22,17 +23,37 @@ export const Route = createFileRoute("/library")({
 
 function Library() {
   const { data } = useSuspenseQuery(referenceQuery);
-  const list = data.conditions.filter((c) => c.is_active && (appConfig.contentMode === "development" || c.review_status === "reviewed"));
+  const { lang, t } = useI18n();
+
+  const list = data.conditions
+    .filter((condition) =>
+      condition.is_active &&
+      (appConfig.contentMode === "development" || condition.review_status === "published"),
+    )
+    .map((condition) => ({
+      condition,
+      name: localized(condition as unknown as Record<string, unknown>, "name", lang),
+      summary: localized(condition as unknown as Record<string, unknown>, "summary", lang),
+    }))
+    .filter((item) => item.name);
+
   return (
     <div>
-      <PageHeader title="المكتبة الصحية" subtitle="معلومات مبسطة لفهم الحالات الشائعة." />
-      {list.length === 0 ? <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">لا يوجد محتوى معتمد بعد.</p> : (
+      <PageHeader title={t("library.title")} subtitle={t("library.subtitle")} />
+      {list.length === 0 ? (
+        <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">{t("library.empty")}</p>
+      ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {list.map((c) => (
-            <Link key={c.id} to="/conditions/$conditionId" params={{ conditionId: c.id }} className="glass rounded-3xl p-5">
-              <h2 className="font-bold">{c.name_ar}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{c.summary_ar}</p>
-              <p className="mt-3 text-xs text-primary">التخصص: {c.specialty}</p>
+          {list.map(({ condition, name, summary }) => (
+            <Link
+              key={condition.id}
+              to="/conditions/$conditionId"
+              params={{ conditionId: condition.id }}
+              className="glass rounded-3xl p-5"
+            >
+              <h2 className="font-bold">{name}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{summary ?? t("common.notTranslated")}</p>
+              {condition.specialty ? <p className="mt-3 text-xs text-primary">{t("library.specialty")}: {condition.specialty}</p> : null}
             </Link>
           ))}
         </div>
