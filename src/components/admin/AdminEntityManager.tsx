@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -56,11 +56,6 @@ export function AdminEntityManager({
       return (data ?? []) as unknown as AdminRow[];
     },
   });
-
-  useEffect(() => {
-    if (!open) return;
-    setForm(editing ? { ...defaultValues, ...editing } : { ...defaultValues });
-  }, [open, editing, defaultValues]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -134,7 +129,7 @@ export function AdminEntityManager({
           {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
         </div>
         {access.roles.some((r) => ["content_editor", "admin", "super_admin"].includes(r)) ? (
-          <button type="button" onClick={() => { setEditing(null); setOpen(true); }} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+          <button type="button" onClick={() => { setEditing(null); setForm({ ...defaultValues }); setOpen(true); }} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
             <Plus className="size-4" /> {t("admin.new")}
           </button>
         ) : null}
@@ -167,7 +162,7 @@ export function AdminEntityManager({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {access.roles.some((r) => ["content_editor", "admin", "super_admin"].includes(r)) ? (
-                    <button type="button" onClick={() => { setEditing(row); setOpen(true); }} className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-xs font-semibold ring-1 ring-border">
+                    <button type="button" onClick={() => { setEditing(row); setForm({ ...defaultValues, ...row }); setOpen(true); }} className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-xs font-semibold ring-1 ring-border">
                       <Pencil className="size-3.5" /> {t("common.edit")}
                     </button>
                   ) : null}
