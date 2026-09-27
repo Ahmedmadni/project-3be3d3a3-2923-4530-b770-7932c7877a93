@@ -10,10 +10,14 @@
   - [x] Results explainability + release/ruleset/condition traceability
   - [x] Governance / AI / i18n safety tests + CI build verification
   - [x] Phase 3 technical report in PHASE3_REPORT.md
-- [ ] Phase 3 hardening
-  - [ ] First-aid section-body review/version/publish workflow
-  - [ ] Publication readiness guard for required medical sources
+- [x] Phase 3 hardening
+  - [x] First-aid section-body review/version/publish workflow
+  - [x] Publication guard requiring active medical source coverage
+  - [x] Structural publication guards for conditions, red flags, questions and first-aid topics
+  - [x] Production knowledge-release gate
+  - [x] Production sessions exclude demo knowledge releases
+- [ ] Phase 3 polish
   - [ ] Remaining Arabic-only admin/non-clinical strings
-  - [ ] Production release gate (no demo/unreviewed knowledge)
+  - [ ] Final runtime smoke test against the connected Supabase project after migrations are applied
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
 - [ ] Medical review of all clinical content — blocked on authorized medical reviewer
