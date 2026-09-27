@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminAccess } from "@/hooks/use-admin-access";
 
 export function ConditionSymptomsEditor() {
   const qc = useQueryClient();
+  const access = useAdminAccess();
   const [conditionId, setConditionId] = useState("");
   const [symptomId, setSymptomId] = useState("");
   const [relationship, setRelationship] = useState("supports");
@@ -40,11 +42,21 @@ export function ConditionSymptomsEditor() {
         weight: Number(weight) || 0,
         is_core_symptom: core,
         is_demo: selectedCondition?.is_demo ?? true,
+        is_active: false,
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تم ربط العرض بالحالة"); setSymptomId(""); qc.invalidateQueries({ queryKey: ["admin", "condition-symptoms-editor"] }); },
+    onSuccess: () => { toast.success("تم ربط العرض كمسودة غير مفعلة"); setSymptomId(""); qc.invalidateQueries({ queryKey: ["admin", "condition-symptoms-editor"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggleLink = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("condition_symptoms").update({ is_active: active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("تم تحديث حالة العلاقة الطبية"); qc.invalidateQueries({ queryKey: ["admin", "condition-symptoms-editor"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
   });
 
   const remove = useMutation({
@@ -85,8 +97,19 @@ export function ConditionSymptomsEditor() {
         <div className="mt-4 divide-y divide-border">
           {links.map((link) => (
             <div key={link.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
-              <div><b>{symptomName(link.symptom_id)}</b><span className="mr-2 text-xs text-muted-foreground">{link.relationship_type} · وزن {link.weight}{link.is_core_symptom ? " · أساسي" : ""}</span></div>
-              <button type="button" onClick={() => remove.mutate(link.id)} className="text-destructive"><Trash2 className="size-4" /></button>
+              <div>
+                <b>{symptomName(link.symptom_id)}</b>
+                <span className="mr-2 text-xs text-muted-foreground">{link.relationship_type} · وزن {link.weight}{link.is_core_symptom ? " · أساسي" : ""}</span>
+                <b className={link.is_active ? "mr-2 text-primary" : "mr-2 text-warning"}>{link.is_active ? "مفعلة" : "بانتظار المراجعة"}</b>
+              </div>
+              <span className="flex items-center gap-2">
+                {access.roles.some((role) => ["medical_reviewer","admin","super_admin"].includes(role)) ? (
+                  <button type="button" onClick={() => toggleLink.mutate({ id: link.id, active: !link.is_active })} className="rounded-lg bg-background px-2 py-1 text-xs font-semibold text-primary ring-1 ring-border">
+                    {link.is_active ? "إيقاف" : "اعتماد وتفعيل"}
+                  </button>
+                ) : null}
+                {access.isAdmin ? <button type="button" onClick={() => remove.mutate(link.id)} className="text-destructive"><Trash2 className="size-4" /></button> : null}
+              </span>
             </div>
           ))}
           {!links.length ? <p className="py-4 text-sm text-muted-foreground">لا توجد أعراض مرتبطة بهذه الحالة.</p> : null}
