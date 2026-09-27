@@ -1,0 +1,24 @@
+name: Phase 3 verification
+
+on:
+  push:
+    branches:
+      - chatgpt/phase3-admin-ai-i18n
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Tests
+        run: bunx vitest run
+      - name: Build
+        run: bun run build
