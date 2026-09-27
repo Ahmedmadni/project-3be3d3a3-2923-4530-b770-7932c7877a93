@@ -1,13 +1,17 @@
 import { Check, Search } from "lucide-react";
 import type { QuestionWithOptions, Severity } from "@/types/medical";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
+import { localizedText } from "@/i18n/localized";
 
 export function ProgressStepper({ steps, current }: { steps: string[]; current: number }) {
+  const { t } = useI18n();
+  const progress = t("checker.stepOf").replace("{current}", String(current + 1)).replace("{total}", String(steps.length));
   return (
-    <div aria-label={`الخطوة ${current + 1} من ${steps.length}`}>
+    <div aria-label={progress}>
       <div className="mb-2 flex justify-between text-xs text-muted-foreground">
         <span className="font-semibold text-primary">{steps[current]}</span>
-        <span>الخطوة {current + 1} من {steps.length}</span>
+        <span>{progress}</span>
       </div>
       <div className="flex gap-1.5">
         {steps.map((s, i) => (
@@ -36,31 +40,34 @@ export function SymptomChip({ label, selected, onToggle }: { label: string; sele
 }
 
 export function SymptomSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useI18n();
   return (
     <label className="relative block">
-      <Search className="pointer-events-none absolute inset-y-0 right-4 my-auto size-5 text-muted-foreground" />
+      <Search className="pointer-events-none absolute inset-y-0 right-4 my-auto size-5 text-muted-foreground rtl:right-4 ltr:right-auto ltr:left-4" />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="ابحث عن عرض مثل الصداع، الدوخة، ألم البطن..."
-        className="w-full rounded-2xl border border-input bg-card py-3.5 pr-12 pl-4 text-sm outline-none focus:ring-2 focus:ring-ring"
+        placeholder={t("checker.searchPlaceholder")}
+        className="w-full rounded-2xl border border-input bg-card py-3.5 pr-12 pl-4 text-sm outline-none focus:ring-2 focus:ring-ring ltr:pr-4 ltr:pl-12"
       />
     </label>
   );
 }
 
-const sev: { v: Severity; l: string; c: string }[] = [
-  { v: "mild", l: "خفيف", c: "bg-success text-primary-foreground" },
-  { v: "moderate", l: "متوسط", c: "bg-warning text-primary-foreground" },
-  { v: "severe", l: "شديد", c: "bg-destructive text-destructive-foreground" },
-];
+const sevClass: Record<Severity, string> = {
+  mild: "bg-success text-primary-foreground",
+  moderate: "bg-warning text-primary-foreground",
+  severe: "bg-destructive text-destructive-foreground",
+};
 export function SeveritySelector({ value, onChange }: { value: Severity | ""; onChange: (v: Severity) => void }) {
+  const { t } = useI18n();
+  const items: Severity[] = ["mild", "moderate", "severe"];
   return (
-    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="مستوى الشدة">
-      {sev.map((s) => (
-        <button key={s.v} type="button" role="radio" aria-checked={value === s.v} onClick={() => onChange(s.v)}
-          className={cn("rounded-xl py-2.5 text-sm font-medium ring-1 ring-border transition-colors", value === s.v ? s.c : "bg-card hover:bg-muted")}>
-          {s.l}
+    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("checker.severity")}>
+      {items.map((v) => (
+        <button key={v} type="button" role="radio" aria-checked={value === v} onClick={() => onChange(v)}
+          className={cn("rounded-xl py-2.5 text-sm font-medium ring-1 ring-border transition-colors", value === v ? sevClass[v] : "bg-card hover:bg-muted")}>
+          {t(`checker.${v}`)}
         </button>
       ))}
     </div>
@@ -81,10 +88,16 @@ export function OptionGroup({ options, value, onChange }: { options: { value: st
 }
 
 export function QuestionCard({ question, value, onChange }: { question: QuestionWithOptions; value: string; onChange: (v: string) => void }) {
+  const { lang, t } = useI18n();
+  const missing = t("common.notTranslated");
   return (
     <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
-      <p className="mb-3 font-medium">{question.question_ar}</p>
-      <OptionGroup options={question.options.map((o) => ({ value: o.value, label: o.label_ar }))} value={value} onChange={onChange} />
+      <p className="mb-3 font-medium">{localizedText(lang, question.question_ar, question.question_en, missing)}</p>
+      <OptionGroup
+        options={question.options.map((o) => ({ value: o.value, label: localizedText(lang, o.label_ar, o.label_en, missing) }))}
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }
