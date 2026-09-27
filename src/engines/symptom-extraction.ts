@@ -68,7 +68,7 @@ export class MockSymptomExtractionService implements SymptomExtractionService {
   async extract(text: string, catalog: CatalogItem[]): Promise<ExtractionResult> {
     const t = normalizeArabic(text.slice(0, MAX_EXTRACTION_CHARS));
     if (!t) return { candidates: [], unresolvedTerms: [], source: "mock" };
-    const clauses = t.split(/[.،,؛;!?\n]|\sو(?=\S)/).map((c) => c.trim()).filter(Boolean);
+    const clauses = t.split(/[.،,؛;!?\n]|\sو(?=\S)/).map((c) => normalizeArabic(c.trim())).filter(Boolean);
     const negs = NEGATIONS.map(normalizeArabic);
     const out: ExtractionCandidate[] = [];
     for (const s of catalog) {
