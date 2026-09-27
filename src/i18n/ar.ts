@@ -63,6 +63,7 @@ export const ar = {
   "firstAid.action": "ماذا أفعل؟",
   "emergency.callNow": "في حالة الخطر اتصل فورًا بالإسعاف.",
   "common.loadError": "تعذر تحميل البيانات. حاول مرة أخرى.",
+  "medical.disclaimer": "المعلومات المقدمة إرشادية ولا تعتبر تشخيصًا طبيًا ولا تغني عن استشارة الطبيب.",
   "compat.high": "توافق مرتفع",
   "compat.medium": "توافق متوسط",
   "compat.low": "توافق منخفض",
