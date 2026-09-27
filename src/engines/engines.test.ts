@@ -73,9 +73,9 @@ describe("ConditionMatchingEngine", () => {
     expect(r[0]?.conditionId).toBe("c1");
     expect(r[0]?.compatibilityLevel).toBe("high");
   });
-  it("hides unreviewed conditions in production", () => {
-    const r = ConditionMatchingEngine.run(ref, input(["cough", "fever"]), { contentMode: "production" });
-    expect(r.map((x) => x.conditionId)).not.toContain("c1");
+  it("shows only published conditions in production", () => {
+    const r = ConditionMatchingEngine.run(ref, input(["cough", "fever", "rash"]), { contentMode: "production" });
+    expect(r).toEqual([]);
   });
   it("ignores inactive clinical links until they are reviewed and activated", () => {
     const guarded = {
