@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppHeader } from "@/components/health/AppHeader";
 import { MobileBottomNav } from "@/components/health/MobileBottomNav";
 import { appConfig } from "@/config/app";
+import { I18nProvider } from "@/i18n";
 
 function NotFoundComponent() {
   return (
@@ -94,11 +95,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AppHeader />
-      <main className="mx-auto w-full max-w-6xl px-5 pt-6 pb-32 md:pb-16">
-        <Outlet />
-      </main>
-      <MobileBottomNav />
+      <I18nProvider>
+        <AppHeader />
+        <main className="mx-auto w-full max-w-6xl px-5 pt-6 pb-32 md:pb-16">
+          <Outlet />
+        </main>
+        <MobileBottomNav />
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
