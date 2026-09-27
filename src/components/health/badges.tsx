@@ -1,26 +1,27 @@
 import { BadgeCheck } from "lucide-react";
 import type { CareLevel, Compatibility } from "@/types/medical";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
-const compat: Record<Compatibility, [string, string]> = {
-  high: ["توافق مرتفع", "bg-primary-soft text-primary"],
-  medium: ["توافق متوسط", "bg-warning-soft text-warning"],
-  low: ["توافق منخفض", "bg-muted text-muted-foreground"],
+const compatClass: Record<Compatibility, string> = {
+  high: "bg-primary-soft text-primary",
+  medium: "bg-warning-soft text-warning",
+  low: "bg-muted text-muted-foreground",
 };
 export function CompatibilityBadge({ level }: { level: Compatibility }) {
-  const [label, cls] = compat[level];
-  return <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", cls)}>{label}</span>;
+  const { t } = useI18n();
+  return <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", compatClass[level])}>{t(`compat.${level}`)}</span>;
 }
 
-const care: Record<CareLevel, [string, string]> = {
-  emergency: ["طوارئ", "bg-destructive-soft text-destructive"],
-  urgent: ["رعاية عاجلة", "bg-warning-soft text-warning"],
-  routine: ["مراجعة طبيب", "bg-primary-soft text-primary"],
-  self_care: ["رعاية ذاتية", "bg-success-soft text-success"],
+const careClass: Record<CareLevel, string> = {
+  emergency: "bg-destructive-soft text-destructive",
+  urgent: "bg-warning-soft text-warning",
+  routine: "bg-primary-soft text-primary",
+  self_care: "bg-success-soft text-success",
 };
 export function CareLevelBadge({ level }: { level: CareLevel }) {
-  const [label, cls] = care[level];
-  return <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", cls)}>{label}</span>;
+  const { t } = useI18n();
+  return <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", careClass[level])}>{t(`care.${level}`)}</span>;
 }
 
 export function ProfessionalBadge() {
