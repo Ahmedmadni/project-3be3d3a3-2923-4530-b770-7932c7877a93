@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminAccess } from "@/hooks/use-admin-access";
 
 export function RedFlagRuleBuilder() {
   const qc = useQueryClient();
+  const access = useAdminAccess();
   const [flagId, setFlagId] = useState("");
   const [symptomId, setSymptomId] = useState("");
   const [questionId, setQuestionId] = useState("");
@@ -41,17 +43,26 @@ export function RedFlagRuleBuilder() {
         red_flag_id: flagId,
         symptom_id: symptomId || null,
         question_id: questionId || null,
-        operator: "equals",
+        operator: symptomId ? "selected" : "eq",
         value: value || null,
         severity: severity ? severity as "mild" | "moderate" | "severe" : null,
         min_age: minAge ? Number(minAge) : null,
         max_age: maxAge ? Number(maxAge) : null,
-        is_active: true,
+        is_active: false,
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تمت إضافة قاعدة الخطر"); qc.invalidateQueries({ queryKey: ["admin", "red-flag-builder"] }); },
+    onSuccess: () => { toast.success("تمت إضافة قاعدة الخطر كمسودة غير مفعلة"); qc.invalidateQueries({ queryKey: ["admin", "red-flag-builder"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggleRule = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("red_flag_rules").update({ is_active: active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("تم تحديث حالة قاعدة الخطر"); qc.invalidateQueries({ queryKey: ["admin", "red-flag-builder"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
   });
 
   const remove = useMutation({
@@ -99,8 +110,16 @@ export function RedFlagRuleBuilder() {
                   {r.question_id ? ` السؤال: ${questionName(r.question_id)} = ${r.value ?? "أي قيمة"}` : ""}
                   {r.severity ? ` · الشدة: ${r.severity}` : ""}
                   {r.min_age != null || r.max_age != null ? ` · العمر: ${r.min_age ?? 0}–${r.max_age ?? "∞"}` : ""}
+                  <b className={r.is_active ? "mr-2 text-primary" : "mr-2 text-warning"}>{r.is_active ? "مفعلة" : "بانتظار المراجعة"}</b>
                 </span>
-                <button onClick={() => remove.mutate(r.id)} className="text-destructive"><Trash2 className="size-4" /></button>
+                <span className="flex items-center gap-2">
+                  {access.roles.some((role) => ["medical_reviewer","admin","super_admin"].includes(role)) ? (
+                    <button type="button" onClick={() => toggleRule.mutate({ id: r.id, active: !r.is_active })} className="rounded-lg bg-background px-2 py-1 font-semibold text-primary ring-1 ring-border">
+                      {r.is_active ? "إيقاف" : "اعتماد وتفعيل"}
+                    </button>
+                  ) : null}
+                  {access.isAdmin ? <button onClick={() => remove.mutate(r.id)} className="text-destructive"><Trash2 className="size-4" /></button> : null}
+                </span>
               </div>
             ))}
             {!rules.length ? <p className="py-4 text-sm text-muted-foreground">لا توجد قواعد لهذه العلامة.</p> : null}
