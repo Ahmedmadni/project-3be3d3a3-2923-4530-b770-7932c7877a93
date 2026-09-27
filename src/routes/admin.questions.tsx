@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
+import { SourceLinker } from "@/components/admin/SourceLinker";
 import { QuestionBuilder } from "@/components/admin/QuestionBuilder";
 export const Route = createFileRoute("/admin/questions")({ component: Page });
 function Page() {
@@ -14,5 +15,5 @@ function Page() {
         {value:"multi_choice",label:"اختيارات متعددة"},{value:"number",label:"رقم"},{value:"text",label:"نص"},{value:"severity",label:"شدة"},{value:"duration",label:"مدة"}]},
       {key:"category",label:"التصنيف"},{key:"sort_order",label:"الترتيب",type:"number"},{key:"is_active",label:"نشط",type:"checkbox"},{key:"is_demo",label:"بيانات تجريبية",type:"checkbox"},
       {key:"translation_status",label:"حالة الترجمة",type:"select",options:[{value:"not_started",label:"لم تبدأ"},{value:"in_progress",label:"قيد الترجمة"},{value:"reviewed",label:"مراجعة"}]}
-    ]} /><QuestionBuilder /><ContentVersionsPanel entityType="questions" /></>;
+    ]} /><QuestionBuilder /><SourceLinker entityTable="questions" entityLabelField="question_ar" linkTable="question_sources" entityForeignKey="question_id" title="مصادر الأسئلة" /><ContentVersionsPanel entityType="questions" /></>;
 }
