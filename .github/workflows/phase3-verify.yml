@@ -1,4 +1,5 @@
 name: Phase 3 verification
+# Runs the full test suite and production build for phase 3 branches.
 
 on:
   push:
