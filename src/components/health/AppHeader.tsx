@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Activity } from "lucide-react";
-import { appConfig } from "@/config/app";
+import { Activity, Languages } from "lucide-react";
+import { useI18n } from "@/i18n";
 import { navItems } from "./nav-items";
 import { EmergencyButton } from "./EmergencyButton";
 
 export function AppHeader() {
+  const { t, lang, setLang } = useI18n();
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-glass backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
@@ -13,11 +14,11 @@ export function AppHeader() {
             <Activity className="size-5" strokeWidth={2.2} />
           </span>
           <span className="leading-tight">
-            <span className="block font-display text-base font-extrabold">{appConfig.name}</span>
-            <span className="block text-[11px] text-muted-foreground">مساعدك الصحي الاسترشادي</span>
+            <span className="block font-display text-base font-extrabold">{t("app.name")}</span>
+            <span className="block text-[11px] text-muted-foreground">{t("app.tagline")}</span>
           </span>
         </Link>
-        <nav className="hidden items-center gap-1 md:flex" aria-label="التنقل الرئيسي">
+        <nav className="hidden items-center gap-1 md:flex" aria-label={t("nav.main")}>
           {navItems.map((n) => (
             <Link
               key={n.to}
@@ -30,7 +31,18 @@ export function AppHeader() {
             </Link>
           ))}
         </nav>
-        <EmergencyButton compact />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            aria-label={t("lang.switch")}
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-primary-soft hover:text-primary"
+          >
+            <Languages className="size-4" />
+            {lang === "ar" ? t("lang.en") : t("lang.ar")}
+          </button>
+          <EmergencyButton compact />
+        </div>
       </div>
     </header>
   );
