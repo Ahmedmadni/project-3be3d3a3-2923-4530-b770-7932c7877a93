@@ -42,6 +42,20 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
       const { data: u } = await supabaseAdmin.auth.getUser(auth.slice(7));
       userId = u.user?.id ?? null;
     }
+    const { data: release } = await supabaseAdmin
+      .from("knowledge_releases")
+      .select("id,version")
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const conditionIds = data.results.map((r) => r.conditionId);
+    const conditionVersions = new Map<string, number>();
+    if (conditionIds.length) {
+      const { data: rows } = await supabaseAdmin.from("conditions").select("id,version").in("id", conditionIds);
+      for (const row of rows ?? []) conditionVersions.set(row.id, row.version);
+    }
+
     const { data: s, error } = await supabaseAdmin.from("symptom_sessions").insert({
       user_id: userId,
       guest_session_id: userId ? null : data.guestSessionId,
@@ -51,6 +65,8 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
       sex: data.sex,
       pregnancy_status: data.pregnancy,
       free_text_description: data.description || null,
+      knowledge_release_id: release?.id ?? null,
+      knowledge_release_version: release?.version ?? null,
       completed_at: new Date().toISOString(),
     }).select("id").single();
     if (error || !s) throw new Error("تعذر حفظ الفحص");
@@ -65,8 +81,12 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
     if (data.answers.length) ops.push(supabaseAdmin.from("session_answers").insert(data.answers.map((a) => ({ session_id: sid, question_id: a.questionId, answer_value: a.value }))) as never);
     if (data.results.length) ops.push(supabaseAdmin.from("session_results").insert(data.results.map((r) => ({
       session_id: sid, condition_id: r.conditionId, matching_score: r.score, matching_level: r.level,
-      explanation_data: r.explanation as never, rank: r.rank, engine_version: data.engineVersion,
+      explanation_data: r.explanation as never,
+      rank: r.rank,
+      engine_version: data.engineVersion,
+      ruleset_version: release?.version ?? null,
+      condition_version: conditionVersions.get(r.conditionId) ?? null,
     }))) as never);
     await Promise.all(ops);
-    return { sessionId: sid, saved: userId ? "account" as const : "guest" as const };
+    return { sessionId: sid, saved: userId ? "account" as const : "guest" as const, knowledgeReleaseVersion: release?.version ?? null };
   });
