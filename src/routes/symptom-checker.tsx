@@ -70,6 +70,7 @@ function Wizard() {
     const emergency = triage.level === "emergency";
     setBusy(true);
     let sessionId: string | null = null;
+    let knowledgeReleaseVersion: string | null = null;
     try {
       const r = await save({ data: {
         guestSessionId: guestId(),
@@ -87,10 +88,11 @@ function Wizard() {
         engineVersion: ENGINE_VERSION,
       } });
       sessionId = r.sessionId;
+      knowledgeReleaseVersion = r.knowledgeReleaseVersion;
     } catch {
       // Saving is best-effort; never block the safety flow.
     }
-    resultStore.save({ sessionId, triage, results, symptomIds: selected });
+    resultStore.save({ sessionId, triage, results, symptomIds: selected, knowledgeReleaseVersion });
     setBusy(false);
     nav({ to: emergency ? "/emergency" : "/results" });
   };
