@@ -4,7 +4,7 @@ import type { ReferenceData } from "./reference";
 export const ENGINE_VERSION = "matching-v1";
 
 export interface MatchingOptions {
-  /** production: published/reviewed conditions only; development: demo data allowed */
+  /** production: published conditions only; development: visible demo/draft data may be exercised for testing */
   contentMode: "production" | "development";
   maxResults?: number;
 }
@@ -21,7 +21,7 @@ export const ConditionMatchingEngine = {
       (c) =>
         c.is_active &&
         c.review_status !== "retired" &&
-        (opts.contentMode === "development" || c.review_status === "published" || c.review_status === "reviewed"),
+        (opts.contentMode === "development" || c.review_status === "published"),
     );
 
     const out: PossibleConditionResult[] = [];
