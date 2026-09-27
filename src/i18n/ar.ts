@@ -63,6 +63,13 @@ export const ar = {
   "firstAid.action": "ماذا أفعل؟",
   "emergency.callNow": "في حالة الخطر اتصل فورًا بالإسعاف.",
   "common.loadError": "تعذر تحميل البيانات. حاول مرة أخرى.",
+  "compat.high": "توافق مرتفع",
+  "compat.medium": "توافق متوسط",
+  "compat.low": "توافق منخفض",
+  "care.emergency": "طوارئ",
+  "care.urgent": "رعاية عاجلة",
+  "care.routine": "مراجعة طبيب",
+  "care.self_care": "رعاية ذاتية",
 
   "admin.title": "لوحة الإدارة",
   "admin.denied": "لا تملك صلاحية الوصول إلى لوحة الإدارة.",
