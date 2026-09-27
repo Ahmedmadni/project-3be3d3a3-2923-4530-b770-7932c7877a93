@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminAccess } from "@/hooks/use-admin-access";
 
 const sections = [
   ["what_is_happening", "ما الذي يحدث؟"],
@@ -13,6 +14,7 @@ const sections = [
 
 export function FirstAidSectionsEditor() {
   const qc = useQueryClient();
+  const access = useAdminAccess();
   const [topicId, setTopicId] = useState("");
 
   const q = useQuery({
@@ -36,6 +38,28 @@ export function FirstAidSectionsEditor() {
       const existing = rows.find((r) => r.section_type === type);
       const title = sections.find(([key]) => key === type)?.[1] ?? type;
       if (existing) {
+        if (existing.review_status === "published") {
+          if (!access.user) throw new Error("AUTH_REQUIRED");
+          const { data: last } = await supabase.from("content_versions")
+            .select("version")
+            .eq("entity_type", "first_aid_sections")
+            .eq("entity_id", existing.id)
+            .order("version", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const nextVersion = (last?.version ?? 1) + 1;
+          const { error } = await supabase.from("content_versions").insert({
+            entity_type: "first_aid_sections",
+            entity_id: existing.id,
+            version: nextVersion,
+            status: "draft",
+            snapshot: { ...existing, content_ar: ar || null, content_en: en || null, review_status: "draft", version: nextVersion } as never,
+            change_reason: "تعديل قسم إسعافات أولية منشور",
+            created_by: access.user.id,
+          });
+          if (error) throw error;
+          return;
+        }
         const { error } = await supabase.from("first_aid_sections").update({
           content_ar: ar || null,
           content_en: en || null,
@@ -56,8 +80,9 @@ export function FirstAidSectionsEditor() {
       }
     },
     onSuccess: () => {
-      toast.success("حُفظت المسودة — لم تُنشر للمستخدمين");
+      toast.success("حُفظت المسودة — والمحتوى المنشور لا يُعدّل مباشرة.");
       qc.invalidateQueries({ queryKey: ["admin", "first-aid-sections"] });
+      qc.invalidateQueries({ queryKey: ["admin", "versions", "first_aid_sections"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
   });
