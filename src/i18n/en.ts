@@ -65,6 +65,7 @@ export const en: Dict = {
   "firstAid.action": "What should I do?",
   "emergency.callNow": "If there is immediate danger, call emergency medical services now.",
   "common.loadError": "Unable to load the data. Please try again.",
+  "medical.disclaimer": "The information provided is for guidance only. It is not a medical diagnosis and does not replace professional medical evaluation.",
   "compat.high": "High match",
   "compat.medium": "Moderate match",
   "compat.low": "Low match",
