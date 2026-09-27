@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { Siren } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export function EmergencyButton({ compact, className }: { compact?: boolean; className?: string }) {
+  const { t } = useI18n();
   return (
     <Link
       to="/emergency"
@@ -13,7 +15,7 @@ export function EmergencyButton({ compact, className }: { compact?: boolean; cla
       )}
     >
       <Siren className="size-4" />
-      حالة طارئة
+      {t("emergency.button")}
     </Link>
   );
 }
