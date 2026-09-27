@@ -10,7 +10,8 @@ import { ENGINE_VERSION } from "@/engines/condition-matching-engine";
 import { mockExtractor, selectableCandidates, extractWithFallback } from "@/engines/symptom-extraction";
 import { RealSymptomExtractionService } from "@/engines/real-extraction";
 import { extractSymptomsAI } from "@/lib/extract.functions";
-import { useI18n } from "@/i18n";
+import { localized, useI18n } from "@/i18n";
+import { arabicIncludes } from "@/lib/arabic";
 import { appConfig } from "@/config/app";
 import { resultStore, guestId } from "@/lib/session-store";
 import { saveSymptomSession } from "@/lib/sessions.functions";
@@ -33,13 +34,20 @@ export const Route = createFileRoute("/symptom-checker")({
   component: Wizard,
 });
 
-const steps = ["معلومات أساسية", "العرض الرئيسي", "صف ما تشعر به", "تفاصيل الأعراض", "أسئلة متابعة"];
 const emptyDetail: SymptomDetail = { onset: "", pattern: "", severity: "", triggers: "", associated: "" };
 
 function Wizard() {
   const { data: ref } = useSuspenseQuery(referenceQuery);
   const save = useServerFn(saveSymptomSession);
   const nav = useNavigate();
+  const { t, lang } = useI18n();
+  const steps = [
+    t("checker.step.basic"),
+    t("checker.step.symptom"),
+    t("checker.step.describe"),
+    t("checker.step.details"),
+    t("checker.step.followup"),
+  ];
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -53,18 +61,22 @@ function Wizard() {
   const [unresolved, setUnresolved] = useState<string[]>([]);
   const [notice, setNotice] = useState("");
   const extractAI = useServerFn(extractSymptomsAI);
-  const { t } = useI18n();
   const [details, setDetails] = useState<Record<string, SymptomDetail>>({});
   const [answers, setAnswers] = useState<AnswerMap>({});
 
   const symptoms = ref.symptoms.filter((s) => s.is_active);
-  const name = (id: string) => symptoms.find((s) => s.id === id)?.name_ar ?? "";
+  const symptomLabel = (id: string) => {
+    const symptom = symptoms.find((s) => s.id === id);
+    if (!symptom) return "";
+    const value = localized(symptom as unknown as Record<string, unknown>, "name", lang);
+    if (value) return value;
+    return lang === "en" ? `${t("common.notTranslated")} (${symptom.code})` : symptom.name_ar;
+  };
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const setDetail = (id: string, patch: Partial<SymptomDetail>) => setDetails((d) => ({ ...d, [id]: { ...emptyDetail, ...d[id], ...patch } }));
   const questions = useMemo(() => DynamicQuestionEngine.visibleQuestions(ref, selected, answers), [ref, selected, answers]);
 
   const finish = async () => {
-    // drop answers to questions no longer visible
     const visible = new Set(questions.map((q) => q.id));
     const cleanAnswers = Object.fromEntries(Object.entries(answers).filter(([k]) => visible.has(k)));
     const input: SessionInput = { basic, symptomIds: selected, details, answers: cleanAnswers, description };
@@ -102,8 +114,8 @@ function Wizard() {
   const next = async () => {
     setError("");
     const age = Number(basic.age);
-    if (step === 0 && (!Number.isInteger(age) || age < 1 || age > 120 || !basic.sex)) return setError("يرجى إدخال العمر والجنس بشكل صحيح.");
-    if (step === 1 && selected.length === 0) return setError("اختر عرضًا واحدًا على الأقل.");
+    if (step === 0 && (!Number.isInteger(age) || age < 1 || age > 120 || !basic.sex)) return setError(t("checker.errorBasic"));
+    if (step === 1 && selected.length === 0) return setError(t("checker.errorSymptom"));
     if (step === 2 && description.trim()) {
       setBusy(true);
       setNotice("");
@@ -127,12 +139,20 @@ function Wizard() {
         if (!ids.length) setNotice(t("extract.none"));
       }
     }
-    if (step === 4 && DynamicQuestionEngine.missing(questions, answers).length) return setError("يرجى الإجابة عن جميع الأسئلة.");
+    if (step === 4 && DynamicQuestionEngine.missing(questions, answers).length) return setError(t("checker.errorQuestions"));
     if (step < steps.length - 1) return setStep(step + 1);
     await finish();
   };
 
-  const filtered = symptoms.filter((s) => s.name_ar.includes(search.trim()));
+  const filtered = symptoms.filter((symptom) => {
+    const label = symptomLabel(symptom.id);
+    const needle = search.trim();
+    if (!needle) return true;
+    return lang === "ar"
+      ? arabicIncludes(label, needle)
+      : label.toLowerCase().includes(needle.toLowerCase()) || symptom.code.toLowerCase().includes(needle.toLowerCase());
+  });
+  const separator = lang === "ar" ? "، " : ", ";
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -141,28 +161,45 @@ function Wizard() {
         <h1 className="text-xl font-extrabold">{steps[step]}</h1>
         {step === 0 && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="العمر"><input type="number" inputMode="numeric" className={inputCls} value={basic.age} onChange={(e) => setBasic({ ...basic, age: e.target.value })} /></Field>
-            <Field label="الجنس"><OptionGroup options={[{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }]} value={basic.sex} onChange={(v) => setBasic({ ...basic, sex: v as BasicInfo["sex"] })} /></Field>
+            <Field label={t("checker.age")}><input type="number" inputMode="numeric" className={inputCls} value={basic.age} onChange={(e) => setBasic({ ...basic, age: e.target.value })} /></Field>
+            <Field label={t("checker.sex")}>
+              <OptionGroup
+                options={[{ value: "male", label: t("checker.male") }, { value: "female", label: t("checker.female") }]}
+                value={basic.sex}
+                onChange={(v) => setBasic({ ...basic, sex: v as BasicInfo["sex"] })}
+              />
+            </Field>
             {basic.sex === "female" && Number(basic.age) >= 12 && Number(basic.age) <= 55 && (
-              <Field label="هل يوجد حمل؟"><OptionGroup options={[{ value: "yes", label: "نعم" }, { value: "no", label: "لا" }, { value: "unsure", label: "غير متأكدة" }]} value={basic.pregnant} onChange={(v) => setBasic({ ...basic, pregnant: v as BasicInfo["pregnant"] })} /></Field>
+              <Field label={t("checker.pregnancy")}>
+                <OptionGroup
+                  options={[
+                    { value: "yes", label: t("checker.yes") },
+                    { value: "no", label: t("checker.no") },
+                    { value: "unsure", label: lang === "ar" ? t("checker.unsureFemale") : t("checker.unsure") },
+                  ]}
+                  value={basic.pregnant}
+                  onChange={(v) => setBasic({ ...basic, pregnant: v as BasicInfo["pregnant"] })}
+                />
+              </Field>
             )}
-            <Field label="أمراض مزمنة" hint="اختياري، لا تُحفظ"><input className={inputCls} value={basic.chronic} onChange={(e) => setBasic({ ...basic, chronic: e.target.value })} /></Field>
-            <Field label="أدوية مستخدمة" hint="اختياري، لا تُحفظ"><input className={inputCls} value={basic.medications} onChange={(e) => setBasic({ ...basic, medications: e.target.value })} /></Field>
+            <Field label={t("checker.chronic")} hint={t("checker.optionalNotSaved")}><input className={inputCls} value={basic.chronic} onChange={(e) => setBasic({ ...basic, chronic: e.target.value })} /></Field>
+            <Field label={t("checker.medications")} hint={t("checker.optionalNotSaved")}><input className={inputCls} value={basic.medications} onChange={(e) => setBasic({ ...basic, medications: e.target.value })} /></Field>
           </div>
         )}
         {step === 1 && (
           <>
             <SymptomSearch value={search} onChange={setSearch} />
             <div className="flex flex-wrap gap-2">
-              {filtered.length ? filtered.map((s) => <SymptomChip key={s.id} label={s.name_ar} selected={selected.includes(s.id)} onToggle={() => toggle(s.id)} />)
-                : <p className="text-sm text-muted-foreground">لا توجد أعراض مطابقة.</p>}
+              {filtered.length
+                ? filtered.map((s) => <SymptomChip key={s.id} label={symptomLabel(s.id)} selected={selected.includes(s.id)} onToggle={() => toggle(s.id)} />)
+                : <p className="text-sm text-muted-foreground">{t("checker.noSymptoms")}</p>}
             </div>
           </>
         )}
         {step === 2 && (
           <>
-            <textarea rows={6} maxLength={4000} className={inputCls} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="مثال: أشعر بدوخة وتعب منذ ثلاثة أيام وتزداد الدوخة عندما أقف..." />
-            <p className="text-xs text-muted-foreground">يمكنك الكتابة بطريقتك، وسنساعدك لاحقًا على استخراج الأعراض من الوصف.</p>
+            <textarea rows={6} maxLength={4000} className={inputCls} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("checker.descriptionPlaceholder")} />
+            <p className="text-xs text-muted-foreground">{t("checker.descriptionHint")}</p>
           </>
         )}
         {step === 3 && (
@@ -172,9 +209,9 @@ function Wizard() {
               <div className="space-y-3 rounded-2xl bg-primary-soft/60 p-4">
                 <p className="text-sm font-bold">{t("extract.found")}</p>
                 <p className="text-xs text-muted-foreground">{t("extract.foundHint")}</p>
-                <div className="flex flex-wrap gap-2">{suggested.map((id) => <SymptomChip key={id} label={name(id)} selected={picked.includes(id)} onToggle={() => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))} />)}</div>
-                {negated.length > 0 && <p className="text-xs text-muted-foreground">{t("extract.negated")} {negated.map(name).join("، ")}</p>}
-                {unresolved.length > 0 && <p className="text-xs text-muted-foreground">{t("extract.unresolved")} {unresolved.join("، ")}</p>}
+                <div className="flex flex-wrap gap-2">{suggested.map((id) => <SymptomChip key={id} label={symptomLabel(id)} selected={picked.includes(id)} onToggle={() => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))} />)}</div>
+                {negated.length > 0 && <p className="text-xs text-muted-foreground">{t("extract.negated")} {negated.map(symptomLabel).join(separator)}</p>}
+                {unresolved.length > 0 && <p className="text-xs text-muted-foreground">{t("extract.unresolved")} {unresolved.join(separator)}</p>}
                 <div className="flex gap-2">
                   <button type="button" onClick={() => { setSelected((s) => [...new Set([...s, ...picked])]); setSuggested([]); setPicked([]); setNotice(t("extract.confirmed")); }} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{t("extract.confirm")}</button>
                   <button type="button" onClick={() => { setSuggested([]); setPicked([]); }} className="rounded-xl bg-card px-4 py-2 text-sm ring-1 ring-border">{t("extract.skip")}</button>
@@ -185,25 +222,35 @@ function Wizard() {
               const d = details[id] ?? emptyDetail;
               return (
                 <div key={id} className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-border">
-                  <h2 className="font-bold text-primary">{name(id)}</h2>
-                  <Field label="متى بدأ؟"><input className={inputCls} value={d.onset} onChange={(e) => setDetail(id, { onset: e.target.value })} placeholder="مثال: منذ يومين" /></Field>
-                  <Field label="هل هو مستمر أم متقطع؟"><OptionGroup options={[{ value: "continuous", label: "مستمر" }, { value: "intermittent", label: "متقطع" }, { value: "unknown", label: "لا أعرف" }]} value={d.pattern} onChange={(v) => setDetail(id, { pattern: v as SymptomDetail["pattern"] })} /></Field>
-                  <Field label="مستوى الشدة"><SeveritySelector value={d.severity} onChange={(v) => setDetail(id, { severity: v })} /></Field>
-                  <Field label="هل يزداد مع شيء معين؟"><input className={inputCls} value={d.triggers} onChange={(e) => setDetail(id, { triggers: e.target.value })} /></Field>
-                  <Field label="هل توجد أعراض مصاحبة؟"><input className={inputCls} value={d.associated} onChange={(e) => setDetail(id, { associated: e.target.value })} /></Field>
+                  <h2 className="font-bold text-primary">{symptomLabel(id)}</h2>
+                  <Field label={t("checker.onset")}><input className={inputCls} value={d.onset} onChange={(e) => setDetail(id, { onset: e.target.value })} placeholder={t("checker.onsetPlaceholder")} /></Field>
+                  <Field label={t("checker.pattern")}>
+                    <OptionGroup
+                      options={[
+                        { value: "continuous", label: t("checker.continuous") },
+                        { value: "intermittent", label: t("checker.intermittent") },
+                        { value: "unknown", label: t("checker.unknown") },
+                      ]}
+                      value={d.pattern}
+                      onChange={(v) => setDetail(id, { pattern: v as SymptomDetail["pattern"] })}
+                    />
+                  </Field>
+                  <Field label={t("checker.severity")}><SeveritySelector value={d.severity} onChange={(v) => setDetail(id, { severity: v })} /></Field>
+                  <Field label={t("checker.triggers")}><input className={inputCls} value={d.triggers} onChange={(e) => setDetail(id, { triggers: e.target.value })} /></Field>
+                  <Field label={t("checker.associated")}><input className={inputCls} value={d.associated} onChange={(e) => setDetail(id, { associated: e.target.value })} /></Field>
                 </div>
               );
             })}
           </>
         )}
-        {step === 4 && (questions.length ? questions.map((q) => (
-          <QuestionCard key={q.id} question={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />
-        )) : <p className="text-sm text-muted-foreground">لا توجد أسئلة متابعة لهذه الأعراض.</p>)}
+        {step === 4 && (questions.length
+          ? questions.map((q) => <QuestionCard key={q.id} question={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />)
+          : <p className="text-sm text-muted-foreground">{t("checker.noQuestions")}</p>)}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <div className="flex gap-3 pt-2">
-          {step > 0 && <button type="button" onClick={() => setStep(step - 1)} className="flex-1 rounded-2xl bg-card py-3.5 font-semibold ring-1 ring-border">السابق</button>}
+          {step > 0 && <button type="button" onClick={() => setStep(step - 1)} className="flex-1 rounded-2xl bg-card py-3.5 font-semibold ring-1 ring-border">{t("checker.previous")}</button>}
           <button type="button" disabled={busy} onClick={next} className="flex-1 rounded-2xl bg-gradient-primary py-3.5 font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
-            {busy ? "جارٍ التحليل..." : step === steps.length - 1 ? "عرض النتائج" : "التالي"}
+            {busy ? t("checker.analyzing") : step === steps.length - 1 ? t("checker.showResults") : t("checker.next")}
           </button>
         </div>
       </section>
