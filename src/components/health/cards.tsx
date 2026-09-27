@@ -41,6 +41,14 @@ export function ResultCard({ result, condition, symptoms }: { result: PossibleCo
       </div>
       <dl className="mt-4 space-y-3 text-sm">
         <div><dt className="font-semibold">لماذا ظهرت هذه النتيجة؟</dt>{why.map((w) => <dd key={w} className="text-muted-foreground">{w}</dd>)}</div>
+        {result.contradictingSymptoms.length ? (
+          <div>
+            <dt className="font-semibold">معلومات لم تتوافق بالكامل</dt>
+            <dd className="mt-1 flex flex-wrap gap-1.5">
+              {result.contradictingSymptoms.map((s) => <span key={s} className="rounded-full bg-warning-soft px-3 py-1 text-xs text-warning">{name(s)}</span>)}
+            </dd>
+          </div>
+        ) : null}
         {condition.when_to_seek_care_ar && <div><dt className="font-semibold">متى تحتاج إلى مراجعة الطبيب؟</dt><dd className="text-muted-foreground">{condition.when_to_seek_care_ar}</dd></div>}
         {condition.specialty && <div><dt className="font-semibold">التخصص المناسب</dt><dd className="text-muted-foreground">{condition.specialty}</dd></div>}
       </dl>

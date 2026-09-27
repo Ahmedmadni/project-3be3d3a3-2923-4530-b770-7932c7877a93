@@ -118,6 +118,7 @@ export type Database = {
           condition_id: string
           created_at: string
           id: string
+          is_active: boolean
           is_core_symptom: boolean
           is_demo: boolean
           relationship_type: Database["public"]["Enums"]["relationship_type"]
@@ -128,6 +129,8 @@ export type Database = {
           condition_id: string
           created_at?: string
           id?: string
+          is_active?: boolean
+          is_active?: boolean
           is_core_symptom?: boolean
           is_demo?: boolean
           relationship_type?: Database["public"]["Enums"]["relationship_type"]

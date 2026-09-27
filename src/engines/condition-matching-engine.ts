@@ -4,21 +4,11 @@ import type { ReferenceData } from "./reference";
 export const ENGINE_VERSION = "matching-v1";
 
 export interface MatchingOptions {
-  /** production: only reviewed conditions; development: demo data allowed */
+  /** production: published/reviewed conditions only; development: demo data allowed */
   contentMode: "production" | "development";
   maxResults?: number;
 }
 
-/**
- * ConditionMatchingEngine v1 — deterministic scoring from condition_symptoms.
- *  supports     → +weight (×1.5 if core symptom)
- *  weak_support → +weight × 0.5
- *  contradicts  → −weight
- * Score is normalised by the condition's max positive score.
- * Extension points (not yet active): evidence weights, age/sex adjustments,
- * duration patterns, symptom combinations, negative findings, AI assistance —
- * add them as additional `Adjuster`s without touching the UI.
- */
 export type Adjuster = (ctx: { conditionId: string; input: SessionInput; score: number; reasons: Reason[] }) => number;
 const adjusters: Adjuster[] = [];
 
@@ -28,12 +18,15 @@ export const ConditionMatchingEngine = {
     if (selected.size === 0) return [];
 
     const conditions = ref.conditions.filter(
-      (c) => c.is_active && c.review_status !== "retired" && (opts.contentMode === "development" || c.review_status === "reviewed"),
+      (c) =>
+        c.is_active &&
+        c.review_status !== "retired" &&
+        (opts.contentMode === "development" || c.review_status === "published" || c.review_status === "reviewed"),
     );
 
     const out: PossibleConditionResult[] = [];
     for (const c of conditions) {
-      const links = ref.conditionSymptoms.filter((l) => l.condition_id === c.id);
+      const links = ref.conditionSymptoms.filter((l) => l.condition_id === c.id && l.is_active);
       if (!links.length) continue;
       let score = 0;
       let max = 0;
@@ -79,5 +72,4 @@ export function toLevel(score: number): Compatibility {
   return "low";
 }
 
-// Kept for future answer-based adjusters.
 export type { AnswerMap };

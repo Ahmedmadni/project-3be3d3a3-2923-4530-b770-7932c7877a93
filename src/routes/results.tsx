@@ -44,6 +44,9 @@ function Results() {
         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">مستوى الرعاية المقترح: <CareLevelBadge level={stored.triage.level} /></div>
       </PageHeader>
       <MedicalDisclaimer text="هذه النتائج لا تؤكد أو تستبعد وجود أي مرض." className="mb-5" />
+      {stored.knowledgeReleaseVersion ? (
+        <p className="mb-4 text-xs text-muted-foreground">إصدار المعرفة الطبية: {stored.knowledgeReleaseVersion}</p>
+      ) : null}
       {items.length === 0 ? (
         <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">لا توجد بيانات كافية لعرض حالات محتملة في النسخة الحالية.</p>
       ) : (

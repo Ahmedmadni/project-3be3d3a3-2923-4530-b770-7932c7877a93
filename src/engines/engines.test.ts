@@ -23,11 +23,11 @@ const conditions = any<ReferenceData["conditions"]>([
   { id: "c2", is_active: true, review_status: "reviewed", care_level: "self_care" },
 ]);
 const conditionSymptoms = any<ReferenceData["conditionSymptoms"]>([
-  { condition_id: "c1", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true },
-  { condition_id: "c1", symptom_id: "fever", relationship_type: "supports", weight: 1, is_core_symptom: false },
-  { condition_id: "c2", symptom_id: "cough", relationship_type: "weak_support", weight: 1, is_core_symptom: false },
-  { condition_id: "c2", symptom_id: "rash", relationship_type: "supports", weight: 2, is_core_symptom: true },
-  { condition_id: "c2", symptom_id: "fever", relationship_type: "contradicts", weight: 1, is_core_symptom: false },
+  { condition_id: "c1", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true, is_active: true },
+  { condition_id: "c1", symptom_id: "fever", relationship_type: "supports", weight: 1, is_core_symptom: false, is_active: true },
+  { condition_id: "c2", symptom_id: "cough", relationship_type: "weak_support", weight: 1, is_core_symptom: false, is_active: true },
+  { condition_id: "c2", symptom_id: "rash", relationship_type: "supports", weight: 2, is_core_symptom: true, is_active: true },
+  { condition_id: "c2", symptom_id: "fever", relationship_type: "contradicts", weight: 1, is_core_symptom: false, is_active: true },
 ]);
 const ref: ReferenceData = { ...emptyReference, redFlags, redFlagRules, conditions, conditionSymptoms };
 
@@ -77,6 +77,27 @@ describe("ConditionMatchingEngine", () => {
     const r = ConditionMatchingEngine.run(ref, input(["cough", "fever"]), { contentMode: "production" });
     expect(r.map((x) => x.conditionId)).not.toContain("c1");
   });
+  it("ignores inactive clinical links until they are reviewed and activated", () => {
+    const guarded = {
+      ...ref,
+      conditionSymptoms: any<ReferenceData["conditionSymptoms"]>([
+        { condition_id: "c1", symptom_id: "cough", relationship_type: "supports", weight: 10, is_core_symptom: true, is_active: false },
+      ]),
+    };
+    expect(ConditionMatchingEngine.run(guarded, input(["cough"]), { contentMode: "development" })).toEqual([]);
+  });
+  it("accepts published content in production", () => {
+    const published = {
+      ...ref,
+      conditions: any<ReferenceData["conditions"]>([
+        { id: "cp", is_active: true, review_status: "published", care_level: "routine" },
+      ]),
+      conditionSymptoms: any<ReferenceData["conditionSymptoms"]>([
+        { condition_id: "cp", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true, is_active: true },
+      ]),
+    };
+    expect(ConditionMatchingEngine.run(published, input(["cough"]), { contentMode: "production" })[0]?.conditionId).toBe("cp");
+  });
   it("returns empty for no symptoms or no data", () => {
     expect(ConditionMatchingEngine.run(ref, input([]), { contentMode: "development" })).toEqual([]);
     expect(ConditionMatchingEngine.run(emptyReference, input(["cough"]), { contentMode: "development" })).toEqual([]);
@@ -110,6 +131,13 @@ describe("DynamicQuestionEngine", () => {
     expect(DynamicQuestionEngine.visibleQuestions(qref, ["cough"], {}).map((q) => q.id)).toEqual(["q1"]);
     expect(DynamicQuestionEngine.visibleQuestions(qref, ["cough"], { q1: "yes" }).map((q) => q.id)).toEqual(["q1", "q2"]);
     expect(DynamicQuestionEngine.visibleQuestions(qref, ["cough"], { q1: "no" }).map((q) => q.id)).toEqual(["q1"]);
+  });
+  it("ignores inactive question rules", () => {
+    const inactive = any<Pick<ReferenceData, "questions" | "questionOptions" | "questionRules">>({
+      ...qref,
+      questionRules: [{ question_id: "q1", trigger_type: "symptom_selected", symptom_id: "cough", operator: "eq", priority: 1, is_active: false }],
+    });
+    expect(DynamicQuestionEngine.visibleQuestions(inactive, ["cough"], {})).toEqual([]);
   });
   it("reports missing answers", () => {
     const qs = DynamicQuestionEngine.visibleQuestions(qref, ["cough"], { q1: "yes" });
