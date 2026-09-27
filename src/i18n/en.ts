@@ -44,6 +44,13 @@ export const en: Dict = {
   "home.feature.library.desc": "A simple library for understanding symptoms and conditions.",
   "home.professional": "Professional mode",
   "home.professionalDesc": "For doctors, nurses, and healthcare professionals",
+  "library.title": "Health library",
+  "library.subtitle": "Simple information to help you understand common conditions.",
+  "library.empty": "There is no published content available in this language yet.",
+  "library.specialty": "Specialty",
+  "professional.title": "Professional mode",
+  "professional.subtitle": "For doctors, nurses, and healthcare professionals",
+  "professional.soon": "Coming soon",
 
   "extract.analyze": "Analyze description",
   "extract.analyzing": "Analyzing description...",
