@@ -3,22 +3,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/health/cards";
 import { Field, inputCls } from "@/components/health/wizard-ui";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({
-    meta: [
-      { title: "تعيين كلمة مرور جديدة — مؤشر صحي" },
-      { name: "description", content: "عيّن كلمة مرور جديدة لحسابك." },
-      { property: "og:title", content: "تعيين كلمة مرور جديدة — مؤشر صحي" },
-      { property: "og:description", content: "استعادة الوصول إلى حسابك." },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "تعيين كلمة مرور جديدة — مؤشر صحي" }, { name: "robots", content: "noindex" }] }),
   component: Reset,
 });
 
 function Reset() {
   const nav = useNavigate();
+  const { t } = useI18n();
   const [ready, setReady] = useState(false);
   const [pw, setPw] = useState("");
   const [msg, setMsg] = useState("");
@@ -29,19 +23,19 @@ function Reset() {
   }, []);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pw.length < 8) return setMsg("كلمة المرور 8 أحرف على الأقل");
+    if (pw.length < 8) return setMsg(t("reset.short"));
     const { error } = await supabase.auth.updateUser({ password: pw });
-    if (error) return setMsg("تعذر التحديث، اطلب رابطًا جديدًا.");
+    if (error) return setMsg(t("reset.failed"));
     nav({ to: "/account" });
   };
   return (
     <div className="mx-auto max-w-md">
-      <PageHeader title="تعيين كلمة مرور جديدة" />
-      {!ready ? <p className="glass rounded-3xl p-6 text-sm text-muted-foreground">افتح هذه الصفحة من رابط الاستعادة المرسل إلى بريدك.</p> : (
+      <PageHeader title={t("reset.title")} />
+      {!ready ? <p className="glass rounded-3xl p-6 text-sm text-muted-foreground">{t("reset.openLink")}</p> : (
         <form onSubmit={submit} className="glass space-y-4 rounded-3xl p-6">
-          <Field label="كلمة المرور الجديدة"><input type="password" dir="ltr" className={inputCls} value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+          <Field label={t("reset.newPassword")}><input type="password" dir="ltr" className={inputCls} value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
           {msg && <p className="text-sm text-destructive">{msg}</p>}
-          <button className="w-full rounded-2xl bg-gradient-primary py-3.5 font-semibold text-primary-foreground">حفظ</button>
+          <button className="w-full rounded-2xl bg-gradient-primary py-3.5 font-semibold text-primary-foreground">{t("reset.save")}</button>
         </form>
       )}
     </div>
