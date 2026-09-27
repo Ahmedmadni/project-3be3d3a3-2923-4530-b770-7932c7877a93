@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as FirstAidRouteImport } from './routes/first-aid'
@@ -20,6 +21,15 @@ import { Route as ProfessionalRouteImport } from './routes/professional'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SymptomCheckerRouteImport } from './routes/symptom-checker'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminConditionsRouteImport } from './routes/admin.conditions'
+import { Route as AdminFirstAidRouteImport } from './routes/admin.first-aid'
+import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
+import { Route as AdminRedFlagsRouteImport } from './routes/admin.red-flags'
+import { Route as AdminReleasesRouteImport } from './routes/admin.releases'
+import { Route as AdminSourcesRouteImport } from './routes/admin.sources'
+import { Route as AdminSymptomsRouteImport } from './routes/admin.symptoms'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as ConditionsConditionIdRouteImport } from './routes/conditions.$conditionId'
 import { Route as FirstAidIndexRouteImport } from './routes/first-aid.index'
 import { Route as FirstAidSlugRouteImport } from './routes/first-aid.$slug'
@@ -32,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -79,6 +94,51 @@ const SymptomCheckerRoute = SymptomCheckerRouteImport.update({
   path: '/symptom-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConditionsRoute = AdminConditionsRouteImport.update({
+  id: '/conditions',
+  path: '/conditions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFirstAidRoute = AdminFirstAidRouteImport.update({
+  id: '/first-aid',
+  path: '/first-aid',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRedFlagsRoute = AdminRedFlagsRouteImport.update({
+  id: '/red-flags',
+  path: '/red-flags',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReleasesRoute = AdminReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSourcesRoute = AdminSourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSymptomsRoute = AdminSymptomsRouteImport.update({
+  id: '/symptoms',
+  path: '/symptoms',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ConditionsConditionIdRoute = ConditionsConditionIdRouteImport.update({
   id: '/conditions/$conditionId',
   path: '/conditions/$conditionId',
@@ -98,6 +158,7 @@ const FirstAidSlugRoute = FirstAidSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/emergency': typeof EmergencyRoute
   '/first-aid': typeof FirstAidRouteWithChildren
@@ -107,8 +168,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
+  '/admin/conditions': typeof AdminConditionsRoute
+  '/admin/first-aid': typeof AdminFirstAidRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/red-flags': typeof AdminRedFlagsRoute
+  '/admin/releases': typeof AdminReleasesRoute
+  '/admin/sources': typeof AdminSourcesRoute
+  '/admin/symptoms': typeof AdminSymptomsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/first-aid/': typeof FirstAidIndexRoute
 }
 export interface FileRoutesByTo {
@@ -122,14 +192,24 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
+  '/admin/conditions': typeof AdminConditionsRoute
+  '/admin/first-aid': typeof AdminFirstAidRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/red-flags': typeof AdminRedFlagsRoute
+  '/admin/releases': typeof AdminReleasesRoute
+  '/admin/sources': typeof AdminSourcesRoute
+  '/admin/symptoms': typeof AdminSymptomsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/first-aid': typeof FirstAidIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/emergency': typeof EmergencyRoute
   '/first-aid': typeof FirstAidRouteWithChildren
@@ -139,8 +219,17 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
+  '/admin/conditions': typeof AdminConditionsRoute
+  '/admin/first-aid': typeof AdminFirstAidRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/red-flags': typeof AdminRedFlagsRoute
+  '/admin/releases': typeof AdminReleasesRoute
+  '/admin/sources': typeof AdminSourcesRoute
+  '/admin/symptoms': typeof AdminSymptomsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/first-aid/': typeof FirstAidIndexRoute
 }
 export interface FileRouteTypes {
@@ -148,6 +237,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/admin'
     | '/auth'
     | '/emergency'
     | '/first-aid'
@@ -157,8 +247,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/results'
     | '/symptom-checker'
+    | '/admin/conditions'
+    | '/admin/first-aid'
+    | '/admin/questions'
+    | '/admin/red-flags'
+    | '/admin/releases'
+    | '/admin/sources'
+    | '/admin/symptoms'
+    | '/admin/users'
     | '/conditions/$conditionId'
     | '/first-aid/$slug'
+    | '/admin/'
     | '/first-aid/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -172,13 +271,23 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/results'
     | '/symptom-checker'
+    | '/admin/conditions'
+    | '/admin/first-aid'
+    | '/admin/questions'
+    | '/admin/red-flags'
+    | '/admin/releases'
+    | '/admin/sources'
+    | '/admin/symptoms'
+    | '/admin/users'
     | '/conditions/$conditionId'
     | '/first-aid/$slug'
+    | '/admin'
     | '/first-aid'
   id:
     | '__root__'
     | '/'
     | '/account'
+    | '/admin'
     | '/auth'
     | '/emergency'
     | '/first-aid'
@@ -188,14 +297,24 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/results'
     | '/symptom-checker'
+    | '/admin/conditions'
+    | '/admin/first-aid'
+    | '/admin/questions'
+    | '/admin/red-flags'
+    | '/admin/releases'
+    | '/admin/sources'
+    | '/admin/symptoms'
+    | '/admin/users'
     | '/conditions/$conditionId'
     | '/first-aid/$slug'
+    | '/admin/'
     | '/first-aid/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   EmergencyRoute: typeof EmergencyRoute
   FirstAidRoute: typeof FirstAidRouteWithChildren
@@ -222,6 +341,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -287,6 +413,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SymptomCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/conditions': {
+      id: '/admin/conditions'
+      path: '/conditions'
+      fullPath: '/admin/conditions'
+      preLoaderRoute: typeof AdminConditionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/first-aid': {
+      id: '/admin/first-aid'
+      path: '/first-aid'
+      fullPath: '/admin/first-aid'
+      preLoaderRoute: typeof AdminFirstAidRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/red-flags': {
+      id: '/admin/red-flags'
+      path: '/red-flags'
+      fullPath: '/admin/red-flags'
+      preLoaderRoute: typeof AdminRedFlagsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/releases': {
+      id: '/admin/releases'
+      path: '/releases'
+      fullPath: '/admin/releases'
+      preLoaderRoute: typeof AdminReleasesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sources': {
+      id: '/admin/sources'
+      path: '/sources'
+      fullPath: '/admin/sources'
+      preLoaderRoute: typeof AdminSourcesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/symptoms': {
+      id: '/admin/symptoms'
+      path: '/symptoms'
+      fullPath: '/admin/symptoms'
+      preLoaderRoute: typeof AdminSymptomsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/conditions/$conditionId': {
       id: '/conditions/$conditionId'
       path: '/conditions/$conditionId'
@@ -311,6 +500,32 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminConditionsRoute: typeof AdminConditionsRoute
+  AdminFirstAidRoute: typeof AdminFirstAidRoute
+  AdminQuestionsRoute: typeof AdminQuestionsRoute
+  AdminRedFlagsRoute: typeof AdminRedFlagsRoute
+  AdminReleasesRoute: typeof AdminReleasesRoute
+  AdminSourcesRoute: typeof AdminSourcesRoute
+  AdminSymptomsRoute: typeof AdminSymptomsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminConditionsRoute: AdminConditionsRoute,
+  AdminFirstAidRoute: AdminFirstAidRoute,
+  AdminQuestionsRoute: AdminQuestionsRoute,
+  AdminRedFlagsRoute: AdminRedFlagsRoute,
+  AdminReleasesRoute: AdminReleasesRoute,
+  AdminSourcesRoute: AdminSourcesRoute,
+  AdminSymptomsRoute: AdminSymptomsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface FirstAidRouteChildren {
   FirstAidSlugRoute: typeof FirstAidSlugRoute
   FirstAidIndexRoute: typeof FirstAidIndexRoute
@@ -328,6 +543,7 @@ const FirstAidRouteWithChildren = FirstAidRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   EmergencyRoute: EmergencyRoute,
   FirstAidRoute: FirstAidRouteWithChildren,
