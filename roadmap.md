@@ -2,11 +2,18 @@
 
 - [x] Phase 1: design system, shell, all pages, RTL
 - [x] Phase 2: Cloud schema + RLS + roles, auth (guest allowed), DB-driven engines, history/account, engine tests
-- [ ] Phase 3
+- [x] Phase 3 foundation
   - [x] Migration: roles, workflow, versions, audit, releases, sources, rate limit, emergency metadata
-  - [ ] Admin dashboard: home, symptoms, conditions, questions, red flags, first aid, sources, users, releases
-  - [x] AI symptom extraction (server, rate limit, confirm screen, fallback)
-  - [ ] i18n ar/en: switcher + dir done; page texts still Arabic-only
-  - [ ] Results explainability + traceability
-  - [ ] Tests + security check + report
-- [ ] Medical review of all content — blocked on medical reviewer
+  - [x] Admin dashboard: home, symptoms, conditions, questions, red flags, first aid, sources, users, releases
+  - [x] AI symptom extraction (server, rate limit, confirmation screen, fallback)
+  - [x] Core clinical i18n ar/en: checker, results, emergency, first aid, condition detail, badges and direction
+  - [x] Results explainability + release/ruleset/condition traceability
+  - [x] Governance / AI / i18n safety tests + CI build verification
+  - [x] Phase 3 technical report in PHASE3_REPORT.md
+- [ ] Phase 3 hardening
+  - [ ] First-aid section-body review/version/publish workflow
+  - [ ] Publication readiness guard for required medical sources
+  - [ ] Remaining Arabic-only admin/non-clinical strings
+  - [ ] Production release gate (no demo/unreviewed knowledge)
+- [ ] Phase 4: reviewed medical knowledge base and controlled content import
+- [ ] Medical review of all clinical content — blocked on authorized medical reviewer
