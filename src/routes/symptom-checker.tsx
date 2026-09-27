@@ -7,7 +7,10 @@ import { referenceQuery } from "@/lib/reference-data";
 import { DynamicQuestionEngine } from "@/engines/dynamic-question-engine";
 import { runSafetyPipeline } from "@/engines/pipeline";
 import { ENGINE_VERSION } from "@/engines/condition-matching-engine";
-import { mockExtractor, selectableCandidates } from "@/engines/symptom-extraction";
+import { extractWithFallback, mockExtractor, selectableCandidates, type ExtractionResult } from "@/engines/symptom-extraction";
+import { RealSymptomExtractionService } from "@/engines/real-extraction";
+import { extractSymptomsAI } from "@/lib/extract.functions";
+import { useI18n } from "@/i18n";
 import { appConfig } from "@/config/app";
 import { resultStore, guestId } from "@/lib/session-store";
 import { saveSymptomSession } from "@/lib/sessions.functions";
@@ -36,6 +39,8 @@ const emptyDetail: SymptomDetail = { onset: "", pattern: "", severity: "", trigg
 function Wizard() {
   const { data: ref } = useSuspenseQuery(referenceQuery);
   const save = useServerFn(saveSymptomSession);
+  const extractAI = useServerFn(extractSymptomsAI);
+  const { t } = useI18n();
   const nav = useNavigate();
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
@@ -44,7 +49,9 @@ function Wizard() {
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [description, setDescription] = useState("");
-  const [suggested, setSuggested] = useState<string[]>([]);
+  const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
+  const [extractionSelection, setExtractionSelection] = useState<string[]>([]);
+  const [extractionFailed, setExtractionFailed] = useState(false);
   const [details, setDetails] = useState<Record<string, SymptomDetail>>({});
   const [answers, setAnswers] = useState<AnswerMap>({});
 
@@ -94,8 +101,26 @@ function Wizard() {
     if (step === 0 && (!Number.isInteger(age) || age < 1 || age > 120 || !basic.sex)) return setError("يرجى إدخال العمر والجنس بشكل صحيح.");
     if (step === 1 && selected.length === 0) return setError("اختر عرضًا واحدًا على الأقل.");
     if (step === 2 && description.trim()) {
-      const c = selectableCandidates(await mockExtractor.extract(description, symptoms));
-      setSuggested(c.map((x) => x.symptomId).filter((id) => !selected.includes(id)));
+      setBusy(true);
+      setExtractionFailed(false);
+      const service = appConfig.symptomExtraction === "real"
+        ? new RealSymptomExtractionService(async (payload) =>
+            extractAI({ data: { ...payload, guestId: guestId() } }))
+        : mockExtractor;
+      const extracted = await extractWithFallback(service, description, symptoms);
+      setBusy(false);
+      if (!extracted) {
+        setExtraction(null);
+        setExtractionSelection([]);
+        setExtractionFailed(true);
+      } else {
+        setExtraction(extracted);
+        setExtractionSelection(
+          selectableCandidates(extracted)
+            .map((x) => x.symptomId)
+            .filter((id) => !selected.includes(id)),
+        );
+      }
     }
     if (step === 4 && DynamicQuestionEngine.missing(questions, answers).length) return setError("يرجى الإجابة عن جميع الأسئلة.");
     if (step < steps.length - 1) return setStep(step + 1);
@@ -137,12 +162,55 @@ function Wizard() {
         )}
         {step === 3 && (
           <>
-            {suggested.length > 0 && (
-              <div className="rounded-2xl bg-primary-soft/60 p-4">
-                <p className="mb-2 text-sm font-medium">قد يكون وصفك يتضمن هذه الأعراض — أضفها إن كانت صحيحة:</p>
-                <div className="flex flex-wrap gap-2">{suggested.map((id) => <SymptomChip key={id} label={name(id)} selected={selected.includes(id)} onToggle={() => toggle(id)} />)}</div>
+            {extractionFailed ? (
+              <div className="rounded-2xl bg-warning-soft p-4 text-sm text-warning">{t("extract.failed")}</div>
+            ) : null}
+            {extraction ? (
+              <div className="space-y-3 rounded-2xl bg-primary-soft/60 p-4">
+                <div>
+                  <p className="text-sm font-semibold">{t("extract.found")}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("extract.foundHint")}</p>
+                </div>
+                {selectableCandidates(extraction).length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {selectableCandidates(extraction).map((candidate) => (
+                      <SymptomChip
+                        key={candidate.symptomId}
+                        label={name(candidate.symptomId)}
+                        selected={extractionSelection.includes(candidate.symptomId)}
+                        onToggle={() =>
+                          setExtractionSelection((prev) =>
+                            prev.includes(candidate.symptomId)
+                              ? prev.filter((id) => id !== candidate.symptomId)
+                              : [...prev, candidate.symptomId],
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : <p className="text-sm text-muted-foreground">{t("extract.none")}</p>}
+                {extraction.candidates.some((x) => x.negated) ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t("extract.negated")} {extraction.candidates.filter((x) => x.negated).map((x) => name(x.symptomId)).filter(Boolean).join("، ")}
+                  </p>
+                ) : null}
+                {extraction.unresolvedTerms.length ? (
+                  <p className="text-xs text-muted-foreground">{t("extract.unresolved")} {extraction.unresolvedTerms.join("، ")}</p>
+                ) : null}
+                {extractionSelection.length ? (
+                  <button
+                    type="button"
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                    onClick={() => {
+                      setSelected((prev) => [...new Set([...prev, ...extractionSelection])]);
+                      setExtractionSelection([]);
+                    }}
+                  >
+                    {t("extract.confirm")}
+                  </button>
+                ) : null}
               </div>
-            )}
+            ) : null}
             {selected.map((id) => {
               const d = details[id] ?? emptyDetail;
               return (
