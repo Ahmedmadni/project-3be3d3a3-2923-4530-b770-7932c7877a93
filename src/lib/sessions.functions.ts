@@ -42,12 +42,20 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
       const { data: u } = await supabaseAdmin.auth.getUser(auth.slice(7));
       userId = u.user?.id ?? null;
     }
-    const { data: release } = await supabaseAdmin
-      .from("knowledge_releases")
-      .select("id,version")
-      .order("published_at", { ascending: false })
-      .limit(1)
+    const { data: modeSetting } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "content_mode")
       .maybeSingle();
+    const productionMode = modeSetting?.value === "production";
+
+    let releaseQuery = supabaseAdmin
+      .from("knowledge_releases")
+      .select("id,version,is_demo")
+      .order("published_at", { ascending: false })
+      .limit(1);
+    if (productionMode) releaseQuery = releaseQuery.eq("is_demo", false);
+    const { data: release } = await releaseQuery.maybeSingle();
 
     const conditionIds = data.results.map((r) => r.conditionId);
     const conditionVersions = new Map<string, number>();
