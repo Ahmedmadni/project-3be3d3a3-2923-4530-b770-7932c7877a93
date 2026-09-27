@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
+import { ConditionSymptomsEditor } from "@/components/admin/ConditionSymptomsEditor";
 export const Route = createFileRoute("/admin/conditions")({ component: Page });
 function Page() {
   return <><AdminEntityManager table="conditions" title="الحالات المحتملة" description="محتوى الحالات المستخدم في محرك المطابقة. لا تُنشر البيانات قبل المراجعة الطبية."
@@ -13,5 +14,5 @@ function Page() {
       {key:"care_level",label:"مستوى الرعاية",type:"select",options:[{value:"self_care",label:"رعاية ذاتية"},{value:"routine",label:"روتيني"},{value:"urgent",label:"عاجل"},{value:"emergency",label:"طوارئ"}]},
       {key:"when_to_seek_care_ar",label:"متى يُنصح بالتقييم الطبي",type:"textarea"},{key:"is_active",label:"نشط",type:"checkbox"},{key:"is_demo",label:"بيانات تجريبية",type:"checkbox"},
       {key:"translation_status",label:"حالة الترجمة",type:"select",options:[{value:"not_started",label:"لم تبدأ"},{value:"in_progress",label:"قيد الترجمة"},{value:"reviewed",label:"مراجعة"}]}
-    ]} /><ContentVersionsPanel entityType="conditions" /></>;
+    ]} /><ConditionSymptomsEditor /><ContentVersionsPanel entityType="conditions" /></>;
 }
