@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FirstAidCard, PageHeader, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
+import { localized, useI18n } from "@/i18n";
+import { arabicIncludes } from "@/lib/arabic";
+import { cn } from "@/lib/utils";
 
 const topicsQuery = queryOptions({
   queryKey: ["first-aid-topics"],
@@ -31,21 +34,40 @@ export const Route = createFileRoute("/first-aid/")({
 
 function FirstAid() {
   const { data: topics } = useSuspenseQuery(topicsQuery);
+  const { lang, dir, t } = useI18n();
   const [q, setQ] = useState("");
-  const list = topics.filter((t) => t.title_ar.includes(q.trim()));
+
+  const list = topics.filter((topic) => {
+    const label = localized(topic as unknown as Record<string, unknown>, "title", lang);
+    if (!label) return false;
+    const needle = q.trim();
+    if (!needle) return true;
+    return lang === "ar"
+      ? arabicIncludes(label, needle)
+      : label.toLowerCase().includes(needle.toLowerCase()) || topic.code.toLowerCase().includes(needle.toLowerCase());
+  });
+
   return (
     <div>
-      <PageHeader title="الإسعافات الأولية" subtitle="خطوات أولية واضحة حتى وصول المساعدة." />
+      <PageHeader title={t("firstAid.title")} subtitle={t("firstAid.subtitle")} />
       <EmergencyAlert className="mb-4" />
       <label className="relative mb-6 block">
-        <Search className="absolute inset-y-0 right-4 my-auto size-5 text-muted-foreground" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن الحالة..." className="w-full rounded-2xl border border-input bg-card py-3.5 pr-12 pl-4 text-sm outline-none focus:ring-2 focus:ring-ring" />
+        <Search className={cn("absolute inset-y-0 my-auto size-5 text-muted-foreground", dir === "rtl" ? "right-4" : "left-4")} />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t("firstAid.search")}
+          className={cn(
+            "w-full rounded-2xl border border-input bg-card py-3.5 text-sm outline-none focus:ring-2 focus:ring-ring",
+            dir === "rtl" ? "pr-12 pl-4" : "pl-12 pr-4",
+          )}
+        />
       </label>
       {list.length === 0 ? (
-        <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">لا توجد نتائج مطابقة.</p>
+        <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">{t("firstAid.noResults")}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((t) => <FirstAidCard key={t.id} topic={t} />)}
+          {list.map((topic) => <FirstAidCard key={topic.id} topic={topic} />)}
         </div>
       )}
     </div>
