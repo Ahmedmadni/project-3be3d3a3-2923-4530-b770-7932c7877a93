@@ -65,6 +65,13 @@ export const en: Dict = {
   "firstAid.action": "What should I do?",
   "emergency.callNow": "If there is immediate danger, call emergency medical services now.",
   "common.loadError": "Unable to load the data. Please try again.",
+  "compat.high": "High match",
+  "compat.medium": "Moderate match",
+  "compat.low": "Low match",
+  "care.emergency": "Emergency",
+  "care.urgent": "Urgent care",
+  "care.routine": "Medical review",
+  "care.self_care": "Self care",
 
   "admin.title": "Admin dashboard",
   "admin.denied": "You don't have access to the admin dashboard.",
