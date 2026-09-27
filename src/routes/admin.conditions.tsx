@@ -15,5 +15,5 @@ function Page() {
       {key:"care_level",label:"مستوى الرعاية",type:"select",options:[{value:"self_care",label:"رعاية ذاتية"},{value:"routine",label:"روتيني"},{value:"urgent",label:"عاجل"},{value:"emergency",label:"طوارئ"}]},
       {key:"when_to_seek_care_ar",label:"متى يُنصح بالتقييم الطبي",type:"textarea"},{key:"is_active",label:"نشط",type:"checkbox"},{key:"is_demo",label:"بيانات تجريبية",type:"checkbox"},
       {key:"translation_status",label:"حالة الترجمة",type:"select",options:[{value:"not_started",label:"لم تبدأ"},{value:"in_progress",label:"قيد الترجمة"},{value:"reviewed",label:"مراجعة"}]}
-    ]} /><ConditionSymptomsEditor /><SourceLinker entityTable="conditions" entityLabelField="name_ar" linkTable="condition_sources" entityForeignKey="condition_id" title="مصادر الحالات" /><ContentVersionsPanel entityType="conditions" /></>;
+    ]} /><ConditionSymptomsEditor /><SourceLinker entityTable="conditions" entityLabelField="name_ar" linkTable="condition_sources" entityForeignKey="condition_id" title="مصادر الحالات" /><SourceLinker entityTable="conditions" entityLabelField="name_ar" linkTable="condition_sources" entityForeignKey="condition_id" title="مصادر الحالات" /><ContentVersionsPanel entityType="conditions" /></>;
 }
