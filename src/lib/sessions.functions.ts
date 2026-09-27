@@ -88,5 +88,5 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
       condition_version: conditionVersions.get(r.conditionId) ?? null,
     }))) as never);
     await Promise.all(ops);
-    return { sessionId: sid, saved: userId ? "account" as const : "guest" as const };
+    return { sessionId: sid, saved: userId ? "account" as const : "guest" as const, knowledgeReleaseVersion: release?.version ?? null };
   });
