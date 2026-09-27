@@ -3,18 +3,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminAccess } from "@/hooks/use-admin-access";
 
 export function QuestionBuilder() {
   const qc = useQueryClient();
+  const access = useAdminAccess();
   const [questionId, setQuestionId] = useState("");
   const [optionValue, setOptionValue] = useState("");
   const [optionAr, setOptionAr] = useState("");
   const [optionEn, setOptionEn] = useState("");
-  const [triggerType, setTriggerType] = useState("symptom");
+  const [triggerType, setTriggerType] = useState("symptom_selected");
   const [symptomId, setSymptomId] = useState("");
   const [parentQuestionId, setParentQuestionId] = useState("");
   const [expectedValue, setExpectedValue] = useState("");
-  const [operator, setOperator] = useState("equals");
+  const [operator, setOperator] = useState("eq");
 
   const q = useQuery({
     queryKey: ["admin", "question-builder"],
@@ -58,17 +60,26 @@ export function QuestionBuilder() {
       const { error } = await supabase.from("question_rules").insert({
         question_id: questionId,
         trigger_type: triggerType,
-        symptom_id: triggerType === "symptom" ? symptomId || null : null,
-        parent_question_id: triggerType === "answer" ? parentQuestionId || null : null,
+        symptom_id: triggerType === "symptom_selected" ? symptomId || null : null,
+        parent_question_id: triggerType === "answer_equals" ? parentQuestionId || null : null,
         operator,
-        expected_value: triggerType === "answer" ? expectedValue || null : null,
+        expected_value: triggerType === "answer_equals" ? expectedValue || null : null,
         priority: rules.length,
-        is_active: true,
+        is_active: false,
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تمت إضافة القاعدة"); qc.invalidateQueries({ queryKey: ["admin", "question-builder"] }); },
+    onSuccess: () => { toast.success("تمت إضافة القاعدة كمسودة غير مفعلة"); qc.invalidateQueries({ queryKey: ["admin", "question-builder"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر الحفظ"),
+  });
+
+  const toggleRule = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("question_rules").update({ is_active: active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("تم تحديث حالة القاعدة"); qc.invalidateQueries({ queryKey: ["admin", "question-builder"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذر التحديث"),
   });
 
   const removeOption = useMutation({
@@ -112,20 +123,20 @@ export function QuestionBuilder() {
             <h4 className="font-semibold">قواعد الظهور</h4>
             <div className="mt-3 grid gap-2">
               <select className={cls} value={triggerType} onChange={(e) => setTriggerType(e.target.value)}>
-                <option value="symptom">إذا تم اختيار عرض</option><option value="answer">إذا كانت إجابة سؤال</option><option value="always">دائمًا</option>
+                <option value="symptom_selected">إذا تم اختيار عرض</option><option value="answer_equals">إذا كانت إجابة سؤال</option><option value="always">دائمًا</option>
               </select>
-              {triggerType === "symptom" ? (
+              {triggerType === "symptom_selected" ? (
                 <select className={cls} value={symptomId} onChange={(e) => setSymptomId(e.target.value)}>
                   <option value="">اختر العرض</option>{(q.data?.symptoms ?? []).map((s) => <option key={s.id} value={s.id}>{s.name_ar}</option>)}
                 </select>
               ) : null}
-              {triggerType === "answer" ? (
+              {triggerType === "answer_equals" ? (
                 <>
                   <select className={cls} value={parentQuestionId} onChange={(e) => setParentQuestionId(e.target.value)}>
                     <option value="">اختر السؤال السابق</option>{(q.data?.questions ?? []).filter((x) => x.id !== questionId).map((x) => <option key={x.id} value={x.id}>{x.question_ar}</option>)}
                   </select>
                   <div className="grid grid-cols-2 gap-2">
-                    <select className={cls} value={operator} onChange={(e) => setOperator(e.target.value)}><option value="equals">يساوي</option><option value="not_equals">لا يساوي</option></select>
+                    <select className={cls} value={operator} onChange={(e) => setOperator(e.target.value)}><option value="eq">يساوي</option><option value="neq">لا يساوي</option></select>
                     <input className={cls} placeholder="القيمة المتوقعة" value={expectedValue} onChange={(e) => setExpectedValue(e.target.value)} />
                   </div>
                 </>
@@ -136,10 +147,18 @@ export function QuestionBuilder() {
               {rules.map((r) => (
                 <div key={r.id} className="flex justify-between gap-3 py-2 text-xs">
                   <span>
-                    {r.trigger_type === "symptom" ? `إذا العرض = ${symptomName(r.symptom_id)}` :
-                     r.trigger_type === "answer" ? `إذا ${questionName(r.parent_question_id ?? "")} ${r.operator} ${r.expected_value ?? ""}` : "دائمًا"}
+                    {r.trigger_type === "symptom_selected" ? `إذا العرض = ${symptomName(r.symptom_id)}` :
+                     r.trigger_type === "answer_equals" ? `إذا ${questionName(r.parent_question_id ?? "")} ${r.operator} ${r.expected_value ?? ""}` : "دائمًا"}
+                    <b className={r.is_active ? "mr-2 text-primary" : "mr-2 text-warning"}>{r.is_active ? "مفعلة" : "بانتظار المراجعة"}</b>
                   </span>
-                  <button onClick={() => removeRule.mutate(r.id)} className="text-destructive"><Trash2 className="size-4" /></button>
+                  <span className="flex items-center gap-2">
+                    {access.roles.some((role) => ["medical_reviewer","admin","super_admin"].includes(role)) ? (
+                      <button type="button" onClick={() => toggleRule.mutate({ id: r.id, active: !r.is_active })} className="rounded-lg bg-background px-2 py-1 font-semibold text-primary ring-1 ring-border">
+                        {r.is_active ? "إيقاف" : "اعتماد وتفعيل"}
+                      </button>
+                    ) : null}
+                    {access.isAdmin ? <button onClick={() => removeRule.mutate(r.id)} className="text-destructive"><Trash2 className="size-4" /></button> : null}
+                  </span>
                 </div>
               ))}
             </div>
