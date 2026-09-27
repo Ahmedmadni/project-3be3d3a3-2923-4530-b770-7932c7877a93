@@ -7,7 +7,10 @@ import { referenceQuery } from "@/lib/reference-data";
 import { DynamicQuestionEngine } from "@/engines/dynamic-question-engine";
 import { runSafetyPipeline } from "@/engines/pipeline";
 import { ENGINE_VERSION } from "@/engines/condition-matching-engine";
-import { mockExtractor, selectableCandidates } from "@/engines/symptom-extraction";
+import { mockExtractor, selectableCandidates, extractWithFallback } from "@/engines/symptom-extraction";
+import { RealSymptomExtractionService } from "@/engines/real-extraction";
+import { extractSymptomsAI } from "@/lib/extract.functions";
+import { useI18n } from "@/i18n";
 import { appConfig } from "@/config/app";
 import { resultStore, guestId } from "@/lib/session-store";
 import { saveSymptomSession } from "@/lib/sessions.functions";
@@ -45,6 +48,12 @@ function Wizard() {
   const [search, setSearch] = useState("");
   const [description, setDescription] = useState("");
   const [suggested, setSuggested] = useState<string[]>([]);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [negated, setNegated] = useState<string[]>([]);
+  const [unresolved, setUnresolved] = useState<string[]>([]);
+  const [notice, setNotice] = useState("");
+  const extractAI = useServerFn(extractSymptomsAI);
+  const { t } = useI18n();
   const [details, setDetails] = useState<Record<string, SymptomDetail>>({});
   const [answers, setAnswers] = useState<AnswerMap>({});
 
@@ -94,8 +103,27 @@ function Wizard() {
     if (step === 0 && (!Number.isInteger(age) || age < 1 || age > 120 || !basic.sex)) return setError("يرجى إدخال العمر والجنس بشكل صحيح.");
     if (step === 1 && selected.length === 0) return setError("اختر عرضًا واحدًا على الأقل.");
     if (step === 2 && description.trim()) {
-      const c = selectableCandidates(await mockExtractor.extract(description, symptoms));
-      setSuggested(c.map((x) => x.symptomId).filter((id) => !selected.includes(id)));
+      setBusy(true);
+      setNotice("");
+      let rateLimited = false;
+      const svc = appConfig.symptomExtraction === "real"
+        ? new RealSymptomExtractionService(async (p) => {
+            const r = await extractAI({ data: { ...p, guestId: guestId() } });
+            if (!r.ok && r.error === "RATE_LIMITED") rateLimited = true;
+            return r.ok ? r : { ok: false, error: r.error };
+          })
+        : mockExtractor;
+      let res = await extractWithFallback(svc, description, symptoms);
+      if (!res && !rateLimited) res = await extractWithFallback(mockExtractor, description, symptoms);
+      setBusy(false);
+      if (!res) setNotice(rateLimited ? t("extract.rateLimited") : t("extract.failed"));
+      else {
+        const ids = selectableCandidates(res).map((x) => x.symptomId).filter((id) => !selected.includes(id));
+        setSuggested(ids);
+        setNegated(res.candidates.filter((c) => c.negated).map((c) => c.symptomId));
+        setUnresolved(res.unresolvedTerms);
+        if (!ids.length) setNotice(t("extract.none"));
+      }
     }
     if (step === 4 && DynamicQuestionEngine.missing(questions, answers).length) return setError("يرجى الإجابة عن جميع الأسئلة.");
     if (step < steps.length - 1) return setStep(step + 1);
@@ -137,10 +165,18 @@ function Wizard() {
         )}
         {step === 3 && (
           <>
+            {notice && <p className="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">{notice}</p>}
             {suggested.length > 0 && (
-              <div className="rounded-2xl bg-primary-soft/60 p-4">
-                <p className="mb-2 text-sm font-medium">قد يكون وصفك يتضمن هذه الأعراض — أضفها إن كانت صحيحة:</p>
-                <div className="flex flex-wrap gap-2">{suggested.map((id) => <SymptomChip key={id} label={name(id)} selected={selected.includes(id)} onToggle={() => toggle(id)} />)}</div>
+              <div className="space-y-3 rounded-2xl bg-primary-soft/60 p-4">
+                <p className="text-sm font-bold">{t("extract.found")}</p>
+                <p className="text-xs text-muted-foreground">{t("extract.foundHint")}</p>
+                <div className="flex flex-wrap gap-2">{suggested.map((id) => <SymptomChip key={id} label={name(id)} selected={picked.includes(id)} onToggle={() => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))} />)}</div>
+                {negated.length > 0 && <p className="text-xs text-muted-foreground">{t("extract.negated")} {negated.map(name).join("، ")}</p>}
+                {unresolved.length > 0 && <p className="text-xs text-muted-foreground">{t("extract.unresolved")} {unresolved.join("، ")}</p>}
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => { setSelected((s) => [...new Set([...s, ...picked])]); setSuggested([]); setPicked([]); setNotice(t("extract.confirmed")); }} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{t("extract.confirm")}</button>
+                  <button type="button" onClick={() => { setSuggested([]); setPicked([]); }} className="rounded-xl bg-card px-4 py-2 text-sm ring-1 ring-border">{t("extract.skip")}</button>
+                </div>
               </div>
             )}
             {selected.map((id) => {
