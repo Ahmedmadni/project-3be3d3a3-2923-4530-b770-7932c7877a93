@@ -11,14 +11,14 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-glass backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-5">
         <Link to="/" className="flex min-w-0 items-center gap-2.5">
           <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
             <Activity className="size-5" strokeWidth={2.2} />
           </span>
           <span className="min-w-0 leading-tight">
             <span className="block truncate font-display text-base font-extrabold">{t("app.name")}</span>
-            <span className="block truncate text-[11px] text-muted-foreground">{t("app.tagline")}</span>
+            <span className="hidden truncate text-[11px] text-muted-foreground sm:block">{t("app.tagline")}</span>
           </span>
         </Link>
 
