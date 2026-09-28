@@ -50,6 +50,14 @@
   - [x] Professional details moved into an optional expandable section
   - [x] Practitioner view uses existing reviewed data only: care level, category, linked symptom groups, sources, review status and version
   - [x] No extra diagnosis, treatment or dosing logic added to condition pages
+- [x] Simplified first-aid experience
+  - [x] First-aid browsing centered on clear topic selection and emergency access
+  - [x] Critical topics visibly flagged and linked to emergency mode
+  - [x] Public detail pages organized into five clear sections without adding unreviewed protocols
+  - [x] Practitioner metadata moved into an optional expandable section
+  - [x] Production visibility limited to active published topics and published sections
+  - [x] Development previews remain clearly marked as pending review
+  - [x] Automated tests cover public first-aid visibility rules
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
