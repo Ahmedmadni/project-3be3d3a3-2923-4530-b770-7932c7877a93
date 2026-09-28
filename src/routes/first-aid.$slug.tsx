@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { appConfig } from "@/config/app";
+import { allowedFirstAidSectionStatuses, isPublicFirstAidTopicVisible } from "@/lib/public-content";
 import { PageHeader, EmergencyAlert, ErrorState } from "@/components/health/cards";
 import { ProfessionalBadge } from "@/components/health/badges";
 import { localized, useI18n } from "@/i18n";
@@ -28,16 +29,13 @@ export const Route = createFileRoute("/first-aid/$slug")({
       .from("first_aid_topics")
       .select("*")
       .eq("code", params.slug)
-      .eq("is_active", true)
       .maybeSingle();
 
-    if (!topic || (appConfig.contentMode === "production" && topic.review_status !== "published")) {
+    if (!topic || !isPublicFirstAidTopicVisible(topic, appConfig.contentMode)) {
       throw notFound();
     }
 
-    const allowedSectionStatuses = appConfig.contentMode === "production"
-      ? ["published"]
-      : ["reviewed", "published"];
+    const allowedSectionStatuses = allowedFirstAidSectionStatuses(appConfig.contentMode);
 
     const [{ data: sections }, { data: sources }] = await Promise.all([
       supabase
