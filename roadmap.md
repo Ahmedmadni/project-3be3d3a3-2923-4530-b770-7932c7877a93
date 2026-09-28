@@ -58,6 +58,16 @@
   - [x] Production visibility limited to active published topics and published sections
   - [x] Development previews remain clearly marked as pending review
   - [x] Automated tests cover public first-aid visibility rules
+- [x] Streamlined symptom-check experience
+  - [x] Reduced public checker from five steps to four
+  - [x] Combined manual symptom selection and optional free-text extraction in one step
+  - [x] Removed symptom-detail fields that do not currently affect matching or safety decisions
+  - [x] Severity remains required because it can affect triage and emergency routing
+  - [x] Follow-up questions filtered to those that can affect active red-flag safety rules
+  - [x] Parent questions required to reveal a safety question are preserved automatically
+  - [x] Emergency red flags detected from symptom + severity can redirect before extra follow-up questions
+  - [x] Checks with no additional safety questions can proceed directly to results
+  - [x] Automated tests cover safety-relevant follow-up filtering
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
