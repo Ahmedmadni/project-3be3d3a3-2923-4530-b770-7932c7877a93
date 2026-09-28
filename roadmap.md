@@ -76,6 +76,15 @@
   - [x] Account page focuses on essential profile information only
   - [x] Account quick actions link directly to history, a new symptom check and first aid
   - [x] Automated tests cover history care-tone, emergency-state and symptom-preview helpers
+- [x] End-to-end UX and navigation polish
+  - [x] Mobile bottom navigation reduced to four primary destinations
+  - [x] Health library remains available from the home page and desktop navigation
+  - [x] Global emergency action localized and compacted for small screens
+  - [x] Header spacing and mobile page padding tightened
+  - [x] Safe-area spacing added for the mobile bottom navigation
+  - [x] Keyboard skip-to-content link added
+  - [x] Authentication and password-reset flows localized for Arabic and English
+  - [x] Automated tests cover the focused mobile navigation structure
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
