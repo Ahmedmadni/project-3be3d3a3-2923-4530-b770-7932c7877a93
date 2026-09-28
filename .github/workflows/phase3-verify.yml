@@ -1,12 +1,10 @@
-name: Phase 3 verification
-# Runs the full test suite and production build for every change that lands on main,
-# and for pull requests targeting main.
+name: Application verification
 
 on:
   push:
     branches:
       - main
-      - chatgpt/phase3-admin-ai-i18n
+      - phase4-readiness
   pull_request:
     branches:
       - main
