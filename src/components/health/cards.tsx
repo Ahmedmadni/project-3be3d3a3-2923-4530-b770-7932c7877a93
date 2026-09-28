@@ -38,62 +38,93 @@ export function ResultCard({ result, condition, symptoms }: { result: PossibleCo
     return localized(symptom as unknown as Record<string, unknown>, "name", lang) ?? t("common.notTranslated");
   };
   const conditionName = localized(condition as unknown as Record<string, unknown>, "name", lang) ?? t("common.notTranslated");
+  const conditionSummary = localized(condition as unknown as Record<string, unknown>, "summary", lang);
   const why = ResultExplanationService.explain(result, symptoms, lang);
   const seekCare = lang === "ar" ? condition.when_to_seek_care_ar : null;
 
   return (
-    <article className="glass rounded-3xl p-5 animate-rise">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-lg font-bold">{conditionName}</h3>
+    <article className="glass rounded-3xl p-5 animate-rise md:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-lg font-extrabold md:text-xl">{conditionName}</h3>
+          {condition.is_demo ? (
+            <span className="mt-2 inline-block rounded-full bg-warning-soft px-2.5 py-0.5 text-[11px] font-semibold text-warning">
+              {t("results.demo")}
+            </span>
+          ) : null}
+        </div>
         <CompatibilityBadge level={result.compatibilityLevel} />
       </div>
-      {condition.is_demo && (
-        <span className="mt-2 inline-block rounded-full bg-warning-soft px-2.5 py-0.5 text-[11px] font-semibold text-warning">
-          {t("results.demo")}
-        </span>
-      )}
-      <div className="mt-4">
-        <p className="mb-2 text-xs font-semibold text-muted-foreground">{t("results.matched")}</p>
+
+      {conditionSummary ? (
+        <div className="mt-4">
+          <p className="text-xs font-bold text-muted-foreground">{t("results.cardSummary")}</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">{conditionSummary}</p>
+        </div>
+      ) : null}
+
+      <div className="mt-5">
+        <p className="mb-2 text-xs font-bold text-muted-foreground">{t("results.matched")}</p>
         <div className="flex flex-wrap gap-1.5">
           {result.matchedSymptoms.map((s) => (
-            <span key={s} className="rounded-full bg-primary-soft px-3 py-1 text-xs text-primary">{name(s)}</span>
+            <span key={s} className="rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary">{name(s)}</span>
           ))}
         </div>
       </div>
-      <dl className="mt-4 space-y-3 text-sm">
-        <div>
-          <dt className="font-semibold">{t("results.why")}</dt>
-          {why.map((w) => <dd key={w} className="text-muted-foreground">{w}</dd>)}
+
+      {why.length ? (
+        <div className="mt-5">
+          <p className="text-sm font-bold">{t("results.why")}</p>
+          <ul className="mt-2 space-y-1.5 text-sm leading-6 text-muted-foreground">
+            {why.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        {result.contradictingSymptoms.length ? (
-          <div>
-            <dt className="font-semibold">{t("results.partial")}</dt>
-            <dd className="mt-1 flex flex-wrap gap-1.5">
+      ) : null}
+
+      {(seekCare || condition.specialty) ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {seekCare ? (
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+              <p className="text-xs font-bold text-muted-foreground">{t("results.conditionStep")}</p>
+              <p className="mt-1 text-sm leading-6">{seekCare}</p>
+            </div>
+          ) : null}
+          {condition.specialty ? (
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+              <p className="text-xs font-bold text-muted-foreground">{t("results.specialtyHint")}</p>
+              <p className="mt-1 text-sm font-semibold">{condition.specialty}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {result.contradictingSymptoms.length ? (
+        <details className="mt-5 rounded-2xl bg-card p-4 ring-1 ring-border">
+          <summary className="cursor-pointer text-sm font-semibold">{t("results.moreInfo")}</summary>
+          <div className="mt-3">
+            <p className="text-xs font-semibold text-muted-foreground">{t("results.partial")}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {result.contradictingSymptoms.map((s) => (
                 <span key={s} className="rounded-full bg-warning-soft px-3 py-1 text-xs text-warning">{name(s)}</span>
               ))}
-            </dd>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">{t("results.partialHint")}</p>
           </div>
-        ) : null}
-        {seekCare ? (
-          <div>
-            <dt className="font-semibold">{t("results.seekCare")}</dt>
-            <dd className="text-muted-foreground">{seekCare}</dd>
-          </div>
-        ) : null}
-        {condition.specialty ? (
-          <div>
-            <dt className="font-semibold">{t("results.specialty")}</dt>
-            <dd className="text-muted-foreground">{condition.specialty}</dd>
-          </div>
-        ) : null}
-      </dl>
+        </details>
+      ) : null}
+
       <Link
         to="/conditions/$conditionId"
         params={{ conditionId: condition.id }}
-        className="mt-5 block w-full rounded-xl bg-card py-2.5 text-center text-sm font-semibold text-primary ring-1 ring-border hover:bg-primary-soft"
+        className="mt-5 flex w-full items-center justify-between rounded-xl bg-card px-4 py-3 text-sm font-semibold text-primary ring-1 ring-border hover:bg-primary-soft"
       >
-        {t("results.details")}
+        {t("results.viewCondition")}
+        <ChevronLeft className={cn("size-4", lang === "en" && "rotate-180")} />
       </Link>
     </article>
   );
