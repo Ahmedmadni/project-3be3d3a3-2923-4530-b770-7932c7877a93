@@ -31,6 +31,12 @@
   - [x] Scenario-specific branching for chest pain, breathing difficulty, bleeding, choking, seizures, burns, head injury, poisoning, severe allergy and fainting
   - [x] Red-flag-driven scenario suggestion from symptom-check results, with manual override
   - [x] Focused public questions and practitioner documentation fields by emergency scenario
+- [x] Practical product UX
+  - [x] Home simplified into three primary paths: symptoms, emergency, health information
+  - [x] First aid and assessment history moved to secondary quick links
+  - [x] Professional mode separated from the public experience
+  - [x] Professional landing focused on practical daily tasks instead of research-style tools
+  - [x] Health library search by condition, specialty, category, or code
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
