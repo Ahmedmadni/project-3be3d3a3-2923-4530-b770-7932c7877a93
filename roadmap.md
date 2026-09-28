@@ -44,6 +44,12 @@
   - [x] Each result shows a simple overview, matching symptoms, why it appeared, care guidance and specialty
   - [x] Contradicting findings and knowledge-release details moved into optional disclosure areas
   - [x] Compatibility remains High / Medium / Low without percentages
+- [x] Simplified condition detail experience
+  - [x] Public view focused on overview, matched symptoms, care guidance and specialty
+  - [x] Back navigation adapts to results vs library entry
+  - [x] Professional details moved into an optional expandable section
+  - [x] Practitioner view uses existing reviewed data only: care level, category, linked symptom groups, sources, review status and version
+  - [x] No extra diagnosis, treatment or dosing logic added to condition pages
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
