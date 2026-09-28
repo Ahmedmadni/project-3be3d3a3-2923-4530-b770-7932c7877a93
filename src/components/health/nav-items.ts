@@ -8,3 +8,9 @@ export const navItems = [
   { to: "/library", labelKey: "nav.library" as TKey, icon: BookOpen },
   { to: "/account", labelKey: "nav.account" as TKey, icon: UserRound },
 ] as const;
+
+/**
+ * Mobile keeps the primary actions intentionally small.
+ * The health library remains a primary home-page entry and desktop nav item.
+ */
+export const mobileNavItems = navItems.filter((item) => item.to !== "/library");
