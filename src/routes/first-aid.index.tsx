@@ -1,17 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { appConfig } from "@/config/app";
 import { FirstAidCard, PageHeader, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
 import { localized, useI18n } from "@/i18n";
 import { arabicIncludes } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
 
 const topicsQuery = queryOptions({
-  queryKey: ["first-aid-topics"],
+  queryKey: ["first-aid-topics", appConfig.contentMode],
   queryFn: async () => {
-    const { data, error } = await supabase.from("first_aid_topics").select("*").eq("is_active", true).order("priority");
+    let query = supabase
+      .from("first_aid_topics")
+      .select("*")
+      .eq("is_active", true)
+      .order("priority");
+
+    if (appConfig.contentMode === "production") {
+      query = query.eq("review_status", "published");
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data;
   },
@@ -49,8 +60,15 @@ function FirstAid() {
 
   return (
     <div>
-      <PageHeader title={t("firstAid.title")} subtitle={t("firstAid.subtitle")} />
+      <PageHeader title={t("firstAid.title")} subtitle={t("firstAid.subtitle")}>
+        <div className="mt-3 flex items-start gap-2 rounded-2xl bg-primary-soft p-3 text-xs leading-5 text-primary">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          <span>{t("firstAid.publicHint")}</span>
+        </div>
+      </PageHeader>
+
       <EmergencyAlert className="mb-4" />
+
       <label className="relative mb-6 block">
         <Search className={cn("absolute inset-y-0 my-auto size-5 text-muted-foreground", dir === "rtl" ? "right-4" : "left-4")} />
         <input
@@ -63,7 +81,12 @@ function FirstAid() {
           )}
         />
       </label>
-      {list.length === 0 ? (
+
+      {topics.length === 0 ? (
+        <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">
+          {t(appConfig.contentMode === "production" ? "firstAid.noPublishedTopics" : "firstAid.noResults")}
+        </p>
+      ) : list.length === 0 ? (
         <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">{t("firstAid.noResults")}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
