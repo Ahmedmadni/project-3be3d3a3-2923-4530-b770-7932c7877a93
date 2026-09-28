@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { appConfig } from "@/config/app";
+import { isPublicFirstAidTopicVisible } from "@/lib/public-content";
 import { FirstAidCard, PageHeader, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
 import { localized, useI18n } from "@/i18n";
 import { arabicIncludes } from "@/lib/arabic";
@@ -12,19 +13,13 @@ import { cn } from "@/lib/utils";
 const topicsQuery = queryOptions({
   queryKey: ["first-aid-topics", appConfig.contentMode],
   queryFn: async () => {
-    let query = supabase
+    const { data, error } = await supabase
       .from("first_aid_topics")
       .select("*")
-      .eq("is_active", true)
       .order("priority");
 
-    if (appConfig.contentMode === "production") {
-      query = query.eq("review_status", "published");
-    }
-
-    const { data, error } = await query;
     if (error) throw error;
-    return data;
+    return data.filter((topic) => isPublicFirstAidTopicVisible(topic, appConfig.contentMode));
   },
 });
 
