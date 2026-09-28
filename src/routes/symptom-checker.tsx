@@ -27,6 +27,9 @@ import {
 } from "@/components/health/wizard-ui";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { ErrorState, LoadingState } from "@/components/health/cards";
+import { PageVisualHeader } from "@/components/health/PageVisualHeader";
+import checkerGuide from "@/assets/symptom-checker-guide.jpg";
+import checkerSticker from "@/assets/sticker-symptom-check.png";
 
 export const Route = createFileRoute("/symptom-checker")({
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
@@ -301,6 +304,7 @@ function Wizard() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
+      <PageVisualHeader title={t("checker.step.symptom")} subtitle={t("home.entry.symptoms.desc")} image={checkerGuide} imageAlt="استخدام الهاتف لتسجيل الأعراض الصحية" sticker={checkerSticker} />
       <ProgressStepper steps={steps} current={step} />
 
       <section key={step} className="glass space-y-4 rounded-3xl p-5 animate-rise md:p-7">

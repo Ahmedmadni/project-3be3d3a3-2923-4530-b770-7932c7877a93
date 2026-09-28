@@ -4,9 +4,12 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { referenceQuery } from "@/lib/reference-data";
 import { appConfig } from "@/config/app";
-import { PageHeader, LoadingState, ErrorState } from "@/components/health/cards";
+import { LoadingState, ErrorState } from "@/components/health/cards";
+import { PageVisualHeader } from "@/components/health/PageVisualHeader";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { localized, useI18n } from "@/i18n";
+import libraryGuide from "@/assets/health-library-guide.jpg";
+import librarySticker from "@/assets/sticker-health-library.png";
 
 export const Route = createFileRoute("/library")({
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
@@ -60,7 +63,7 @@ function Library() {
 
   return (
     <div>
-      <PageHeader title={t("library.title")} subtitle={t("library.subtitle")} />
+      <PageVisualHeader title={t("library.title")} subtitle={t("library.subtitle")} image={libraryGuide} imageAlt="مراجع ومصادر صحية موثوقة" sticker={librarySticker} />
 
       <label className="relative mb-5 block">
         <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground rtl:right-3 ltr:right-auto ltr:left-3" />

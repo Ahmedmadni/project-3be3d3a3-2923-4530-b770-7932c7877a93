@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   BookOpen,
   ChevronLeft,
-  HeartHandshake,
   History,
   ShieldCheck,
   Siren,
@@ -13,6 +12,11 @@ import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { ProfessionalBadge } from "@/components/health/badges";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
+import homeHero from "@/assets/health-home-hero.jpg";
+import symptomSticker from "@/assets/sticker-symptom-check.png";
+import firstAidSticker from "@/assets/sticker-first-aid.png";
+import librarySticker from "@/assets/sticker-health-library.png";
+import safeCareSticker from "@/assets/sticker-safe-care.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,6 +39,7 @@ const primaryEntries = [
     action: "home.entry.symptoms.action",
     iconClass: "bg-primary-soft text-primary",
     cardClass: "hover:ring-primary/30",
+    sticker: symptomSticker,
   },
   {
     to: "/emergency",
@@ -44,6 +49,7 @@ const primaryEntries = [
     action: "home.entry.emergency.action",
     iconClass: "bg-destructive-soft text-destructive",
     cardClass: "ring-destructive/20 hover:ring-destructive/40",
+    sticker: safeCareSticker,
   },
   {
     to: "/library",
@@ -53,6 +59,7 @@ const primaryEntries = [
     action: "home.entry.info.action",
     iconClass: "bg-accent/10 text-accent",
     cardClass: "hover:ring-accent/30",
+    sticker: librarySticker,
   },
 ] as const;
 
@@ -61,9 +68,11 @@ function Home() {
 
   return (
     <div className="space-y-6">
-      <section className="glass relative overflow-hidden rounded-[2rem] p-6 md:p-12 animate-rise">
-        <div className="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-primary/20 blur-3xl" />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+      <section className="glass relative min-h-[34rem] overflow-hidden rounded-[2rem] animate-rise sm:min-h-[31rem] md:min-h-[34rem]">
+        <img src={homeHero} alt="استخدام مؤشر صحي بهدوء في المنزل" width={1600} height={1104} fetchPriority="high" className="absolute inset-0 size-full object-cover object-left" />
+        <div className="absolute inset-0 bg-gradient-to-l from-background via-background/90 to-background/10" />
+        <div className="relative z-10 flex min-h-[34rem] max-w-3xl flex-col justify-center p-6 sm:min-h-[31rem] sm:p-9 md:min-h-[34rem] md:p-12">
+        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
           <ShieldCheck className="size-3.5" /> {t("home.safeInfo")}
         </span>
         <h1 className="mt-4 max-w-2xl text-3xl leading-tight font-extrabold text-balance md:text-5xl">
@@ -87,6 +96,7 @@ function Home() {
           </Link>
         </div>
         <MedicalDisclaimer className="mt-6 max-w-2xl" />
+        </div>
       </section>
 
       <section>
@@ -96,19 +106,20 @@ function Home() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          {primaryEntries.map(({ to, icon: Icon, title, desc, action, iconClass, cardClass }, index) => (
+          {primaryEntries.map(({ to, icon: Icon, title, desc, action, iconClass, cardClass, sticker }, index) => (
             <Link
               key={title}
               to={to}
               style={{ animationDelay: `${index * 70}ms` }}
               className={cn(
-                "glass group flex min-h-56 flex-col rounded-3xl p-5 ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-lg animate-rise md:p-6",
+                "glass group relative flex min-h-60 flex-col overflow-hidden rounded-3xl p-5 ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-lg animate-rise md:p-6",
                 cardClass,
               )}
             >
               <span className={cn("grid size-12 place-items-center rounded-2xl", iconClass)}>
                 <Icon className="size-6" strokeWidth={1.9} />
               </span>
+              <img src={sticker} alt="" width={816} height={816} loading="lazy" className="pointer-events-none absolute end-3 top-3 size-20 object-contain opacity-80 transition-transform group-hover:scale-105" />
               <h3 className="mt-5 text-lg font-extrabold">{t(title)}</h3>
               <p className="mt-2 flex-1 text-sm leading-7 text-muted-foreground">{t(desc)}</p>
               <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary">
@@ -124,9 +135,7 @@ function Home() {
         <h2 className="mb-3 text-base font-extrabold">{t("home.quickTitle")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <Link to="/first-aid" className="glass flex items-center gap-4 rounded-3xl p-4 transition hover:-translate-y-0.5">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-destructive-soft text-destructive">
-              <HeartHandshake className="size-5" />
-            </span>
+            <img src={firstAidSticker} alt="" width={816} height={816} loading="lazy" className="size-16 shrink-0 object-contain" />
             <div className="min-w-0">
               <h3 className="font-bold">{t("home.quickFirstAid")}</h3>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("home.quickFirstAidDesc")}</p>

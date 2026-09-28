@@ -5,10 +5,13 @@ import { Search, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { appConfig } from "@/config/app";
 import { isPublicFirstAidTopicVisible } from "@/lib/public-content";
-import { FirstAidCard, PageHeader, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
+import { FirstAidCard, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
+import { PageVisualHeader } from "@/components/health/PageVisualHeader";
 import { localized, useI18n } from "@/i18n";
 import { arabicIncludes } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
+import firstAidGuide from "@/assets/first-aid-guide.jpg";
+import firstAidSticker from "@/assets/sticker-first-aid.png";
 
 const topicsQuery = queryOptions({
   queryKey: ["first-aid-topics", appConfig.contentMode],
@@ -55,12 +58,12 @@ function FirstAid() {
 
   return (
     <div>
-      <PageHeader title={t("firstAid.title")} subtitle={t("firstAid.subtitle")}>
+      <PageVisualHeader title={t("firstAid.title")} subtitle={t("firstAid.subtitle")} image={firstAidGuide} imageAlt="حقيبة إسعافات أولية منظمة" sticker={firstAidSticker}>
         <div className="mt-3 flex items-start gap-2 rounded-2xl bg-primary-soft p-3 text-xs leading-5 text-primary">
           <ShieldCheck className="mt-0.5 size-4 shrink-0" />
           <span>{t("firstAid.publicHint")}</span>
         </div>
-      </PageHeader>
+      </PageVisualHeader>
 
       <EmergencyAlert className="mb-4" />
 
