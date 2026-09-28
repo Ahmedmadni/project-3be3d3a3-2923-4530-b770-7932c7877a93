@@ -4,7 +4,9 @@ import {
   EMPTY_PUBLIC_EMERGENCY_ANSWERS,
   buildProfessionalHandover,
   effectiveEmergencyRole,
+  getEmergencyScenario,
   publicEmergencyAttentionItems,
+  scenarioFromRedFlags,
 } from "./emergency-flow";
 
 describe("emergency role flow", () => {
@@ -44,5 +46,26 @@ describe("emergency role flow", () => {
 
   it("does not add empty professional fields", () => {
     expect(buildProfessionalHandover(EMPTY_PROFESSIONAL_EMERGENCY_ASSESSMENT)).toBe("Emergency handover");
+  });
+});
+
+
+describe("emergency scenario routing", () => {
+  it("maps red-flag codes to a practical emergency scenario", () => {
+    expect(scenarioFromRedFlags([{ code: "severe_chest_pain" }])).toBe("chest_pain");
+    expect(scenarioFromRedFlags([{ code: "severe_dyspnea" }])).toBe("breathing");
+    expect(scenarioFromRedFlags([{ code: "loss_of_consciousness" }])).toBe("fainting");
+    expect(scenarioFromRedFlags([{ code: "major_bleeding" }])).toBe("bleeding");
+  });
+
+  it("leaves unknown red flags unclassified so the user can choose", () => {
+    expect(scenarioFromRedFlags([{ code: "unexpected_flag" }])).toBeNull();
+  });
+
+  it("keeps public and practitioner question sets separate", () => {
+    const choking = getEmergencyScenario("choking");
+    expect(choking?.publicQuestionIds).toContain("can_speak");
+    expect(choking?.practitionerQuestionIds).toContain("obstruction_assessment");
+    expect(choking?.publicQuestionIds).not.toContain("obstruction_assessment");
   });
 });

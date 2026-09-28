@@ -1,29 +1,43 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Activity,
+  Brain,
   CheckCircle2,
+  CircleAlert,
   ClipboardList,
   Copy,
+  Droplets,
+  Flame,
+  FlaskConical,
   HeartHandshake,
+  HeartPulse,
   HelpCircle,
   Phone,
   ShieldAlert,
+  Sparkles,
   Siren,
   Stethoscope,
   UserRound,
+  UserX,
+  Wind,
 } from "lucide-react";
 import { referenceQuery } from "@/lib/reference-data";
 import { selectEmergencyContacts } from "@/engines/emergency-contacts";
 import { appConfig } from "@/config/app";
+import { resultStore } from "@/lib/session-store";
 import { localized, useI18n } from "@/i18n";
 import {
   EMPTY_PROFESSIONAL_EMERGENCY_ASSESSMENT,
   EMPTY_PUBLIC_EMERGENCY_ANSWERS,
   buildProfessionalHandover,
   effectiveEmergencyRole,
+  getEmergencyScenario,
   publicEmergencyAttentionItems,
+  scenarioFromRedFlags,
   type EmergencyAnswer,
+  type EmergencyScenarioId,
   type EmergencyUserRole,
   type ProfessionalEmergencyAssessment,
   type PublicEmergencyAnswers,
@@ -53,10 +67,31 @@ function Emergency() {
   const [publicAnswers, setPublicAnswers] = useState<PublicEmergencyAnswers>(EMPTY_PUBLIC_EMERGENCY_ANSWERS);
   const [professional, setProfessional] = useState<ProfessionalEmergencyAssessment>(EMPTY_PROFESSIONAL_EMERGENCY_ASSESSMENT);
   const [copied, setCopied] = useState(false);
+  const [scenario, setScenario] = useState<EmergencyScenarioId | null>(null);
+  const [autoScenario, setAutoScenario] = useState(false);
+  const [scenarioAnswers, setScenarioAnswers] = useState<Record<string, EmergencyAnswer>>({});
+  const [professionalFocused, setProfessionalFocused] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const inferred = scenarioFromRedFlags(resultStore.load()?.triage.flags ?? []);
+    if (inferred) {
+      setScenario(inferred);
+      setAutoScenario(true);
+    }
+  }, []);
 
   const effectiveRole = effectiveEmergencyRole(role);
   const attentionItems = useMemo(() => publicEmergencyAttentionItems(publicAnswers), [publicAnswers]);
-  const handover = useMemo(() => buildProfessionalHandover(professional), [professional]);
+  const activeScenario = getEmergencyScenario(scenario);
+  const handover = useMemo(() => {
+    const base = buildProfessionalHandover(professional);
+    if (!activeScenario) return base;
+    const focused = activeScenario.practitionerQuestionIds
+      .map((id) => [id, professionalFocused[id]?.trim()] as const)
+      .filter(([, value]) => value)
+      .map(([id, value]) => `${t(`emergency.p.${id}` as never)}: ${value}`);
+    return focused.length ? [base, "", ...focused].join("\n") : base;
+  }, [professional, professionalFocused, activeScenario, t]);
 
   const contactName = (contact: (typeof others)[number]) =>
     localized(contact as unknown as Record<string, unknown>, "name", lang) ?? contact.name_ar;
@@ -141,12 +176,28 @@ function Emergency() {
         </div>
       </section>
 
+      {effectiveRole ? (
+        <EmergencyScenarioSelector
+          scenario={scenario}
+          autoScenario={autoScenario}
+          onSelect={(next) => {
+            setScenario(next);
+            setAutoScenario(false);
+            setScenarioAnswers({});
+            setProfessionalFocused({});
+          }}
+        />
+      ) : null}
+
       {effectiveRole === "public" ? (
         <PublicEmergencyPath
           answers={publicAnswers}
           onAnswer={setPublicAnswer}
           attentionItems={attentionItems}
           ambulance={ambulance}
+          scenario={scenario}
+          scenarioAnswers={scenarioAnswers}
+          onScenarioAnswer={(id, value) => setScenarioAnswers((prev) => ({ ...prev, [id]: value }))}
         />
       ) : null}
 
@@ -158,9 +209,63 @@ function Emergency() {
           copied={copied}
           onCopy={copyHandover}
           ambulance={ambulance}
+          scenario={scenario}
+          focusedAnswers={professionalFocused}
+          onFocusedAnswer={(id, value) => setProfessionalFocused((prev) => ({ ...prev, [id]: value }))}
         />
       ) : null}
     </div>
+  );
+}
+
+const scenarioOptions: { id: EmergencyScenarioId; icon: typeof Siren }[] = [
+  { id: "chest_pain", icon: HeartPulse },
+  { id: "breathing", icon: Wind },
+  { id: "bleeding", icon: Droplets },
+  { id: "choking", icon: CircleAlert },
+  { id: "seizure", icon: Activity },
+  { id: "burns", icon: Flame },
+  { id: "head_injury", icon: Brain },
+  { id: "poisoning", icon: FlaskConical },
+  { id: "allergy", icon: Sparkles },
+  { id: "fainting", icon: UserX },
+  { id: "other", icon: HelpCircle },
+];
+
+function EmergencyScenarioSelector({
+  scenario,
+  autoScenario,
+  onSelect,
+}: {
+  scenario: EmergencyScenarioId | null;
+  autoScenario: boolean;
+  onSelect: (scenario: EmergencyScenarioId) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <section className="glass rounded-[2rem] p-5 md:p-7">
+      <h2 className="text-xl font-extrabold">{t("emergency.scenarioTitle")}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{t("emergency.scenarioHint")}</p>
+      {autoScenario && scenario ? (
+        <p className="mt-3 rounded-xl bg-primary-soft p-3 text-xs font-medium text-primary">{t("emergency.scenarioAuto")}</p>
+      ) : null}
+      <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {scenarioOptions.map(({ id, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onSelect(id)}
+            aria-pressed={scenario === id}
+            className={scenario === id
+              ? "flex items-center gap-3 rounded-2xl bg-primary-soft p-4 text-start ring-2 ring-primary"
+              : "flex items-center gap-3 rounded-2xl bg-card p-4 text-start ring-1 ring-border transition hover:ring-primary/40"}
+          >
+            <Icon className="size-5 shrink-0 text-primary" />
+            <span className="text-sm font-bold">{t(`emergency.scenario.${id}` as never)}</span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -197,13 +302,20 @@ function PublicEmergencyPath({
   onAnswer,
   attentionItems,
   ambulance,
+  scenario,
+  scenarioAnswers,
+  onScenarioAnswer,
 }: {
   answers: PublicEmergencyAnswers;
   onAnswer: (key: keyof PublicEmergencyAnswers, value: EmergencyAnswer) => void;
   attentionItems: string[];
   ambulance: string;
+  scenario: EmergencyScenarioId | null;
+  scenarioAnswers: Record<string, EmergencyAnswer>;
+  onScenarioAnswer: (id: string, value: EmergencyAnswer) => void;
 }) {
   const { t } = useI18n();
+  const activeScenario = getEmergencyScenario(scenario);
   const questions: { key: keyof PublicEmergencyAnswers; label: string }[] = [
     { key: "conscious", label: t("emergency.qConscious") },
     { key: "breathingNormally", label: t("emergency.qBreathing") },
@@ -230,6 +342,24 @@ function PublicEmergencyPath({
           </div>
         ))}
       </div>
+
+      {activeScenario?.publicQuestionIds.length ? (
+        <div className="mt-6">
+          <h3 className="text-sm font-extrabold">{t("emergency.scenarioQuestions")}</h3>
+          <div className="mt-3 space-y-3">
+            {activeScenario.publicQuestionIds.map((id) => (
+              <div key={id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                <p className="text-sm font-bold">{t(`emergency.q.${id}` as never)}</p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <AnswerButton selected={scenarioAnswers[id] === "yes"} onClick={() => onScenarioAnswer(id, "yes")}>{t("emergency.yes")}</AnswerButton>
+                  <AnswerButton selected={scenarioAnswers[id] === "no"} onClick={() => onScenarioAnswer(id, "no")}>{t("emergency.no")}</AnswerButton>
+                  <AnswerButton selected={scenarioAnswers[id] === "unknown"} onClick={() => onScenarioAnswer(id, "unknown")}>{t("emergency.unknown")}</AnswerButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {attentionItems.length ? (
         <div className="mt-5 rounded-2xl bg-warning-soft p-4">
@@ -267,6 +397,9 @@ function ProfessionalEmergencyPath({
   copied,
   onCopy,
   ambulance,
+  scenario,
+  focusedAnswers,
+  onFocusedAnswer,
 }: {
   assessment: ProfessionalEmergencyAssessment;
   setField: <K extends keyof ProfessionalEmergencyAssessment>(key: K, value: ProfessionalEmergencyAssessment[K]) => void;
@@ -274,8 +407,12 @@ function ProfessionalEmergencyPath({
   copied: boolean;
   onCopy: () => void;
   ambulance: string;
+  scenario: EmergencyScenarioId | null;
+  focusedAnswers: Record<string, string>;
+  onFocusedAnswer: (id: string, value: string) => void;
 }) {
   const { t } = useI18n();
+  const activeScenario = getEmergencyScenario(scenario);
   const yesNoUnknown = (key: "airwayConcern" | "breathingConcern" | "circulationConcern", label: string) => (
     <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
       <p className="text-sm font-bold">{label}</p>
@@ -331,6 +468,24 @@ function ProfessionalEmergencyPath({
         <Field label={t("emergency.relevantHistory")}><textarea rows={3} className={inputClass} value={assessment.relevantHistory} onChange={(e) => setField("relevantHistory", e.target.value)} /></Field>
         <Field label={t("emergency.notes")}><textarea rows={3} className={inputClass} value={assessment.notes} onChange={(e) => setField("notes", e.target.value)} /></Field>
       </div>
+
+      {activeScenario?.practitionerQuestionIds.length ? (
+        <div className="mt-6">
+          <h3 className="text-sm font-extrabold uppercase tracking-wide text-muted-foreground">{t("emergency.profFocused")}</h3>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {activeScenario.practitionerQuestionIds.map((id) => (
+              <Field key={id} label={t(`emergency.p.${id}` as never)}>
+                <textarea
+                  rows={2}
+                  className={inputClass}
+                  value={focusedAnswers[id] ?? ""}
+                  onChange={(e) => onFocusedAnswer(id, e.target.value)}
+                />
+              </Field>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6 rounded-2xl bg-card p-4 ring-1 ring-border">
         <h3 className="font-bold">{t("emergency.handoverTitle")}</h3>

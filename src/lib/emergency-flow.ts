@@ -1,5 +1,56 @@
 export type EmergencyUserRole = "public" | "practitioner" | "unsure";
 export type EmergencyAnswer = "yes" | "no" | "unknown" | "";
+export type EmergencyScenarioId =
+  | "chest_pain"
+  | "breathing"
+  | "bleeding"
+  | "choking"
+  | "seizure"
+  | "burns"
+  | "head_injury"
+  | "poisoning"
+  | "allergy"
+  | "fainting"
+  | "other";
+
+export interface EmergencyScenario {
+  id: EmergencyScenarioId;
+  publicQuestionIds: string[];
+  practitionerQuestionIds: string[];
+}
+
+export const EMERGENCY_SCENARIOS: EmergencyScenario[] = [
+  { id: "chest_pain", publicQuestionIds: ["pain_now", "pain_spread", "sweating_nausea"], practitionerQuestionIds: ["onset_context", "character_radiation", "associated_findings"] },
+  { id: "breathing", publicQuestionIds: ["breath_at_rest", "cannot_speak_full_sentence", "blue_lips"], practitionerQuestionIds: ["onset_context", "respiratory_findings", "relevant_history"] },
+  { id: "bleeding", publicQuestionIds: ["bleeding_now", "heavy_flow", "large_wound"], practitionerQuestionIds: ["bleeding_site", "estimated_loss", "bleeding_status"] },
+  { id: "choking", publicQuestionIds: ["can_speak", "can_cough", "became_unresponsive"], practitionerQuestionIds: ["obstruction_assessment", "witnessed_object", "current_airway_findings"] },
+  { id: "seizure", publicQuestionIds: ["seizure_ongoing", "back_to_usual", "injury_during_event"], practitionerQuestionIds: ["event_duration", "recurrent_events", "post_event_state"] },
+  { id: "burns", publicQuestionIds: ["face_neck_burn", "chemical_or_electrical", "breathing_problem"], practitionerQuestionIds: ["burn_mechanism", "body_regions", "estimated_extent"] },
+  { id: "head_injury", publicQuestionIds: ["lost_consciousness", "repeated_vomiting", "speech_movement_problem"], practitionerQuestionIds: ["injury_mechanism", "loc_details", "neuro_findings"] },
+  { id: "poisoning", publicQuestionIds: ["known_substance", "exposure_route", "symptoms_now"], practitionerQuestionIds: ["agent", "route_amount", "exposure_time"] },
+  { id: "allergy", publicQuestionIds: ["lip_tongue_swelling", "breathing_problem", "faint_dizzy"], practitionerQuestionIds: ["suspected_trigger", "airway_skin_findings", "circulation_findings"] },
+  { id: "fainting", publicQuestionIds: ["awake_again", "injury_after_fall", "chest_pain_palpitations"], practitionerQuestionIds: ["event_duration", "prodrome_recovery", "relevant_history"] },
+  { id: "other", publicQuestionIds: [], practitionerQuestionIds: ["focused_observations"] },
+];
+
+export function getEmergencyScenario(id: EmergencyScenarioId | null): EmergencyScenario | null {
+  return id ? EMERGENCY_SCENARIOS.find((scenario) => scenario.id === id) ?? null : null;
+}
+
+export function scenarioFromRedFlags(flags: { code: string; title?: string }[]): EmergencyScenarioId | null {
+  const haystack = flags.map((flag) => `${flag.code} ${flag.title ?? ""}`.toLowerCase()).join(" ");
+  if (/chest|صدر/.test(haystack)) return "chest_pain";
+  if (/dysp|breath|تنفس/.test(haystack)) return "breathing";
+  if (/bleed|نزف|نزيف/.test(haystack)) return "bleeding";
+  if (/chok|اختناق/.test(haystack)) return "choking";
+  if (/seiz|تشنج/.test(haystack)) return "seizure";
+  if (/burn|حرق/.test(haystack)) return "burns";
+  if (/head|رأس/.test(haystack)) return "head_injury";
+  if (/poison|سم/.test(haystack)) return "poisoning";
+  if (/allerg|anaphyl|حساس/.test(haystack)) return "allergy";
+  if (/faint|conscious|وعي|إغم/.test(haystack)) return "fainting";
+  return null;
+}
 
 export interface PublicEmergencyAnswers {
   conscious: EmergencyAnswer;
