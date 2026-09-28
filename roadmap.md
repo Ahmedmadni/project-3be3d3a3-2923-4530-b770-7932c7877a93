@@ -37,6 +37,13 @@
   - [x] Professional mode separated from the public experience
   - [x] Professional landing focused on practical daily tasks instead of research-style tools
   - [x] Health library search by condition, specialty, category, or code
+- [x] Simplified result experience
+  - [x] Results page centered on the next care step instead of technical metadata
+  - [x] Emergency results keep a direct emergency-mode action
+  - [x] Possible conditions displayed in a single readable flow
+  - [x] Each result shows a simple overview, matching symptoms, why it appeared, care guidance and specialty
+  - [x] Contradicting findings and knowledge-release details moved into optional disclosure areas
+  - [x] Compatibility remains High / Medium / Low without percentages
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
