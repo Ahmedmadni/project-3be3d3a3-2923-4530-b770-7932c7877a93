@@ -21,6 +21,13 @@
 - [ ] Phase 3 polish
   - [ ] Remaining Arabic-only admin/non-clinical strings
   - [ ] Final runtime smoke test against the connected Supabase project after migrations are applied
+- [x] Practical emergency experience
+  - [x] Emergency call-to-action always appears before app questions
+  - [x] Ask whether the user is a healthcare practitioner after the emergency alert
+  - [x] Simple public pathway with observable yes/no/unknown questions
+  - [x] Practitioner pathway for primary assessment, available vital signs and focused history
+  - [x] Factual handover summary generated only from entered data
+  - [x] No diagnosis, treatment or medication-dose inference in the emergency pathway
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
