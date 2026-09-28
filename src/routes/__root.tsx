@@ -14,7 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppHeader } from "@/components/health/AppHeader";
 import { MobileBottomNav } from "@/components/health/MobileBottomNav";
 import { appConfig } from "@/config/app";
-import { I18nProvider } from "@/i18n";
+import { I18nProvider, useI18n } from "@/i18n";
 
 function NotFoundComponent() {
   return (
@@ -91,16 +91,33 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AppChrome() {
+  const { t } = useI18n();
+
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="fixed start-4 top-2 z-50 -translate-y-20 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition-transform focus:translate-y-0"
+      >
+        {t("a11y.skipToContent")}
+      </a>
+      <AppHeader />
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 pt-5 pb-32 sm:px-5 sm:pt-6 md:pb-16">
+        <Outlet />
+      </main>
+      <MobileBottomNav />
+    </>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <AppHeader />
-        <main className="mx-auto w-full max-w-6xl px-5 pt-6 pb-32 md:pb-16">
-          <Outlet />
-        </main>
-        <MobileBottomNav />
+        <AppChrome />
       </I18nProvider>
     </QueryClientProvider>
   );
