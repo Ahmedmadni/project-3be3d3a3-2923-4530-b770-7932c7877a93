@@ -16,8 +16,17 @@
   - [x] Structural publication guards for conditions, red flags, questions and first-aid topics
   - [x] Production knowledge-release gate
   - [x] Production sessions exclude demo knowledge releases
+  - [x] Medical-content readiness indicators in the admin dashboard
+  - [x] Governance safety tests for demo blocking, separation of duties, published-content versioning, production visibility and role self-edit prevention
 - [ ] Phase 3 polish
   - [ ] Remaining Arabic-only admin/non-clinical strings
   - [ ] Final runtime smoke test against the connected Supabase project after migrations are applied
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
+  - [x] Controlled import bundle schema and validator
+  - [x] Mandatory source references for every imported clinical item
+  - [x] Duplicate/unknown source and item-code validation
+  - [x] Imported knowledge forced into inactive draft state; import never implies medical review or publication
+  - [ ] Admin import preview/review screen
+  - [ ] Transactional database import service with audit trail
+  - [ ] First reviewed medical knowledge release
 - [ ] Medical review of all clinical content — blocked on authorized medical reviewer
