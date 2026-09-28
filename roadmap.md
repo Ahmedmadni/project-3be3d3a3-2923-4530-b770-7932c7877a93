@@ -28,6 +28,9 @@
   - [x] Practitioner pathway for primary assessment, available vital signs and focused history
   - [x] Factual handover summary generated only from entered data
   - [x] No diagnosis, treatment or medication-dose inference in the emergency pathway
+  - [x] Scenario-specific branching for chest pain, breathing difficulty, bleeding, choking, seizures, burns, head injury, poisoning, severe allergy and fainting
+  - [x] Red-flag-driven scenario suggestion from symptom-check results, with manual override
+  - [x] Focused public questions and practitioner documentation fields by emergency scenario
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
