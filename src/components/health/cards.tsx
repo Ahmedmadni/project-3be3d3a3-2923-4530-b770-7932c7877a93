@@ -12,13 +12,29 @@ export function FirstAidCard({ topic }: { topic: FirstAidTopic }) {
   const Icon = icons[(topic.icon ?? "Cross") as keyof typeof icons] ?? icons.Cross;
   const title = localized(topic as unknown as Record<string, unknown>, "title", lang) ?? t("common.notTranslated");
   const summary = localized(topic as unknown as Record<string, unknown>, "summary", lang);
+  const unpublished = appConfig.contentMode === "development" && topic.review_status !== "published";
+
   return (
     <div className="glass flex flex-col rounded-3xl p-5 transition-transform hover:-translate-y-0.5">
-      <span className="grid size-12 place-items-center rounded-2xl bg-destructive-soft text-destructive">
-        <Icon className="size-6" strokeWidth={1.9} />
-      </span>
+      <div className="flex items-start justify-between gap-3">
+        <span className="grid size-12 place-items-center rounded-2xl bg-destructive-soft text-destructive">
+          <Icon className="size-6" strokeWidth={1.9} />
+        </span>
+        <div className="flex flex-col items-end gap-1.5">
+          {topic.is_critical ? (
+            <span className="rounded-full bg-destructive-soft px-2.5 py-1 text-[11px] font-semibold text-destructive">
+              {t("firstAid.critical")}
+            </span>
+          ) : null}
+          {unpublished ? (
+            <span className="rounded-full bg-warning-soft px-2.5 py-1 text-[11px] font-semibold text-warning">
+              {t("firstAid.pendingReview")}
+            </span>
+          ) : null}
+        </div>
+      </div>
       <h3 className="mt-4 text-base font-bold">{title}</h3>
-      <p className="mt-1 flex-1 text-sm text-muted-foreground">{summary ?? t("common.notTranslated")}</p>
+      <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{summary ?? t("common.notTranslated")}</p>
       <Link
         to="/first-aid/$slug"
         params={{ slug: topic.code }}
