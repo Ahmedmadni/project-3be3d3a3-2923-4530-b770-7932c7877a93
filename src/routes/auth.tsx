@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/health/cards";
 import { Field, inputCls } from "@/components/health/wizard-ui";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -13,17 +14,18 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "سجّل الدخول أو أنشئ حسابًا لحفظ فحوصاتك." },
       { property: "og:title", content: "تسجيل الدخول — مؤشر صحي" },
       { property: "og:description", content: "حساب اختياري لحفظ سجل الفحوصات." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: AuthPage,
 });
 
 type Mode = "signin" | "signup" | "forgot";
-const schema = z.object({ email: z.string().trim().email("بريد إلكتروني غير صحيح"), password: z.string().min(8, "كلمة المرور 8 أحرف على الأقل") });
 
 function AuthPage() {
   const { redirect } = Route.useSearch();
   const nav = useNavigate();
+  const { t } = useI18n();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,50 +33,154 @@ function AuthPage() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const safeRedirect = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/account";
+  const safeRedirect =
+    redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+      ? redirect
+      : "/account";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setMsg(null);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMsg(null);
+
+    const validEmail = z.string().trim().email().safeParse(email.trim());
+    if (!validEmail.success) {
+      setMsg({ ok: false, text: t("auth.invalidEmail") });
+      return;
+    }
+
     if (mode === "forgot") {
-      const r = z.string().email().safeParse(email.trim());
-      if (!r.success) return setMsg({ ok: false, text: "بريد إلكتروني غير صحيح" });
       setBusy(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       setBusy(false);
-      return setMsg(error ? { ok: false, text: "تعذر الإرسال، حاول لاحقًا." } : { ok: true, text: "إذا كان البريد مسجلًا فستصلك رسالة لاستعادة كلمة المرور." });
+      setMsg(
+        error
+          ? { ok: false, text: t("auth.sendFailed") }
+          : { ok: true, text: t("auth.resetSent") },
+      );
+      return;
     }
-    const p = schema.safeParse({ email, password });
-    if (!p.success) return setMsg({ ok: false, text: p.error.issues[0]?.message ?? "بيانات غير صحيحة" });
+
+    if (password.length < 8) {
+      setMsg({ ok: false, text: t("auth.passwordMin") });
+      return;
+    }
+
     setBusy(true);
+
     if (mode === "signup") {
-      const { data, error } = await supabase.auth.signUp({ email: p.data.email, password: p.data.password, options: { emailRedirectTo: window.location.origin, data: { display_name: name.trim() || undefined } } });
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { display_name: name.trim() || undefined },
+        },
+      });
       setBusy(false);
-      if (error) return setMsg({ ok: false, text: error.message });
-      if (!data.session) return setMsg({ ok: true, text: "تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيده." });
+
+      if (error) {
+        setMsg({ ok: false, text: error.message });
+        return;
+      }
+      if (!data.session) {
+        setMsg({ ok: true, text: t("auth.signupConfirm") });
+        return;
+      }
     } else {
-      const { error } = await supabase.auth.signInWithPassword(p.data);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
       setBusy(false);
-      if (error) return setMsg({ ok: false, text: "البريد أو كلمة المرور غير صحيحة." });
+
+      if (error) {
+        setMsg({ ok: false, text: t("auth.invalidCredentials") });
+        return;
+      }
     }
+
     nav({ to: safeRedirect });
   };
 
-  const titles: Record<Mode, string> = { signin: "تسجيل الدخول", signup: "إنشاء حساب", forgot: "استعادة كلمة المرور" };
+  const title =
+    mode === "signin"
+      ? t("auth.signin")
+      : mode === "signup"
+        ? t("auth.signup")
+        : t("auth.forgot");
+
   return (
     <div className="mx-auto max-w-md">
-      <PageHeader title={titles[mode]} subtitle="الحساب اختياري — يمكنك فحص الأعراض كضيف." />
-      <form onSubmit={submit} className="glass space-y-4 rounded-3xl p-6">
-        {mode === "signup" && <Field label="الاسم" hint="اختياري"><input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} /></Field>}
-        <Field label="البريد الإلكتروني"><input type="email" dir="ltr" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></Field>
-        {mode !== "forgot" && <Field label="كلمة المرور"><input type="password" dir="ltr" className={inputCls} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} /></Field>}
-        {msg && <p role="alert" className={msg.ok ? "text-sm text-success" : "text-sm text-destructive"}>{msg.text}</p>}
-        <button disabled={busy} className="w-full rounded-2xl bg-gradient-primary py-3.5 font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
-          {busy ? "جارٍ التنفيذ..." : titles[mode]}
+      <PageHeader title={title} subtitle={t("auth.optional")} />
+
+      <form onSubmit={submit} className="glass space-y-4 rounded-3xl p-5 sm:p-6">
+        {mode === "signup" ? (
+          <Field label={t("auth.name")} hint={t("auth.nameOptional")}>
+            <input
+              className={inputCls}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              maxLength={80}
+              autoComplete="name"
+            />
+          </Field>
+        ) : null}
+
+        <Field label={t("auth.email")}>
+          <input
+            type="email"
+            dir="ltr"
+            className={inputCls}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+          />
+        </Field>
+
+        {mode !== "forgot" ? (
+          <Field label={t("auth.password")}>
+            <input
+              type="password"
+              dir="ltr"
+              className={inputCls}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+            />
+          </Field>
+        ) : null}
+
+        {msg ? (
+          <p role="alert" className={msg.ok ? "text-sm text-success" : "text-sm text-destructive"}>
+            {msg.text}
+          </p>
+        ) : null}
+
+        <button
+          disabled={busy}
+          className="w-full rounded-2xl bg-gradient-primary py-3.5 font-semibold text-primary-foreground shadow-glow disabled:opacity-60"
+        >
+          {busy ? t("auth.running") : title}
         </button>
+
         <div className="flex flex-wrap justify-between gap-2 text-sm">
-          {mode !== "signin" && <button type="button" onClick={() => setMode("signin")} className="text-primary">لدي حساب</button>}
-          {mode !== "signup" && <button type="button" onClick={() => setMode("signup")} className="text-primary">إنشاء حساب جديد</button>}
-          {mode === "signin" && <button type="button" onClick={() => setMode("forgot")} className="text-muted-foreground">نسيت كلمة المرور؟</button>}
+          {mode !== "signin" ? (
+            <button type="button" onClick={() => setMode("signin")} className="text-primary">
+              {t("auth.haveAccount")}
+            </button>
+          ) : null}
+          {mode !== "signup" ? (
+            <button type="button" onClick={() => setMode("signup")} className="text-primary">
+              {t("auth.createNew")}
+            </button>
+          ) : null}
+          {mode === "signin" ? (
+            <button type="button" onClick={() => setMode("forgot")} className="text-muted-foreground">
+              {t("auth.forgotLink")}
+            </button>
+          ) : null}
         </div>
       </form>
     </div>
