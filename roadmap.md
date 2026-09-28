@@ -68,6 +68,14 @@
   - [x] Emergency red flags detected from symptom + severity can redirect before extra follow-up questions
   - [x] Checks with no additional safety questions can proceed directly to results
   - [x] Automated tests cover safety-relevant follow-up filtering
+- [x] Simplified history and account experience
+  - [x] History cards show date, care level, symptom preview and top result at a glance
+  - [x] Emergency history entries keep a direct emergency-mode action
+  - [x] Full history details remain expandable instead of always visible
+  - [x] History query explicitly scopes sessions to the signed-in user in addition to RLS
+  - [x] Account page focuses on essential profile information only
+  - [x] Account quick actions link directly to history, a new symptom check and first aid
+  - [x] Automated tests cover history care-tone, emergency-state and symptom-preview helpers
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
