@@ -14,3 +14,4 @@
 - Emergency numbers and locale/dir only in src/config/app.ts — single source for future settings/DB.
 - Triage goes through RedFlagEngine (src/lib/red-flag-engine.ts); emergency always bypasses results.
 - Health UI components in src/components/health/; colors only via tokens in src/styles.css.
+- Curated page imagery lives in src/assets; use PageVisualHeader for consistent responsive page introductions.

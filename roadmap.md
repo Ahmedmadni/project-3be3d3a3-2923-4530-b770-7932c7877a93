@@ -94,3 +94,4 @@
   - [ ] Transactional database import service with audit trail
   - [ ] First reviewed medical knowledge release
 - [ ] Medical review of all clinical content — blocked on authorized medical reviewer
+- [x] Visual media: generated and integrated page photography plus transparent medical stickers
