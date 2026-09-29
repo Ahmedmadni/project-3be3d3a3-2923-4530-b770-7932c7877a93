@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, BookOpenCheck, FileQuestion, FlagTriangleRight, HeartPulse, LayoutDashboard, ShieldCheck, Stethoscope, UsersRound, Wrench } from "lucide-react";
+import { Activity, BookOpenCheck, FileQuestion, FlagTriangleRight, HeartPulse, LayoutDashboard, Network, ShieldCheck, Stethoscope, UsersRound, Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAdminAccess } from "@/hooks/use-admin-access";
 import { useI18n } from "@/i18n";
@@ -12,6 +12,7 @@ const links = [
   { to: "/admin/red-flags", key: "admin.redFlags", icon: FlagTriangleRight },
   { to: "/admin/first-aid", key: "admin.firstAid", icon: HeartPulse },
   { to: "/admin/sources", key: "admin.sources", icon: BookOpenCheck },
+  { to: "/admin/external-resources", key: "admin.externalResources", icon: Network },
   { to: "/admin/users", key: "admin.users", icon: UsersRound },
   { to: "/admin/releases", key: "admin.releases", icon: Wrench },
 ] as const;
