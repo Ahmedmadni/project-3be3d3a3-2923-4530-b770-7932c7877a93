@@ -127,6 +127,20 @@
   - [x] Admin question builder supports candidate-condition triggers and confirmed-symptom targets
   - [x] Automated tests confirm clarifiers improve matching without becoming emergency triggers
   - [ ] Authorized medical reviewer approval and activation of clarifier content
+- [x] Source-backed red-flag safety pack
+  - [x] Production red-flag engine ignores draft/demo database flags
+  - [x] Reviewed database rules can add urgency but cannot suppress the deterministic safety floor
+  - [x] Preserved legacy sudden-headache and chest-radiation emergency checks in the safety floor
+  - [x] Added inactive sourced headache safety questions and red flags
+  - [x] Added inactive sourced chest-pain safety questions and red flags
+  - [x] Added inactive sourced severe-breathing safety questions and red flags
+  - [x] Added inactive sourced fainting safety questions and red flags
+  - [x] Added inactive sourced vomiting emergency/urgent questions and red flags
+  - [x] Added inactive sourced heavy/continuous bleeding symptom and emergency rule
+  - [x] Strengthened rule activation prerequisites for question and red-flag rules
+  - [x] Aligned question_rules trigger constraint with condition_candidate smart clarifiers
+  - [x] Automated tests cover production gating, published rules, partial rule sets, and legacy safety floor
+  - [ ] Authorized medical reviewer approval and activation of the new safety content
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
