@@ -96,6 +96,16 @@
   - [x] Kept all new condition content inactive and all new first-aid bodies in draft status
   - [x] Added MEDICAL_STARTER_PACK.md reviewer checklist
   - [ ] Authorized medical reviewer approval and publication
+- [x] Starter sourced medical content pack 2
+  - [x] Added inactive draft condition: dehydration
+  - [x] Added inactive draft condition: common cold
+  - [x] Added inactive draft condition: migraine
+  - [x] Linked dehydration to Saudi MOH and NHS sources
+  - [x] Linked common cold and migraine to Saudi MOH sources
+  - [x] Added inactive symptom relationships using only the current symptom vocabulary
+  - [x] Documented common-cold and migraine symptom-vocabulary limitations before activation
+  - [x] Expanded MEDICAL_STARTER_PACK.md reviewer checklist
+  - [ ] Authorized medical reviewer approval and activation
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
