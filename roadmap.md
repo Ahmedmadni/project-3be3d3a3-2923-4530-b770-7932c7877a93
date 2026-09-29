@@ -85,6 +85,17 @@
   - [x] Keyboard skip-to-content link added
   - [x] Authentication and password-reset flows localized for Arabic and English
   - [x] Automated tests cover the focused mobile navigation structure
+- [x] Starter sourced medical content pack
+  - [x] Fixed condition matching so real condition_symptoms database rows are no longer discarded
+  - [x] Regression test uses the real condition_symptoms row shape
+  - [x] Added authoritative sources checked on 2026-09-29
+  - [x] Added inactive draft condition: iron deficiency anemia
+  - [x] Added inactive draft condition: type 2 diabetes
+  - [x] Added draft first-aid section bodies for bleeding, burns, adult/child choking and seizures
+  - [x] Linked every starter condition/first-aid topic to its source records
+  - [x] Kept all new condition content inactive and all new first-aid bodies in draft status
+  - [x] Added MEDICAL_STARTER_PACK.md reviewer checklist
+  - [ ] Authorized medical reviewer approval and publication
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
