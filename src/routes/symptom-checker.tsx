@@ -4,7 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import type { BasicInfo, SymptomDetail, AnswerMap, SessionInput } from "@/types/medical";
 import { referenceQuery } from "@/lib/reference-data";
-import { visibleSafetyQuestions } from "@/engines/assessment-question-engine";
+import {
+  confirmedSymptomIdsFromAnswers,
+  visibleClarifyingQuestions,
+  visibleSafetyQuestions,
+} from "@/engines/assessment-question-engine";
 import { runSafetyPipeline } from "@/engines/pipeline";
 import { ENGINE_VERSION } from "@/engines/condition-matching-engine";
 import { mockExtractor, selectableCandidates, extractWithFallback } from "@/engines/symptom-extraction";
@@ -108,9 +112,25 @@ function Wizard() {
       [id]: { ...emptyDetail, ...current[id], ...patch },
     }));
 
-  const questions = useMemo(
+  const safetyQuestions = useMemo(
     () => visibleSafetyQuestions(ref, selected, answers),
     [ref, selected, answers],
+  );
+
+  const clarifyingQuestions = useMemo(
+    () => visibleClarifyingQuestions(
+      ref,
+      selected,
+      answers,
+      appConfig.contentMode,
+      4,
+    ),
+    [ref, selected, answers],
+  );
+
+  const questions = useMemo(
+    () => [...safetyQuestions, ...clarifyingQuestions],
+    [safetyQuestions, clarifyingQuestions],
   );
 
   const buildInput = (): SessionInput => {
@@ -120,7 +140,7 @@ function Wizard() {
     );
     return {
       basic,
-      symptomIds: selected,
+      symptomIds: savedSymptomIds,
       details,
       answers: cleanAnswers,
       description,
@@ -133,6 +153,13 @@ function Wizard() {
       contentMode: appConfig.contentMode,
     });
     const emergency = triage.level === "emergency";
+    const confirmedSymptoms = confirmedSymptomIdsFromAnswers(
+      ref,
+      selected,
+      input.answers,
+      appConfig.contentMode,
+    );
+    const savedSymptomIds = [...new Set([...selected, ...confirmedSymptoms])];
 
     setBusy(true);
     let sessionId: string | null = null;
@@ -148,7 +175,7 @@ function Wizard() {
           sex: basic.sex as "male" | "female",
           pregnancy: basic.pregnant || null,
           description,
-          symptoms: selected.map((id) => ({
+          symptoms: savedSymptomIds.map((id) => ({
             symptomId: id,
             severity: details[id]?.severity || null,
             startedWhen: "",
@@ -317,7 +344,7 @@ function Wizard() {
             <p className="mt-1 text-sm text-muted-foreground">{t("checker.safetyDetailsHint")}</p>
           ) : null}
           {step === 3 ? (
-            <p className="mt-1 text-sm text-muted-foreground">{t("checker.safetyQuestionsHint")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("checker.followupQuestionsHint")}</p>
           ) : null}
         </div>
 
@@ -500,18 +527,43 @@ function Wizard() {
 
         {step === 3 ? (
           questions.length ? (
-            <div className="space-y-3">
-              {questions.map((question) => (
-                <QuestionCard
-                  key={question.id}
-                  question={question}
-                  value={answers[question.id] ?? ""}
-                  onChange={(value) => setAnswers({ ...answers, [question.id]: value })}
-                />
-              ))}
+            <div className="space-y-6">
+              {safetyQuestions.length ? (
+                <div className="space-y-3">
+                  <div>
+                    <h2 className="text-sm font-extrabold">{t("checker.safetyQuestionGroup")}</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("checker.safetyQuestionGroupHint")}</p>
+                  </div>
+                  {safetyQuestions.map((question) => (
+                    <QuestionCard
+                      key={question.id}
+                      question={question}
+                      value={answers[question.id] ?? ""}
+                      onChange={(value) => setAnswers({ ...answers, [question.id]: value })}
+                    />
+                  ))}
+                </div>
+              ) : null}
+
+              {clarifyingQuestions.length ? (
+                <div className="space-y-3">
+                  <div>
+                    <h2 className="text-sm font-extrabold">{t("checker.clarifierQuestionGroup")}</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("checker.clarifierQuestionGroupHint")}</p>
+                  </div>
+                  {clarifyingQuestions.map((question) => (
+                    <QuestionCard
+                      key={question.id}
+                      question={question}
+                      value={answers[question.id] ?? ""}
+                      onChange={(value) => setAnswers({ ...answers, [question.id]: value })}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">{t("checker.noSafetyQuestions")}</p>
+            <p className="text-sm text-muted-foreground">{t("checker.noFollowupQuestions")}</p>
           )
         ) : null}
 
