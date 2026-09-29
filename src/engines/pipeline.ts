@@ -13,7 +13,11 @@ export interface PipelineOutput { triage: TriageResult; results: PossibleConditi
 export function runSafetyPipeline(ref: ReferenceData, input: SessionInput, opts: MatchingOptions): PipelineOutput {
   const severity = Object.fromEntries(input.symptomIds.map((id) => [id, input.details[id]?.severity ?? ""]));
   const age = Number(input.basic.age) || undefined;
-  const triage = RedFlagEngine.evaluate(ref, { symptomIds: input.symptomIds, answers: input.answers, severity, age });
+  const triage = RedFlagEngine.evaluate(
+    ref,
+    { symptomIds: input.symptomIds, answers: input.answers, severity, age },
+    { contentMode: opts.contentMode },
+  );
   if (triage.level === "emergency") return { triage, results: [] };
   const results = ConditionMatchingEngine.run(ref, input, opts);
   // results inform care level upward only
