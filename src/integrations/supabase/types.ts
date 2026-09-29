@@ -701,6 +701,7 @@ export type Database = {
       question_rules: {
         Row: {
           condition_id: string | null
+          confirms_symptom_id: string | null
           expected_value: string | null
           id: string
           is_active: boolean
@@ -713,6 +714,7 @@ export type Database = {
         }
         Insert: {
           condition_id?: string | null
+          confirms_symptom_id?: string | null
           expected_value?: string | null
           id?: string
           is_active?: boolean
@@ -725,6 +727,7 @@ export type Database = {
         }
         Update: {
           condition_id?: string | null
+          confirms_symptom_id?: string | null
           expected_value?: string | null
           id?: string
           is_active?: boolean
@@ -736,6 +739,13 @@ export type Database = {
           trigger_type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "question_rules_confirms_symptom_id_fkey"
+            columns: ["confirms_symptom_id"]
+            isOneToOne: false
+            referencedRelation: "symptoms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "question_rules_condition_id_fkey"
             columns: ["condition_id"]

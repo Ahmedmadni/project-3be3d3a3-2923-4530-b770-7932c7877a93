@@ -174,4 +174,53 @@ describe("Safety pipeline", () => {
     const out = runSafetyPipeline({ ...emptyReference, redFlags, redFlagRules }, input(["cough"]), { contentMode: "development" });
     expect(out.results).toEqual([]);
   });
+
+  it("uses a yes clarifier for matching without turning it into a red-flag symptom", () => {
+    const smartRef = any<ReferenceData>({
+      ...emptyReference,
+      symptoms: [
+        { id: "headache", is_active: true, review_status: "published" },
+        { id: "light", is_active: true, review_status: "published" },
+      ],
+      conditions: [
+        { id: "migraine", is_active: true, review_status: "published", care_level: "routine" },
+      ],
+      conditionSymptoms: [
+        { condition_id: "migraine", symptom_id: "headache", relationship_type: "supports", weight: 1, is_core_symptom: true, is_active: true },
+        { condition_id: "migraine", symptom_id: "light", relationship_type: "supports", weight: 1, is_core_symptom: true, is_active: true },
+      ],
+      questions: [
+        { id: "q-light", is_active: true, review_status: "published", sort_order: 1 },
+      ],
+      questionOptions: [
+        { id: "yes", question_id: "q-light", value: "yes", sort_order: 1 },
+      ],
+      questionRules: [
+        {
+          id: "qr1",
+          question_id: "q-light",
+          trigger_type: "condition_candidate",
+          condition_id: "migraine",
+          confirms_symptom_id: "light",
+          priority: 1,
+          is_active: true,
+        },
+      ],
+      redFlags: [
+        { id: "rf-light", code: "light_selected", title_ar: "test", care_level: "emergency", priority: 1, is_active: true },
+      ],
+      redFlagRules: [
+        { id: "rr-light", red_flag_id: "rf-light", symptom_id: "light", operator: "selected", is_active: true },
+      ],
+    });
+
+    const out = runSafetyPipeline(
+      smartRef,
+      input(["headache"], { answers: { "q-light": "yes" } }),
+      { contentMode: "production" },
+    );
+
+    expect(out.triage.level).toBe("routine");
+    expect(out.results[0]?.matchedSymptoms).toEqual(["headache", "light"]);
+  });
 });

@@ -1,5 +1,6 @@
 import type { AnswerMap, Compatibility, PossibleConditionResult, Reason, SessionInput } from "@/types/medical";
 import type { ReferenceData } from "./reference";
+import { confirmedSymptomIdsFromAnswers } from "./assessment-question-engine";
 
 export const ENGINE_VERSION = "matching-v1";
 
@@ -13,8 +14,22 @@ export type Adjuster = (ctx: { conditionId: string; input: SessionInput; score: 
 const adjusters: Adjuster[] = [];
 
 export const ConditionMatchingEngine = {
-  run(ref: Pick<ReferenceData, "conditions" | "conditionSymptoms">, input: SessionInput, opts: MatchingOptions): PossibleConditionResult[] {
-    const selected = new Set(input.symptomIds);
+  run(
+    ref: Pick<
+      ReferenceData,
+      "conditions" | "conditionSymptoms" | "questions" | "questionOptions" |
+      "questionRules" | "redFlagRules" | "symptoms"
+    >,
+    input: SessionInput,
+    opts: MatchingOptions,
+  ): PossibleConditionResult[] {
+    const confirmed = confirmedSymptomIdsFromAnswers(
+      ref,
+      input.symptomIds,
+      input.answers,
+      opts.contentMode,
+    );
+    const selected = new Set([...input.symptomIds, ...confirmed]);
     if (selected.size === 0) return [];
 
     const conditions = ref.conditions.filter(
