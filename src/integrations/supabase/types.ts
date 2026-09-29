@@ -570,6 +570,200 @@ export type Database = {
         }
         Relationships: []
       }
+      external_source_registry: {
+        Row: {
+          base_url: string
+          created_at: string
+          display_name: string
+          id: string
+          integration_mode: string
+          is_active: boolean
+          last_verified_at: string | null
+          license_model: string | null
+          license_notes: string | null
+          may_supply_clinical_content: boolean
+          may_supply_population_data: boolean
+          may_supply_terminology: boolean
+          notes: string | null
+          provider: string
+          repository_url: string | null
+          requires_credentials: boolean
+          source_key: string
+          source_kind: string
+          trust_tier: string
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          created_at?: string
+          display_name: string
+          id?: string
+          integration_mode: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          license_model?: string | null
+          license_notes?: string | null
+          may_supply_clinical_content?: boolean
+          may_supply_population_data?: boolean
+          may_supply_terminology?: boolean
+          notes?: string | null
+          provider: string
+          repository_url?: string | null
+          requires_credentials?: boolean
+          source_key: string
+          source_kind: string
+          trust_tier: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          integration_mode?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          license_model?: string | null
+          license_notes?: string | null
+          may_supply_clinical_content?: boolean
+          may_supply_population_data?: boolean
+          may_supply_terminology?: boolean
+          notes?: string | null
+          provider?: string
+          repository_url?: string | null
+          requires_credentials?: boolean
+          source_key?: string
+          source_kind?: string
+          trust_tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clinical_engine_integrations: {
+        Row: {
+          capabilities: Json
+          created_at: string
+          display_name: string
+          enabled: boolean
+          endpoint_base: string | null
+          id: string
+          last_verified_at: string | null
+          mode: string
+          notes: string | null
+          provider_key: string
+          send_identifiable_health_data: boolean
+          source_registry_id: string
+          updated_at: string
+        }
+        Insert: {
+          capabilities?: Json
+          created_at?: string
+          display_name: string
+          enabled?: boolean
+          endpoint_base?: string | null
+          id?: string
+          last_verified_at?: string | null
+          mode?: string
+          notes?: string | null
+          provider_key: string
+          send_identifiable_health_data?: boolean
+          source_registry_id: string
+          updated_at?: string
+        }
+        Update: {
+          capabilities?: Json
+          created_at?: string
+          display_name?: string
+          enabled?: boolean
+          endpoint_base?: string | null
+          id?: string
+          last_verified_at?: string | null
+          mode?: string
+          notes?: string | null
+          provider_key?: string
+          send_identifiable_health_data?: boolean
+          source_registry_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_engine_integrations_source_registry_id_fkey"
+            columns: ["source_registry_id"]
+            isOneToOne: false
+            referencedRelation: "external_source_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      terminology_mappings: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          external_code: string
+          external_uri: string | null
+          id: string
+          last_verified_at: string | null
+          mapping_method: string
+          mapping_status: string
+          notes: string | null
+          preferred_term: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          semantic_type: string | null
+          source_registry_id: string
+          terminology_system: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          external_code: string
+          external_uri?: string | null
+          id?: string
+          last_verified_at?: string | null
+          mapping_method?: string
+          mapping_status?: string
+          notes?: string | null
+          preferred_term?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          semantic_type?: string | null
+          source_registry_id: string
+          terminology_system: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          external_code?: string
+          external_uri?: string | null
+          id?: string
+          last_verified_at?: string | null
+          mapping_method?: string
+          mapping_status?: string
+          notes?: string | null
+          preferred_term?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          semantic_type?: string | null
+          source_registry_id?: string
+          terminology_system?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terminology_mappings_source_registry_id_fkey"
+            columns: ["source_registry_id"]
+            isOneToOne: false
+            referencedRelation: "external_source_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
       medical_sources: {
         Row: {
           country: string | null

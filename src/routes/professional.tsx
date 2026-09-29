@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/health/cards";
 import { ProfessionalBadge } from "@/components/health/badges";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +64,8 @@ function Professional() {
       <PageHeader title={t("professional.title")} subtitle={t("professional.subtitle")}>
         <div className="mt-3"><ProfessionalBadge /></div>
       </PageHeader>
+
+      <MedicalDisclaimer text={t("medical.professionalDisclaimer")} />
 
       <section className="glass rounded-3xl p-5 md:p-6">
         <div className="flex items-start gap-3">

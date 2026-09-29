@@ -12,6 +12,7 @@ import { appConfig } from "@/config/app";
 import { allowedFirstAidSectionStatuses, isPublicFirstAidTopicVisible } from "@/lib/public-content";
 import { PageHeader, EmergencyAlert, ErrorState } from "@/components/health/cards";
 import { ProfessionalBadge } from "@/components/health/badges";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { localized, useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -118,6 +119,7 @@ function Detail() {
       </div>
 
       <EmergencyAlert />
+      <MedicalDisclaimer text={t("medical.firstAidDisclaimer")} />
 
       <section className="glass rounded-3xl p-5 md:p-6">
         <div className="flex items-start gap-3">
