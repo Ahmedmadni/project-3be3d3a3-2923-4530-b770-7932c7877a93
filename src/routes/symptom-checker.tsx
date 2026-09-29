@@ -140,7 +140,7 @@ function Wizard() {
     );
     return {
       basic,
-      symptomIds: savedSymptomIds,
+      symptomIds: selected,
       details,
       answers: cleanAnswers,
       description,
@@ -211,7 +211,7 @@ function Wizard() {
       sessionId,
       triage,
       results,
-      symptomIds: selected,
+      symptomIds: savedSymptomIds,
       knowledgeReleaseVersion,
     });
 
