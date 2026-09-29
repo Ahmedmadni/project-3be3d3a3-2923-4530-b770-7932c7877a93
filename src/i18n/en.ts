@@ -177,6 +177,7 @@ export const en: Dict = {
   "firstAid.action": "What should I do?",
   "emergency.callNow": "If there is immediate danger, call emergency medical services now.",
   "common.loadError": "Unable to load the data. Please try again.",
+  "medical.disclaimerLabel": "Medical disclaimer",
   "medical.globalDisclaimer": "Disclaimer: Health Indicator is for guidance and education only. It does not provide a diagnosis or treatment and does not replace evaluation by a qualified clinician. If an emergency is suspected, seek medical help immediately and do not delay because of the app.",
   "medical.firstAidDisclaimer": "First-aid guidance is for general education only. It does not replace hands-on training, emergency-dispatch instructions, or medical evaluation, and it must not delay emergency care.",
   "medical.professionalDisclaimer": "Professional mode is a supporting reference only. It is not a binding clinical protocol and does not replace clinical judgment, local policies, or approved professional references.",
