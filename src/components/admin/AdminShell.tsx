@@ -43,7 +43,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <aside className="glass h-fit rounded-3xl p-3">
             <h1 className="px-3 py-2 text-lg font-extrabold">{t("admin.title")}</h1>
             <nav className="mt-2 grid gap-1">
-              {links.map(({ to, key, icon: Icon, exact }) => (
+              {links.map(({ to, key, icon: Icon, ...rest }) => { const exact = "exact" in rest ? rest.exact : false; return (
                 <Link
                   key={to}
                   to={to}

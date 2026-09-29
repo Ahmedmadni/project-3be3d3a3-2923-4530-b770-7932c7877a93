@@ -155,6 +155,7 @@ export const en: Dict = {
   "results.moreInfo": "Additional information",
   "results.specialtyHint": "Related specialty for evaluation",
   "results.viewCondition": "Open condition page",
+  "condition.notDiagnosis": "This is not a diagnosis.",
   "results.why": "Why did this appear?",
   "results.why.core": "Matching core symptoms",
   "results.why.support": "Supporting symptoms",
