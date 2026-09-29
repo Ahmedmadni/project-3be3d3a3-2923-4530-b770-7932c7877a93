@@ -55,9 +55,13 @@ export const RedFlagEngine = {
     for (const flag of fired) level = maxCareLevel(level, flag.care_level);
 
     const mergedFlags = new Map<string, { code: string; title: string }>();
-    for (const flag of legacy.flags) mergedFlags.set(flag.code, flag);
+    // Keep reviewed/source-backed rules first in the presentation order, then
+    // append fallback-only safety findings that are not already represented.
     for (const flag of fired) {
       mergedFlags.set(flag.code, { code: flag.code, title: flag.title_ar });
+    }
+    for (const flag of legacy.flags) {
+      if (!mergedFlags.has(flag.code)) mergedFlags.set(flag.code, flag);
     }
 
     return {
