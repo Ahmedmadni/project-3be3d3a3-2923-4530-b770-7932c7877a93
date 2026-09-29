@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppHeader } from "@/components/health/AppHeader";
 import { MobileBottomNav } from "@/components/health/MobileBottomNav";
+import { GlobalMedicalDisclaimer } from "@/components/health/GlobalMedicalDisclaimer";
 import { appConfig } from "@/config/app";
 import { I18nProvider, useI18n } from "@/i18n";
 
@@ -106,6 +107,7 @@ function AppChrome() {
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 pt-5 pb-32 sm:px-5 sm:pt-6 md:pb-16">
         <Outlet />
       </main>
+      <GlobalMedicalDisclaimer />
       <MobileBottomNav />
     </>
   );
