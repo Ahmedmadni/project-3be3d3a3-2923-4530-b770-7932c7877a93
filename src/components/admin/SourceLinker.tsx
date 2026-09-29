@@ -11,10 +11,10 @@ export function SourceLinker({
   entityForeignKey,
   title = "ربط المصادر",
 }: {
-  entityTable: "conditions" | "questions" | "red_flags" | "first_aid_topics";
+  entityTable: "symptoms" | "conditions" | "questions" | "red_flags" | "first_aid_topics";
   entityLabelField: "name_ar" | "question_ar" | "title_ar";
-  linkTable: "condition_sources" | "question_sources" | "red_flag_sources" | "first_aid_sources";
-  entityForeignKey: "condition_id" | "question_id" | "red_flag_id" | "first_aid_topic_id";
+  linkTable: "symptom_sources" | "condition_sources" | "question_sources" | "red_flag_sources" | "first_aid_sources";
+  entityForeignKey: "symptom_id" | "condition_id" | "question_id" | "red_flag_id" | "first_aid_topic_id";
   title?: string;
 }) {
   const qc = useQueryClient();
