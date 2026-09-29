@@ -141,6 +141,22 @@
   - [x] Aligned question_rules trigger constraint with condition_candidate smart clarifiers
   - [x] Automated tests cover production gating, published rules, partial rule sets, and legacy safety floor
   - [ ] Authorized medical reviewer approval and activation of the new safety content
+- [x] Medical interoperability and external-source governance
+  - [x] Added external source registry with trust tier, integration mode, license notes and allowed-use flags
+  - [x] Registered authoritative UMLS/NLM and WHO sources
+  - [x] Registered Infermedica as disabled shadow-comparison provider only
+  - [x] Registered only official/established GitHub organization repositories: HL7/fhir, OpenMRS core and OHDSI CommonDataModel
+  - [x] Community symptom-checker repositories documented as reference-only/not approved for clinical import
+  - [x] Added terminology_mappings governance table with draft/reviewed/approved/rejected states
+  - [x] Added server-side UMLS REST adapter contract; API key is never exposed to browser code
+  - [x] Added external clinical-engine adapter contract with disabled default and no-PHI default
+  - [x] Added read-only admin view for external sources, trust, licenses, capabilities and engine status
+  - [x] Added automated source-policy and adapter tests
+- [x] Medical disclaimer coverage
+  - [x] Global disclaimer appears on every application page
+  - [x] Context-specific disclaimers added for emergency, first aid and professional mode
+  - [x] Existing symptom-check, results, condition and library disclaimers retained
+  - [x] Disclaimer component is exposed as an accessible semantic note
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
