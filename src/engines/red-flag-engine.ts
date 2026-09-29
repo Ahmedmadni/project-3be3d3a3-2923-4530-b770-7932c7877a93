@@ -104,8 +104,20 @@ function fallback(
   const flags: { code: string; title: string }[] = [];
   const has = (code: string) => input.symptomIds.includes(sid(code));
 
-  if (has("chest_pain") && input.severity[sid("chest_pain")] === "severe") {
-    flags.push({ code: "severe_chest_pain", title: "ألم صدر شديد" });
+  if (
+    has("chest_pain") &&
+    (
+      input.severity[sid("chest_pain")] === "severe" ||
+      input.answers[qid("cp_radiate")] === "yes"
+    )
+  ) {
+    flags.push({ code: "severe_chest_pain", title: "ألم صدر يستدعي الطوارئ" });
+  }
+  if (
+    has("headache") &&
+    input.answers[qid("hd_sudden")] === "yes"
+  ) {
+    flags.push({ code: "thunderclap_headache", title: "صداع مفاجئ شديد" });
   }
   if (
     has("shortness_of_breath") &&
