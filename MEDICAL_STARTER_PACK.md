@@ -26,14 +26,16 @@ This pack intentionally starts small. It is meant to give the medical reviewer a
 
 4. Common cold
    - Saudi Ministry of Health
-   - Draft matching links currently use cough, headache, fatigue and fever
-   - Important limitation: the current symptom catalog does not yet include runny nose or sore throat, so matching must be reviewed before activation
+   - NHS
+   - Draft matching links now include runny nose, sore throat, nasal congestion, sneezing and body aches in addition to the existing respiratory symptoms
+   - The added symptom vocabulary remains inactive until medical review
    - Remains inactive until medical review
 
 5. Migraine
    - Saudi Ministry of Health
-   - Draft matching links: headache, nausea, vomiting and dizziness
-   - Important limitation: light/sound sensitivity are not yet part of the current symptom catalog
+   - NHS
+   - Draft matching links now include sensitivity to light and sensitivity to sound in addition to headache, nausea, vomiting and dizziness
+   - The added symptom vocabulary remains inactive until medical review
    - Remains inactive until medical review
 
 The condition summaries explicitly state that symptoms alone are not diagnostic.
@@ -77,6 +79,10 @@ Checked on 2026-09-29:
   https://www.moh.gov.sa/healthawareness/educationalcontent/diseases/infectious/pages/common-cold.aspx
 - Saudi MOH — Migraine  
   https://www.moh.gov.sa/healthawareness/educationalcontent/diseases/nervous-system/pages/migraine.aspx
+- NHS — Common cold  
+  https://www.nhs.uk/conditions/common-cold/
+- NHS — Migraine  
+  https://www.nhs.uk/conditions/migraine/
 - American Red Cross — Burns  
   https://www.redcross.org/take-a-class/resources/learn-first-aid/burns
 - American Red Cross — Life-threatening external bleeding  
@@ -94,8 +100,9 @@ For every item, an authorized medical reviewer should confirm:
 - English translation matches the intended meaning.
 - Care level and specialty are appropriate.
 - Symptom relationships and core/supporting status are appropriate.
-- Common-cold matching should not be activated until the reviewer accepts the limited current symptom vocabulary or the catalog adds runny nose/sore throat.
-- Migraine matching should be reviewed with awareness that light/sound sensitivity are not yet selectable symptoms.
+- Newly added symptoms (runny nose, sore throat, nasal congestion, sneezing, body aches, light sensitivity and sound sensitivity) should remain inactive until individually reviewed.
+- Common-cold and migraine matching links that depend on the new symptoms should remain inactive until both the symptom and relationship are approved.
+- Every symptom publication now requires at least one active linked medical source.
 - First-aid instructions match the current source and local practice.
 - Choking content is clearly limited to adult/child instructions and is not used as infant guidance.
 - Emergency wording does not delay calling emergency services.
