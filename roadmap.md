@@ -141,6 +141,23 @@
   - [x] Aligned question_rules trigger constraint with condition_candidate smart clarifiers
   - [x] Automated tests cover production gating, published rules, partial rule sets, and legacy safety floor
   - [ ] Authorized medical reviewer approval and activation of the new safety content
+- [x] Medical interoperability and external-source governance foundation
+  - [x] Added source trust, licensing, owner-verification and clinical-use fields to medical_sources
+  - [x] Clinical publication now requires an approved trusted source, not merely an active URL
+  - [x] Added external_resource_registry for APIs, commercial engines and trusted engineering references
+  - [x] Added terminology_mappings foundation for UMLS CUI/source-vocabulary mappings
+  - [x] Registered official NLM UMLS for terminology-only use
+  - [x] Registered WHO World Health Data Hub for population-health context only
+  - [x] Registered Infermedica as disabled/shadow-evaluation integration only
+  - [x] Added clinical engine adapter contract and shadow-comparison tests
+  - [x] Added source-trust policy tests that reject community GitHub repos as trusted clinical evidence
+  - [x] Added WHO Go.Data as a verified institutional GitHub engineering reference only
+  - [x] Reviewed user-supplied community GitHub repositories and documented why none are approved as clinical evidence
+  - [x] Added admin audit page for external resources
+  - [x] Added global medical disclaimer across every route plus local disclaimers on high-risk content pages
+  - [ ] UMLS server-side API key and controlled mapping workflow
+  - [ ] WHO population-health library adapter
+  - [ ] Infermedica contractual/privacy review before any shadow traffic
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
