@@ -583,6 +583,14 @@ export type Database = {
           notes: string | null
           organization: string | null
           organization_type: string | null
+          owner_verified: boolean
+          provenance_kind: string
+          trust_level: string
+          clinical_use_allowed: boolean
+          license_name: string | null
+          license_url: string | null
+          terms_url: string | null
+          verification_notes: string | null
           publication_date: string | null
           published_at: string | null
           source_type: Database["public"]["Enums"]["source_type"]
@@ -601,6 +609,22 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           organization_type?: string | null
+          owner_verified?: boolean
+          provenance_kind?: string
+          trust_level?: string
+          clinical_use_allowed?: boolean
+          license_name?: string | null
+          license_url?: string | null
+          terms_url?: string | null
+          verification_notes?: string | null
+          owner_verified?: boolean
+          provenance_kind?: string
+          trust_level?: string
+          clinical_use_allowed?: boolean
+          license_name?: string | null
+          license_url?: string | null
+          terms_url?: string | null
+          verification_notes?: string | null
           publication_date?: string | null
           published_at?: string | null
           source_type?: Database["public"]["Enums"]["source_type"]
@@ -626,6 +650,176 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      clinical_engine_integrations: {
+        Row: {
+          base_url: string
+          created_at: string
+          credential_secret_names: Json
+          data_handling_note: string | null
+          display_name: string
+          id: string
+          is_active: boolean
+          last_verified_at: string | null
+          mode: string
+          provider_code: string
+          terms_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          created_at?: string
+          credential_secret_names?: Json
+          data_handling_note?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          mode?: string
+          provider_code: string
+          terms_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          credential_secret_names?: Json
+          data_handling_note?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          mode?: string
+          provider_code?: string
+          terms_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      external_resource_registry: {
+        Row: {
+          clinical_use_status: string
+          code: string
+          commercial: boolean
+          created_at: string
+          id: string
+          is_active: boolean
+          last_verified_at: string | null
+          license_name: string | null
+          license_url: string | null
+          name: string
+          notes: string | null
+          owner_verified: boolean
+          provider: string
+          requires_credentials: boolean
+          resource_type: string
+          terms_url: string | null
+          trust_level: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          clinical_use_status: string
+          code: string
+          commercial?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          license_name?: string | null
+          license_url?: string | null
+          name: string
+          notes?: string | null
+          owner_verified?: boolean
+          provider: string
+          requires_credentials?: boolean
+          resource_type: string
+          terms_url?: string | null
+          trust_level: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          clinical_use_status?: string
+          code?: string
+          commercial?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          license_name?: string | null
+          license_url?: string | null
+          name?: string
+          notes?: string | null
+          owner_verified?: boolean
+          provider?: string
+          requires_credentials?: boolean
+          resource_type?: string
+          terms_url?: string | null
+          trust_level?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      terminology_mappings: {
+        Row: {
+          concept_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          external_resource_id: string | null
+          id: string
+          is_active: boolean
+          language: string | null
+          preferred_term: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          source_code: string | null
+          source_vocabulary: string | null
+          system: string
+          updated_at: string
+        }
+        Insert: {
+          concept_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          external_resource_id?: string | null
+          id?: string
+          is_active?: boolean
+          language?: string | null
+          preferred_term?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          source_code?: string | null
+          source_vocabulary?: string | null
+          system?: string
+          updated_at?: string
+        }
+        Update: {
+          concept_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          external_resource_id?: string | null
+          id?: string
+          is_active?: boolean
+          language?: string | null
+          preferred_term?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          source_code?: string | null
+          source_vocabulary?: string | null
+          system?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terminology_mappings_external_resource_id_fkey"
+            columns: ["external_resource_id"]
+            isOneToOne: false
+            referencedRelation: "external_resource_registry"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
