@@ -106,6 +106,15 @@
   - [x] Documented common-cold and migraine symptom-vocabulary limitations before activation
   - [x] Expanded MEDICAL_STARTER_PACK.md reviewer checklist
   - [ ] Authorized medical reviewer approval and activation
+- [x] Sourced symptom vocabulary expansion
+  - [x] Added inactive draft symptoms: runny nose, sore throat, nasal congestion, sneezing and body aches
+  - [x] Added inactive draft symptoms: light sensitivity and sound sensitivity
+  - [x] Added symptom_sources traceability table
+  - [x] Added publication guard requiring an active source before a symptom can be published
+  - [x] Added symptom-source linking to the admin symptoms page
+  - [x] Added inactive common-cold and migraine relationships for the new symptom vocabulary
+  - [x] Linked respiratory symptoms to Saudi MOH / NHS sources and sensory symptoms to Saudi MOH / NHS migraine sources
+  - [ ] Authorized medical reviewer approval and activation of the new symptoms and links
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
