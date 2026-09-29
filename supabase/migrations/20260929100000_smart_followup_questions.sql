@@ -38,38 +38,37 @@ BEGIN
     RAISE EXCEPTION 'CLINICAL_REVIEW_REQUIRED: only a medical reviewer or admin may activate clinical rules';
   END IF;
 
-  IF activating
-     AND TG_TABLE_NAME = 'question_rules'
-     AND NEW.confirms_symptom_id IS NOT NULL THEN
+  IF activating AND TG_TABLE_NAME = 'question_rules' THEN
+    IF NEW.confirms_symptom_id IS NOT NULL THEN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM public.questions q
+        WHERE q.id = NEW.question_id
+          AND q.is_active = true
+          AND q.review_status = 'published'
+      ) THEN
+        RAISE EXCEPTION 'CLARIFIER_QUESTION_NOT_PUBLISHED: publish and activate the question first';
+      END IF;
 
-    IF NOT EXISTS (
-      SELECT 1
-      FROM public.questions q
-      WHERE q.id = NEW.question_id
-        AND q.is_active = true
-        AND q.review_status = 'published'
-    ) THEN
-      RAISE EXCEPTION 'CLARIFIER_QUESTION_NOT_PUBLISHED: publish and activate the question first';
-    END IF;
+      IF NOT EXISTS (
+        SELECT 1
+        FROM public.symptoms s
+        WHERE s.id = NEW.confirms_symptom_id
+          AND s.is_active = true
+          AND s.review_status = 'published'
+      ) THEN
+        RAISE EXCEPTION 'CLARIFIER_SYMPTOM_NOT_PUBLISHED: publish and activate the confirmed symptom first';
+      END IF;
 
-    IF NOT EXISTS (
-      SELECT 1
-      FROM public.symptoms s
-      WHERE s.id = NEW.confirms_symptom_id
-        AND s.is_active = true
-        AND s.review_status = 'published'
-    ) THEN
-      RAISE EXCEPTION 'CLARIFIER_SYMPTOM_NOT_PUBLISHED: publish and activate the confirmed symptom first';
-    END IF;
-
-    IF NEW.condition_id IS NOT NULL AND NOT EXISTS (
-      SELECT 1
-      FROM public.conditions c
-      WHERE c.id = NEW.condition_id
-        AND c.is_active = true
-        AND c.review_status = 'published'
-    ) THEN
-      RAISE EXCEPTION 'CLARIFIER_CONDITION_NOT_PUBLISHED: publish and activate the candidate condition first';
+      IF NEW.condition_id IS NOT NULL AND NOT EXISTS (
+        SELECT 1
+        FROM public.conditions c
+        WHERE c.id = NEW.condition_id
+          AND c.is_active = true
+          AND c.review_status = 'published'
+      ) THEN
+        RAISE EXCEPTION 'CLARIFIER_CONDITION_NOT_PUBLISHED: publish and activate the candidate condition first';
+      END IF;
     END IF;
   END IF;
 
