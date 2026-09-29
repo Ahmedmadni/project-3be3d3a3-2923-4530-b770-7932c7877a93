@@ -27,6 +27,7 @@ import { referenceQuery } from "@/lib/reference-data";
 import { selectEmergencyContacts } from "@/engines/emergency-contacts";
 import { appConfig } from "@/config/app";
 import { resultStore } from "@/lib/session-store";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { localized, useI18n } from "@/i18n";
 import {
   EMPTY_PROFESSIONAL_EMERGENCY_ASSESSMENT,
@@ -120,6 +121,7 @@ function Emergency() {
         <ShieldAlert className="size-5 shrink-0" />
         {t("emergency.stickyWarning")}
       </div>
+      <MedicalDisclaimer text={t("medical.emergencyDisclaimer")} />
 
       <section className="glass rounded-[2rem] p-6 text-center md:p-10">
         <span className="mx-auto grid size-16 place-items-center rounded-full bg-destructive-soft text-destructive">
