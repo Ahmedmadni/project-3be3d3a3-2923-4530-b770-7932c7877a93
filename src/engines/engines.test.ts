@@ -11,12 +11,12 @@ import type { SessionInput } from "@/types/medical";
 // Test fixtures — synthetic ids, not medical content.
 const any = <T,>(x: unknown) => x as T;
 const redFlags = any<ReferenceData["redFlags"]>([
-  { id: "rf1", code: "severe_chest", title_ar: "ألم صدر شديد", care_level: "emergency", priority: 10 },
-  { id: "rf2", code: "high_fever_child", title_ar: "حرارة", care_level: "urgent", priority: 5 },
+  { id: "rf1", code: "severe_chest", title_ar: "ألم صدر شديد", care_level: "emergency", priority: 10, is_active: true },
+  { id: "rf2", code: "high_fever_child", title_ar: "حرارة", care_level: "urgent", priority: 5, is_active: true },
 ]);
 const redFlagRules = any<ReferenceData["redFlagRules"]>([
-  { id: "r1", red_flag_id: "rf1", symptom_id: "chest", question_id: null, operator: "selected", value: null, severity: "severe", min_age: null, max_age: null },
-  { id: "r2", red_flag_id: "rf2", symptom_id: null, question_id: "q_fever", operator: "eq", value: "yes", severity: null, min_age: null, max_age: 5 },
+  { id: "r1", red_flag_id: "rf1", symptom_id: "chest", question_id: null, operator: "selected", value: null, severity: "severe", min_age: null, max_age: null, is_active: true },
+  { id: "r2", red_flag_id: "rf2", symptom_id: null, question_id: "q_fever", operator: "eq", value: "yes", severity: null, min_age: null, max_age: 5, is_active: true },
 ]);
 const conditions = any<ReferenceData["conditions"]>([
   { id: "c1", is_active: true, review_status: "draft", care_level: "routine" },
