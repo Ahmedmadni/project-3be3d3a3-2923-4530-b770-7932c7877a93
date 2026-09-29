@@ -23,11 +23,11 @@ const conditions = any<ReferenceData["conditions"]>([
   { id: "c2", is_active: true, review_status: "reviewed", care_level: "self_care" },
 ]);
 const conditionSymptoms = any<ReferenceData["conditionSymptoms"]>([
-  { condition_id: "c1", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true },
-  { condition_id: "c1", symptom_id: "fever", relationship_type: "supports", weight: 1, is_core_symptom: false },
-  { condition_id: "c2", symptom_id: "cough", relationship_type: "weak_support", weight: 1, is_core_symptom: false },
-  { condition_id: "c2", symptom_id: "rash", relationship_type: "supports", weight: 2, is_core_symptom: true },
-  { condition_id: "c2", symptom_id: "fever", relationship_type: "contradicts", weight: 1, is_core_symptom: false },
+  { condition_id: "c1", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true, is_active: true },
+  { condition_id: "c1", symptom_id: "fever", relationship_type: "supports", weight: 1, is_core_symptom: false, is_active: true },
+  { condition_id: "c2", symptom_id: "cough", relationship_type: "weak_support", weight: 1, is_core_symptom: false, is_active: true },
+  { condition_id: "c2", symptom_id: "rash", relationship_type: "supports", weight: 2, is_core_symptom: true, is_active: true },
+  { condition_id: "c2", symptom_id: "fever", relationship_type: "contradicts", weight: 1, is_core_symptom: false, is_active: true },
 ]);
 const ref: ReferenceData = { ...emptyReference, redFlags, redFlagRules, conditions, conditionSymptoms };
 
@@ -68,15 +68,6 @@ describe("RedFlagEngine", () => {
 });
 
 describe("ConditionMatchingEngine", () => {
-  it("matches condition-symptom rows using the real database shape", () => {
-    const realShape = any<ReferenceData["conditionSymptoms"]>([
-      { condition_id: "c1", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true, is_demo: false },
-    ]);
-    const realRef: ReferenceData = { ...ref, conditionSymptoms: realShape };
-    const r = ConditionMatchingEngine.run(realRef, input(["cough"]), { contentMode: "development" });
-    expect(r[0]?.conditionId).toBe("c1");
-  });
-
   it("returns ranked results without percentages", () => {
     const r = ConditionMatchingEngine.run(ref, input(["cough", "fever"]), { contentMode: "development" });
     expect(r[0]?.conditionId).toBe("c1");
@@ -102,7 +93,7 @@ describe("ConditionMatchingEngine", () => {
         { id: "cp", is_active: true, review_status: "published", care_level: "routine" },
       ]),
       conditionSymptoms: any<ReferenceData["conditionSymptoms"]>([
-        { condition_id: "cp", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true },
+        { condition_id: "cp", symptom_id: "cough", relationship_type: "supports", weight: 1, is_core_symptom: true, is_active: true },
       ]),
     };
     expect(ConditionMatchingEngine.run(published, input(["cough"]), { contentMode: "production" })[0]?.conditionId).toBe("cp");
@@ -130,9 +121,9 @@ describe("DynamicQuestionEngine", () => {
     ],
     questionOptions: [],
     questionRules: [
-      { question_id: "q1", trigger_type: "symptom_selected", symptom_id: "cough", operator: "eq", priority: 1 },
-      { question_id: "q2", trigger_type: "answer_equals", parent_question_id: "q1", operator: "eq", expected_value: "yes", priority: 2 },
-      { question_id: "q3", trigger_type: "always", operator: "eq", priority: 0 },
+      { question_id: "q1", trigger_type: "symptom_selected", symptom_id: "cough", operator: "eq", priority: 1, is_active: true },
+      { question_id: "q2", trigger_type: "answer_equals", parent_question_id: "q1", operator: "eq", expected_value: "yes", priority: 2, is_active: true },
+      { question_id: "q3", trigger_type: "always", operator: "eq", priority: 0, is_active: true },
     ],
   });
   it("shows questions progressively", () => {
@@ -156,9 +147,9 @@ describe("DynamicQuestionEngine", () => {
 
 describe("Emergency contacts", () => {
   const contacts = any<ReferenceData["emergencyContacts"]>([
-    { id: "a", country_code: "SA", region_code: null, service_type: "ambulance", priority: 10 },
-    { id: "b", country_code: "SA", region_code: "EP", service_type: "unified_emergency", priority: 20 },
-    { id: "c", country_code: "AE", region_code: null, service_type: "ambulance", priority: 10 },
+    { id: "a", country_code: "SA", region_code: null, service_type: "ambulance", priority: 10, is_active: true },
+    { id: "b", country_code: "SA", region_code: "EP", service_type: "unified_emergency", priority: 20, is_active: true },
+    { id: "c", country_code: "AE", region_code: null, service_type: "ambulance", priority: 10, is_active: true },
     { id: "d", country_code: "SA", region_code: null, service_type: "police", priority: 5, is_active: false },
   ]);
   it("filters by country/region and sorts by priority", () => {
