@@ -1255,6 +1255,37 @@ export type Database = {
           },
         ]
       }
+      symptom_sources: {
+        Row: {
+          source_id: string
+          symptom_id: string
+        }
+        Insert: {
+          source_id: string
+          symptom_id: string
+        }
+        Update: {
+          source_id?: string
+          symptom_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_sources_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "symptom_sources_symptom_id_fkey"
+            columns: ["symptom_id"]
+            isOneToOne: false
+            referencedRelation: "symptoms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
       symptoms: {
         Row: {
           approved_at: string | null
