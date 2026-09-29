@@ -46,7 +46,7 @@ export function FirstAidCard({ topic }: { topic: FirstAidTopic }) {
   );
 }
 
-export function ResultCard({ result, condition, symptoms, meta }: { result: PossibleConditionResult; condition: Condition; symptoms: Symptom[]; meta?: { conditionVersion?: number | undefined; release: string | null; engine?: string | undefined } }) {
+export function ResultCard({ result, condition, symptoms, meta }: { result: PossibleConditionResult; condition: Condition; symptoms: Symptom[]; meta?: { conditionVersion?: number | undefined; release: string | null; engine?: string | undefined } | undefined }) {
   const { lang, t } = useI18n();
   const name = (id: string) => {
     const symptom = symptoms.find((s) => s.id === id);
@@ -169,7 +169,7 @@ export function ErrorState({ text }: { text?: string }) {
 
 function WhySection({ result, name, fallback, meta }: {
   result: PossibleConditionResult; name: (id: string) => string; fallback: string[];
-  meta?: { conditionVersion?: number | undefined; release: string | null; engine?: string | undefined };
+  meta?: { conditionVersion?: number | undefined; release: string | null; engine?: string | undefined } | undefined;
 }) {
   const { t } = useI18n();
   const ids = (code: string) => [...new Set(result.reasonCodes.filter((r) => r.code === code && r.symptomId).map((r) => r.symptomId!))];
