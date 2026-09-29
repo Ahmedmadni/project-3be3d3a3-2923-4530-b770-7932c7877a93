@@ -13,6 +13,6 @@ describe("navigation items", () => {
 
   it("keeps the health library available in desktop navigation", () => {
     expect(navItems.some((item) => item.to === "/library")).toBe(true);
-    expect(mobileNavItems.some((item) => item.to === "/library")).toBe(false);
+    expect(mobileNavItems.some((item) => (item.to as string) === "/library")).toBe(false);
   });
 });
