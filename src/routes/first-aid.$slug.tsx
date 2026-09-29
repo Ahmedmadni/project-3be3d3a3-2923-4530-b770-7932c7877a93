@@ -12,6 +12,7 @@ import { appConfig } from "@/config/app";
 import { allowedFirstAidSectionStatuses, isPublicFirstAidTopicVisible } from "@/lib/public-content";
 import { PageHeader, EmergencyAlert, ErrorState } from "@/components/health/cards";
 import { ProfessionalBadge } from "@/components/health/badges";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { localized, useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +98,8 @@ function Detail() {
           ) : null}
         </div>
       </PageHeader>
+
+      <MedicalDisclaimer />
 
       <div className="flex flex-wrap gap-3">
         <Link
