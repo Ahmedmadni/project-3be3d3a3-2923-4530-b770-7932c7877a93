@@ -18,6 +18,24 @@ This pack intentionally starts small. It is meant to give the medical reviewer a
    - Draft matching links: excessive thirst, frequent urination, fatigue
    - Remains inactive until medical review
 
+3. Dehydration
+   - Saudi Ministry of Health
+   - NHS
+   - Draft matching links: excessive thirst, dizziness, fatigue, nausea
+   - Remains inactive until medical review
+
+4. Common cold
+   - Saudi Ministry of Health
+   - Draft matching links currently use cough, headache, fatigue and fever
+   - Important limitation: the current symptom catalog does not yet include runny nose or sore throat, so matching must be reviewed before activation
+   - Remains inactive until medical review
+
+5. Migraine
+   - Saudi Ministry of Health
+   - Draft matching links: headache, nausea, vomiting and dizziness
+   - Important limitation: light/sound sensitivity are not yet part of the current symptom catalog
+   - Remains inactive until medical review
+
 The condition summaries explicitly state that symptoms alone are not diagnostic.
 
 ## Draft first-aid topics
@@ -51,6 +69,14 @@ Checked on 2026-09-29:
   https://www.moh.gov.sa/healthawareness/educationalcontent/diseases/diabetic/pages/008.aspx
 - CDC — Symptoms of diabetes  
   https://www.cdc.gov/diabetes/signs-symptoms/index.html
+- Saudi MOH — Dehydration during pilgrimage  
+  https://www.moh.gov.sa/healthawareness/pilgrims-health/pages/dehydration.aspx
+- NHS — Dehydration  
+  https://www.nhs.uk/conditions/dehydration/
+- Saudi MOH — Common cold  
+  https://www.moh.gov.sa/healthawareness/educationalcontent/diseases/infectious/pages/common-cold.aspx
+- Saudi MOH — Migraine  
+  https://www.moh.gov.sa/healthawareness/educationalcontent/diseases/nervous-system/pages/migraine.aspx
 - American Red Cross — Burns  
   https://www.redcross.org/take-a-class/resources/learn-first-aid/burns
 - American Red Cross — Life-threatening external bleeding  
@@ -68,6 +94,8 @@ For every item, an authorized medical reviewer should confirm:
 - English translation matches the intended meaning.
 - Care level and specialty are appropriate.
 - Symptom relationships and core/supporting status are appropriate.
+- Common-cold matching should not be activated until the reviewer accepts the limited current symptom vocabulary or the catalog adds runny nose/sore throat.
+- Migraine matching should be reviewed with awareness that light/sound sensitivity are not yet selectable symptoms.
 - First-aid instructions match the current source and local practice.
 - Choking content is clearly limited to adult/child instructions and is not used as infant guidance.
 - Emergency wording does not delay calling emergency services.
