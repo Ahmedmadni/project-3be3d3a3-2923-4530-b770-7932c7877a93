@@ -26,11 +26,7 @@ export const ConditionMatchingEngine = {
 
     const out: PossibleConditionResult[] = [];
     for (const c of conditions) {
-      // condition_symptoms has no is_active column in the database schema.
-      // Every persisted link is therefore considered active; removing a link is
-      // the way to deactivate it. Filtering on a non-existent property caused
-      // real database rows to be discarded at runtime.
-      const links = ref.conditionSymptoms.filter((l) => l.condition_id === c.id);
+      const links = ref.conditionSymptoms.filter((l) => l.condition_id === c.id && l.is_active);
       if (!links.length) continue;
       let score = 0;
       let max = 0;
