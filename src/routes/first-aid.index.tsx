@@ -7,6 +7,7 @@ import { appConfig } from "@/config/app";
 import { isPublicFirstAidTopicVisible } from "@/lib/public-content";
 import { FirstAidCard, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
 import { PageVisualHeader } from "@/components/health/PageVisualHeader";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { localized, useI18n } from "@/i18n";
 import { arabicIncludes } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,7 @@ function FirstAid() {
         </div>
       </PageVisualHeader>
 
+      <MedicalDisclaimer className="mb-4" />
       <EmergencyAlert className="mb-4" />
 
       <label className="relative mb-6 block">
