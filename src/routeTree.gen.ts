@@ -23,6 +23,7 @@ import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SymptomCheckerRouteImport } from './routes/symptom-checker'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminConditionsRouteImport } from './routes/admin.conditions'
+import { Route as AdminExternalSourcesRouteImport } from './routes/admin.external-sources'
 import { Route as AdminFirstAidRouteImport } from './routes/admin.first-aid'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminRedFlagsRouteImport } from './routes/admin.red-flags'
@@ -104,6 +105,11 @@ const AdminConditionsRoute = AdminConditionsRouteImport.update({
   path: '/conditions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminExternalSourcesRoute = AdminExternalSourcesRouteImport.update({
+  id: '/external-sources',
+  path: '/external-sources',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFirstAidRoute = AdminFirstAidRouteImport.update({
   id: '/first-aid',
   path: '/first-aid',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
   '/admin/conditions': typeof AdminConditionsRoute
+  '/admin/external-sources': typeof AdminExternalSourcesRoute
   '/admin/first-aid': typeof AdminFirstAidRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/red-flags': typeof AdminRedFlagsRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
   '/admin/conditions': typeof AdminConditionsRoute
+  '/admin/external-sources': typeof AdminExternalSourcesRoute
   '/admin/first-aid': typeof AdminFirstAidRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/red-flags': typeof AdminRedFlagsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/results': typeof ResultsRoute
   '/symptom-checker': typeof SymptomCheckerRoute
   '/admin/conditions': typeof AdminConditionsRoute
+  '/admin/external-sources': typeof AdminExternalSourcesRoute
   '/admin/first-aid': typeof AdminFirstAidRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/red-flags': typeof AdminRedFlagsRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/symptom-checker'
     | '/admin/conditions'
+    | '/admin/external-sources'
     | '/admin/first-aid'
     | '/admin/questions'
     | '/admin/red-flags'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/symptom-checker'
     | '/admin/conditions'
+    | '/admin/external-sources'
     | '/admin/first-aid'
     | '/admin/questions'
     | '/admin/red-flags'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/symptom-checker'
     | '/admin/conditions'
+    | '/admin/external-sources'
     | '/admin/first-aid'
     | '/admin/questions'
     | '/admin/red-flags'
@@ -427,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConditionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/external-sources': {
+      id: '/admin/external-sources'
+      path: '/external-sources'
+      fullPath: '/admin/external-sources'
+      preLoaderRoute: typeof AdminExternalSourcesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/first-aid': {
       id: '/admin/first-aid'
       path: '/first-aid'
@@ -502,6 +521,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminConditionsRoute: typeof AdminConditionsRoute
+  AdminExternalSourcesRoute: typeof AdminExternalSourcesRoute
   AdminFirstAidRoute: typeof AdminFirstAidRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminRedFlagsRoute: typeof AdminRedFlagsRoute
@@ -514,6 +534,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminConditionsRoute: AdminConditionsRoute,
+  AdminExternalSourcesRoute: AdminExternalSourcesRoute,
   AdminFirstAidRoute: AdminFirstAidRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminRedFlagsRoute: AdminRedFlagsRoute,
