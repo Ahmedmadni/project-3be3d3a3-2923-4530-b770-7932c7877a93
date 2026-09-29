@@ -14,6 +14,8 @@ export function QuestionBuilder() {
   const [optionEn, setOptionEn] = useState("");
   const [triggerType, setTriggerType] = useState("symptom_selected");
   const [symptomId, setSymptomId] = useState("");
+  const [conditionId, setConditionId] = useState("");
+  const [confirmSymptomId, setConfirmSymptomId] = useState("");
   const [parentQuestionId, setParentQuestionId] = useState("");
   const [expectedValue, setExpectedValue] = useState("");
   const [operator, setOperator] = useState("eq");
@@ -21,17 +23,25 @@ export function QuestionBuilder() {
   const q = useQuery({
     queryKey: ["admin", "question-builder"],
     queryFn: async () => {
-      const [questions, symptoms, options, rules] = await Promise.all([
+      const [questions, symptoms, conditions, options, rules] = await Promise.all([
         supabase.from("questions").select("id,question_ar,question_type").order("sort_order"),
         supabase.from("symptoms").select("id,name_ar").order("name_ar"),
+        supabase.from("conditions").select("id,name_ar").order("name_ar"),
         supabase.from("question_options").select("*").order("sort_order"),
         supabase.from("question_rules").select("*").order("priority"),
       ]);
       if (questions.error) throw questions.error;
       if (symptoms.error) throw symptoms.error;
+      if (conditions.error) throw conditions.error;
       if (options.error) throw options.error;
       if (rules.error) throw rules.error;
-      return { questions: questions.data ?? [], symptoms: symptoms.data ?? [], options: options.data ?? [], rules: rules.data ?? [] };
+      return {
+        questions: questions.data ?? [],
+        symptoms: symptoms.data ?? [],
+        conditions: conditions.data ?? [],
+        options: options.data ?? [],
+        rules: rules.data ?? [],
+      };
     },
   });
 
@@ -57,10 +67,13 @@ export function QuestionBuilder() {
   const addRule = useMutation({
     mutationFn: async () => {
       if (!questionId) throw new Error("اختر السؤال.");
+      if (triggerType === "condition_candidate" && !conditionId) throw new Error("اختر الحالة المرشحة.");
       const { error } = await supabase.from("question_rules").insert({
         question_id: questionId,
         trigger_type: triggerType,
         symptom_id: triggerType === "symptom_selected" ? symptomId || null : null,
+        condition_id: triggerType === "condition_candidate" ? conditionId || null : null,
+        confirms_symptom_id: confirmSymptomId || null,
         parent_question_id: triggerType === "answer_equals" ? parentQuestionId || null : null,
         operator,
         expected_value: triggerType === "answer_equals" ? expectedValue || null : null,
@@ -94,6 +107,7 @@ export function QuestionBuilder() {
   if (q.isPending) return null;
   const questionName = (id: string) => q.data?.questions.find((x) => x.id === id)?.question_ar ?? id;
   const symptomName = (id: string | null) => q.data?.symptoms.find((x) => x.id === id)?.name_ar ?? id ?? "";
+  const conditionName = (id: string | null) => q.data?.conditions.find((x) => x.id === id)?.name_ar ?? id ?? "";
 
   return (
     <section className="mt-6 glass rounded-3xl p-5">
@@ -123,11 +137,22 @@ export function QuestionBuilder() {
             <h4 className="font-semibold">قواعد الظهور</h4>
             <div className="mt-3 grid gap-2">
               <select className={cls} value={triggerType} onChange={(e) => setTriggerType(e.target.value)}>
-                <option value="symptom_selected">إذا تم اختيار عرض</option><option value="answer_equals">إذا كانت إجابة سؤال</option><option value="always">دائمًا</option>
+                <option value="symptom_selected">إذا تم اختيار عرض</option>
+                <option value="condition_candidate">إذا كانت هناك حالة مرشحة</option>
+                <option value="answer_equals">إذا كانت إجابة سؤال</option>
+                <option value="always">دائمًا</option>
               </select>
               {triggerType === "symptom_selected" ? (
                 <select className={cls} value={symptomId} onChange={(e) => setSymptomId(e.target.value)}>
                   <option value="">اختر العرض</option>{(q.data?.symptoms ?? []).map((s) => <option key={s.id} value={s.id}>{s.name_ar}</option>)}
+                </select>
+              ) : null}
+              {triggerType === "condition_candidate" ? (
+                <select className={cls} value={conditionId} onChange={(e) => setConditionId(e.target.value)}>
+                  <option value="">اختر الحالة المرشحة</option>
+                  {(q.data?.conditions ?? []).map((condition) => (
+                    <option key={condition.id} value={condition.id}>{condition.name_ar}</option>
+                  ))}
                 </select>
               ) : null}
               {triggerType === "answer_equals" ? (
@@ -141,6 +166,15 @@ export function QuestionBuilder() {
                   </div>
                 </>
               ) : null}
+              <select className={cls} value={confirmSymptomId} onChange={(e) => setConfirmSymptomId(e.target.value)}>
+                <option value="">لا تضف عرضًا من الإجابة</option>
+                {(q.data?.symptoms ?? []).map((symptom) => (
+                  <option key={symptom.id} value={symptom.id}>إذا كانت الإجابة نعم: أكد {symptom.name_ar}</option>
+                ))}
+              </select>
+              <p className="text-[11px] leading-5 text-muted-foreground">
+                قواعد التأكيد الذكي لا يمكن تفعيلها إلا بعد نشر السؤال والعرض والحالة المرتبطة.
+              </p>
               <button type="button" className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground" onClick={() => addRule.mutate()}>إضافة قاعدة</button>
             </div>
             <div className="mt-3 divide-y divide-border">
@@ -148,7 +182,9 @@ export function QuestionBuilder() {
                 <div key={r.id} className="flex justify-between gap-3 py-2 text-xs">
                   <span>
                     {r.trigger_type === "symptom_selected" ? `إذا العرض = ${symptomName(r.symptom_id)}` :
+                     r.trigger_type === "condition_candidate" ? `إذا الحالة مرشحة = ${conditionName(r.condition_id)}` :
                      r.trigger_type === "answer_equals" ? `إذا ${questionName(r.parent_question_id ?? "")} ${r.operator} ${r.expected_value ?? ""}` : "دائمًا"}
+                    {r.confirms_symptom_id ? <em className="mr-2 not-italic text-muted-foreground">← نعم تؤكد: {symptomName(r.confirms_symptom_id)}</em> : null}
                     <b className={r.is_active ? "mr-2 text-primary" : "mr-2 text-warning"}>{r.is_active ? "مفعلة" : "بانتظار المراجعة"}</b>
                   </span>
                   <span className="flex items-center gap-2">
