@@ -7,6 +7,7 @@ import { appConfig } from "@/config/app";
 import { isPublicFirstAidTopicVisible } from "@/lib/public-content";
 import { FirstAidCard, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
 import { PageVisualHeader } from "@/components/health/PageVisualHeader";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { localized, useI18n } from "@/i18n";
 import { arabicIncludes } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,7 @@ function FirstAid() {
       </PageVisualHeader>
 
       <EmergencyAlert className="mb-4" />
+      <MedicalDisclaimer text={t("medical.firstAidDisclaimer")} className="mb-4" />
 
       <label className="relative mb-6 block">
         <Search className={cn("absolute inset-y-0 my-auto size-5 text-muted-foreground", dir === "rtl" ? "right-4" : "left-4")} />
