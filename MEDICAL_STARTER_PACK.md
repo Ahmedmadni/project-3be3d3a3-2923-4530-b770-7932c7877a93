@@ -110,3 +110,51 @@ For every item, an authorized medical reviewer should confirm:
 - No medication dose or patient-specific treatment advice has been introduced.
 
 Only after review should the normal governance workflow move content from draft to review/approval/publication.
+
+
+## Draft smart follow-up questions
+
+A small clarifier-question foundation has been added for the starter conditions. All questions and their rules remain inactive drafts.
+
+### Migraine
+
+Triggered only when migraine is already a candidate condition from a selected core symptom.
+
+- Does light bother you more than usual during the headache? -> may confirm light sensitivity
+- Do sounds bother you more than usual during the headache? -> may confirm sound sensitivity
+- Is the headache accompanied by nausea? -> may confirm nausea
+
+Sources:
+- Saudi Ministry of Health — Migraine
+- NHS — Migraine
+
+### Common cold
+
+Triggered only when common cold is already a candidate condition from a selected core symptom.
+
+- Do you have a runny nose? -> may confirm runny nose
+- Do you have a sore or irritated throat? -> may confirm sore throat
+
+Sources:
+- Saudi Ministry of Health — Common cold
+- NHS — Common cold
+
+### Dehydration
+
+Triggered only when dehydration is already a candidate condition from a selected core symptom.
+
+- Do you feel unusually or extremely thirsty? -> may confirm excessive thirst
+- Are you urinating less than usual or is your urine dark? -> may confirm reduced/dark urine
+
+Sources:
+- Saudi Ministry of Health — Exposure to dehydration
+- NHS — Dehydration
+
+### Safety behavior
+
+- Clarifier answers affect condition matching only.
+- Clarifier-confirmed symptoms are deliberately not injected into the red-flag engine.
+- At most four clarifier questions are shown in one public assessment.
+- Questions already covered by the user's selected symptoms are skipped.
+- Production requires the question, target symptom and candidate condition to be published and active before a clarifier rule can be activated.
+- Every question remains traceable to a medical source.
