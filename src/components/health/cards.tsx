@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { icons, ChevronLeft, AlertTriangle, Phone } from "lucide-react";
+import { icons, ChevronLeft, AlertTriangle, Phone, CheckCircle2, CircleDot, MinusCircle, Info } from "lucide-react";
 import type { Condition, FirstAidTopic, PossibleConditionResult, Symptom } from "@/types/medical";
 import { CompatibilityBadge } from "./badges";
 import { appConfig } from "@/config/app";
@@ -46,7 +46,7 @@ export function FirstAidCard({ topic }: { topic: FirstAidTopic }) {
   );
 }
 
-export function ResultCard({ result, condition, symptoms }: { result: PossibleConditionResult; condition: Condition; symptoms: Symptom[] }) {
+export function ResultCard({ result, condition, symptoms, meta }: { result: PossibleConditionResult; condition: Condition; symptoms: Symptom[]; meta?: { conditionVersion?: number | undefined; release: string | null; engine?: string | undefined } }) {
   const { lang, t } = useI18n();
   const name = (id: string) => {
     const symptom = symptoms.find((s) => s.id === id);
@@ -88,19 +88,7 @@ export function ResultCard({ result, condition, symptoms }: { result: PossibleCo
         </div>
       </div>
 
-      {why.length ? (
-        <div className="mt-5">
-          <p className="text-sm font-bold">{t("results.why")}</p>
-          <ul className="mt-2 space-y-1.5 text-sm leading-6 text-muted-foreground">
-            {why.map((item) => (
-              <li key={item} className="flex items-start gap-2">
-                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <WhySection result={result} name={name} fallback={why} meta={meta} />
 
       {(seekCare || condition.specialty) ? (
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -177,4 +165,49 @@ export function LoadingState() {
 export function ErrorState({ text }: { text?: string }) {
   const { t } = useI18n();
   return <div className="rounded-3xl bg-destructive-soft p-6 text-center text-sm text-destructive">{text ?? t("common.loadError")}</div>;
+}
+
+function WhySection({ result, name, fallback, meta }: {
+  result: PossibleConditionResult; name: (id: string) => string; fallback: string[];
+  meta?: { conditionVersion?: number | undefined; release: string | null; engine?: string | undefined };
+}) {
+  const { t } = useI18n();
+  const ids = (code: string) => [...new Set(result.reasonCodes.filter((r) => r.code === code && r.symptomId).map((r) => r.symptomId!))];
+  const groups = [
+    { key: "results.why.core" as const, items: ids("MATCHED_PRIMARY_SYMPTOM"), Icon: CheckCircle2, tone: "bg-primary-soft text-primary" },
+    { key: "results.why.support" as const, items: ids("MATCHED_SECONDARY_SYMPTOM"), Icon: CircleDot, tone: "bg-success-soft text-success" },
+    { key: "results.why.against" as const, items: ids("CONTRADICTING_FINDING"), Icon: MinusCircle, tone: "bg-warning-soft text-warning" },
+  ].filter((g) => g.items.length);
+  const levelText = t(`results.why.level.${result.compatibilityLevel}` as never);
+
+  return (
+    <section className="mt-5 rounded-2xl bg-card/60 p-4 ring-1 ring-border">
+      <div className="flex items-center gap-2">
+        <Info className="size-4 text-primary" />
+        <p className="text-sm font-bold">{t("results.why")}</p>
+      </div>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">{levelText}</p>
+      {groups.length ? (
+        <div className="mt-3 space-y-3">
+          {groups.map(({ key, items, Icon, tone }) => (
+            <div key={key}>
+              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold"><Icon className="size-3.5" />{t(key)}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {items.map((id) => <span key={id} className={cn("rounded-full px-3 py-1 text-xs font-medium", tone)}>{name(id)}</span>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">{fallback.map((f) => <li key={f}>{f}</li>)}</ul>
+      )}
+      <p className="mt-3 text-[11px] leading-5 text-muted-foreground">{t("results.why.note")}</p>
+      {meta && (meta.release || meta.conditionVersion) ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {meta.release ? `${t("results.release")}: ${meta.release}` : ""}
+          {meta.conditionVersion ? ` · ${t("results.conditionVersion")}: v${meta.conditionVersion}` : ""}
+        </p>
+      ) : null}
+    </section>
+  );
 }

@@ -59,9 +59,12 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
 
     const conditionIds = data.results.map((r) => r.conditionId);
     const conditionVersions = new Map<string, number>();
+    const snapshots = new Map<string, Record<string, unknown>>();
     if (conditionIds.length) {
-      const { data: rows } = await supabaseAdmin.from("conditions").select("id,version").in("id", conditionIds);
-      for (const row of rows ?? []) conditionVersions.set(row.id, row.version);
+      const { data: rows } = await supabaseAdmin.from("conditions")
+        .select("id,code,version,name_ar,name_en,summary_ar,summary_en,care_level,specialty,review_status,is_demo")
+        .in("id", conditionIds);
+      for (const row of rows ?? []) { conditionVersions.set(row.id, row.version); snapshots.set(row.id, row); }
     }
 
     const { data: s, error } = await supabaseAdmin.from("symptom_sessions").insert({
@@ -89,12 +92,18 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
     if (data.answers.length) ops.push(supabaseAdmin.from("session_answers").insert(data.answers.map((a) => ({ session_id: sid, question_id: a.questionId, answer_value: a.value }))) as never);
     if (data.results.length) ops.push(supabaseAdmin.from("session_results").insert(data.results.map((r) => ({
       session_id: sid, condition_id: r.conditionId, matching_score: r.score, matching_level: r.level,
-      explanation_data: r.explanation as never,
+      explanation_data: { ...r.explanation, condition_snapshot: snapshots.get(r.conditionId) ?? null, knowledge_release: release?.version ?? null } as never,
       rank: r.rank,
       engine_version: data.engineVersion,
       ruleset_version: release?.version ?? null,
       condition_version: conditionVersions.get(r.conditionId) ?? null,
     }))) as never);
     await Promise.all(ops);
-    return { sessionId: sid, saved: userId ? "account" as const : "guest" as const, knowledgeReleaseVersion: release?.version ?? null };
+    return { conditionSnapshots: Object.fromEntries(snapshots) as Record<string, ConditionSnapshot>, sessionId: sid, saved: userId ? "account" as const : "guest" as const, knowledgeReleaseVersion: release?.version ?? null };
   });
+
+export interface ConditionSnapshot {
+  id: string; code: string; version: number; name_ar: string; name_en: string | null;
+  summary_ar: string | null; summary_en: string | null; care_level: string;
+  specialty: string | null; review_status: string; is_demo: boolean;
+}

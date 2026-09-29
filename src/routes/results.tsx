@@ -61,7 +61,13 @@ function Results() {
   }
 
   const items = stored.results
-    .map((r) => ({ r, c: ref.conditions.find((c) => c.id === r.conditionId) }))
+    .map((r) => {
+      const live = ref.conditions.find((c) => c.id === r.conditionId);
+      const snap = stored.conditionSnapshots?.[r.conditionId];
+      // Prefer the condition version captured at check time so old results never drift.
+      const c = snap ? ({ ...(live ?? {}), ...snap } as unknown as typeof live) : live;
+      return { r, c, version: (snap?.version as number | undefined) ?? live?.version };
+    })
     .filter((x) => x.c);
 
   const care = resultCarePresentation(stored.triage.level);
@@ -109,8 +115,9 @@ function Results() {
             </span>
           </div>
           <div className="space-y-4">
-            {items.map(({ r, c }) => (
-              <ResultCard key={r.conditionId} result={r} condition={c!} symptoms={ref.symptoms} />
+            {items.map(({ r, c, version }) => (
+              <ResultCard key={r.conditionId} result={r} condition={c!} symptoms={ref.symptoms}
+                meta={{ conditionVersion: version, release: stored.knowledgeReleaseVersion ?? null, engine: stored.engineVersion }} />
             ))}
           </div>
         </>
@@ -131,6 +138,8 @@ function Results() {
           <details className="text-xs text-muted-foreground">
             <summary className="cursor-pointer font-medium">{t("results.moreInfo")}</summary>
             <p className="mt-2">{t("results.release")}: {stored.knowledgeReleaseVersion}</p>
+            {stored.engineVersion ? <p>{t("results.engine")}: {stored.engineVersion}</p> : null}
+            {stored.savedAt ? <p>{t("results.checkedAt")}: {new Date(stored.savedAt).toLocaleString()}</p> : null}
           </details>
         ) : null}
       </div>

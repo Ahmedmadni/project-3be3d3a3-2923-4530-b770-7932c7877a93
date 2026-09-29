@@ -4,7 +4,7 @@ import type { PossibleConditionResult, TriageResult } from "@/types/medical";
 const KEY = "mh.lastResult";
 const GUEST = "mh.guestId";
 
-export interface StoredResult { sessionId: string | null; triage: TriageResult; results: PossibleConditionResult[]; symptomIds: string[]; knowledgeReleaseVersion?: string | null }
+export interface StoredResult { sessionId: string | null; triage: TriageResult; results: PossibleConditionResult[]; symptomIds: string[]; knowledgeReleaseVersion?: string | null; engineVersion?: string; savedAt?: string; conditionSnapshots?: Record<string, Record<string, unknown> & { version?: number }> }
 
 export const resultStore = {
   save(v: StoredResult) { sessionStorage.setItem(KEY, JSON.stringify(v)); },
