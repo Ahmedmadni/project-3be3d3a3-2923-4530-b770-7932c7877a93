@@ -164,6 +164,7 @@ function Wizard() {
     setBusy(true);
     let sessionId: string | null = null;
     let knowledgeReleaseVersion: string | null = null;
+    let conditionSnapshots: Record<string, Record<string, unknown>> = {};
 
     try {
       const response = await save({
@@ -203,6 +204,7 @@ function Wizard() {
 
       sessionId = response.sessionId;
       knowledgeReleaseVersion = response.knowledgeReleaseVersion;
+      conditionSnapshots = response.conditionSnapshots as unknown as Record<string, Record<string, unknown>>;
     } catch {
       // Saving is best-effort; never block the safety flow.
     }
@@ -213,6 +215,9 @@ function Wizard() {
       results,
       symptomIds: savedSymptomIds,
       knowledgeReleaseVersion,
+      engineVersion: ENGINE_VERSION,
+      savedAt: new Date().toISOString(),
+      conditionSnapshots,
     });
 
     setBusy(false);
