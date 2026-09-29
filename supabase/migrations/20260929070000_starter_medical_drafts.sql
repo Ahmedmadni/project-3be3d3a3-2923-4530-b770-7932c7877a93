@@ -3,6 +3,13 @@
 -- Existing first-aid topics remain draft. No content is published by this migration.
 -- Medical reviewer approval is required before any activation/publication.
 
+-- condition_symptoms is a governed clinical link. The matching engine already
+-- honors is_active, but the original table did not have the column. Existing
+-- links stay active for backward compatibility; starter-pack links below are
+-- explicitly inactive until reviewed.
+ALTER TABLE public.condition_symptoms
+  ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+
 -- ---------------------------------------------------------------------------
 -- Authoritative sources checked on 2026-09-29
 -- ---------------------------------------------------------------------------
@@ -244,9 +251,9 @@ ON CONFLICT DO NOTHING;
 
 -- Draft matching relationships. The parent conditions remain inactive until review.
 INSERT INTO public.condition_symptoms (
-  condition_id, symptom_id, relationship_type, weight, is_core_symptom, is_demo
+  condition_id, symptom_id, relationship_type, weight, is_core_symptom, is_demo, is_active
 )
-SELECT c.id, s.id, v.relationship_type::public.relationship_type, v.weight, v.is_core, false
+SELECT c.id, s.id, v.relationship_type::public.relationship_type, v.weight, v.is_core, false, false
 FROM (VALUES
   ('iron_deficiency_anemia', 'fatigue', 'supports', 1.0::numeric, true),
   ('iron_deficiency_anemia', 'dizziness', 'supports', 1.0::numeric, true),
