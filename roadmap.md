@@ -115,6 +115,18 @@
   - [x] Added inactive common-cold and migraine relationships for the new symptom vocabulary
   - [x] Linked respiratory symptoms to Saudi MOH / NHS sources and sensory symptoms to Saudi MOH / NHS migraine sources
   - [ ] Authorized medical reviewer approval and activation of the new symptoms and links
+- [x] Smart follow-up question foundation
+  - [x] Added clarifier rule target (confirmed symptom) without coupling it to red-flag input
+  - [x] Candidate-condition trigger shows clarifiers only after a core symptom makes the condition relevant
+  - [x] Public assessment shows safety questions first, then up to four clarifier questions
+  - [x] Yes answers can confirm a linked symptom for condition matching and saved history
+  - [x] No / unsure answers do not add a symptom
+  - [x] Added inactive sourced clarifiers for migraine, common cold and dehydration
+  - [x] Added inactive sourced symptom: reduced/dark urine
+  - [x] Activation guard requires published active question, symptom and candidate condition before a smart rule can be enabled
+  - [x] Admin question builder supports candidate-condition triggers and confirmed-symptom targets
+  - [x] Automated tests confirm clarifiers improve matching without becoming emergency triggers
+  - [ ] Authorized medical reviewer approval and activation of clarifier content
 - [ ] Phase 4: reviewed medical knowledge base and controlled content import
   - [x] Controlled import bundle schema and validator
   - [x] Mandatory source references for every imported clinical item
