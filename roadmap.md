@@ -86,8 +86,8 @@
   - [x] Authentication and password-reset flows localized for Arabic and English
   - [x] Automated tests cover the focused mobile navigation structure
 - [x] Starter sourced medical content pack
-  - [x] Fixed condition matching so real condition_symptoms database rows are no longer discarded
-  - [x] Regression test uses the real condition_symptoms row shape
+  - [x] Aligned condition_symptoms schema with the matching engine activation guard
+  - [x] Existing links stay active for backward compatibility; new starter links are explicitly inactive
   - [x] Added authoritative sources checked on 2026-09-29
   - [x] Added inactive draft condition: iron deficiency anemia
   - [x] Added inactive draft condition: type 2 diabetes
