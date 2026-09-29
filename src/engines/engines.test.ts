@@ -65,6 +65,140 @@ describe("RedFlagEngine", () => {
     const r = RedFlagEngine.evaluate({ ...emptyReference }, { symptomIds: ["fainting"], answers: {}, severity: {} });
     expect(r).toMatchObject({ level: "emergency", source: "fallback" });
   });
+
+  it("ignores draft/demo database red flags in production", () => {
+    const productionRef = any<ReferenceData>({
+      ...emptyReference,
+      redFlags: [
+        {
+          id: "draft",
+          code: "draft_flag",
+          title_ar: "مسودة",
+          care_level: "emergency",
+          priority: 100,
+          is_active: true,
+          is_demo: false,
+          review_status: "draft",
+        },
+        {
+          id: "demo",
+          code: "demo_flag",
+          title_ar: "تجريبي",
+          care_level: "emergency",
+          priority: 100,
+          is_active: true,
+          is_demo: true,
+          review_status: "published",
+        },
+      ],
+      redFlagRules: [
+        { id: "dr", red_flag_id: "draft", question_id: "q", operator: "eq", value: "yes", is_active: true },
+        { id: "dm", red_flag_id: "demo", question_id: "q", operator: "eq", value: "yes", is_active: true },
+      ],
+    });
+
+    const result = RedFlagEngine.evaluate(
+      productionRef,
+      { symptomIds: [], answers: { q: "yes" }, severity: {} },
+      { contentMode: "production" },
+    );
+
+    expect(result.flags).toEqual([]);
+    expect(result.level).toBe("self_care");
+  });
+
+  it("accepts published non-demo red flags in production", () => {
+    const productionRef = any<ReferenceData>({
+      ...emptyReference,
+      redFlags: [
+        {
+          id: "real",
+          code: "published_flag",
+          title_ar: "منشور",
+          care_level: "urgent",
+          priority: 50,
+          is_active: true,
+          is_demo: false,
+          review_status: "published",
+        },
+      ],
+      redFlagRules: [
+        { id: "rr", red_flag_id: "real", question_id: "q", operator: "eq", value: "yes", is_active: true },
+      ],
+    });
+
+    const result = RedFlagEngine.evaluate(
+      productionRef,
+      { symptomIds: [], answers: { q: "yes" }, severity: {} },
+      { contentMode: "production" },
+    );
+
+    expect(result.flags.map((flag) => flag.code)).toContain("published_flag");
+    expect(result.level).toBe("urgent");
+  });
+
+  it("keeps the deterministic safety floor when the reviewed database rule set is partial", () => {
+    const partial = any<ReferenceData>({
+      ...emptyReference,
+      symptoms: [
+        { id: "cp", code: "chest_pain" },
+      ],
+      redFlags: [
+        {
+          id: "real",
+          code: "unrelated_published_flag",
+          title_ar: "منشور",
+          care_level: "urgent",
+          priority: 50,
+          is_active: true,
+          is_demo: false,
+          review_status: "published",
+        },
+      ],
+      redFlagRules: [
+        { id: "rr", red_flag_id: "real", question_id: "other", operator: "eq", value: "yes", is_active: true },
+      ],
+    });
+
+    const result = RedFlagEngine.evaluate(
+      partial,
+      { symptomIds: ["cp"], answers: {}, severity: { cp: "severe" } },
+      { contentMode: "production" },
+    );
+
+    expect(result.level).toBe("emergency");
+    expect(result.flags.map((flag) => flag.code)).toContain("severe_chest_pain");
+  });
+
+  it("keeps legacy sudden-headache and chest-radiation safety checks", () => {
+    const legacyRef = any<ReferenceData>({
+      ...emptyReference,
+      symptoms: [
+        { id: "hd", code: "headache" },
+        { id: "cp", code: "chest_pain" },
+      ],
+      questions: [
+        { id: "q-hd", code: "hd_sudden" },
+        { id: "q-cp", code: "cp_radiate" },
+      ],
+    });
+
+    const headache = RedFlagEngine.evaluate(
+      legacyRef,
+      { symptomIds: ["hd"], answers: { "q-hd": "yes" }, severity: { hd: "moderate" } },
+      { contentMode: "production" },
+    );
+    const chest = RedFlagEngine.evaluate(
+      legacyRef,
+      { symptomIds: ["cp"], answers: { "q-cp": "yes" }, severity: { cp: "mild" } },
+      { contentMode: "production" },
+    );
+
+    expect(headache.level).toBe("emergency");
+    expect(headache.flags.map((flag) => flag.code)).toContain("thunderclap_headache");
+    expect(chest.level).toBe("emergency");
+    expect(chest.flags.map((flag) => flag.code)).toContain("severe_chest_pain");
+  });
 });
 
 describe("ConditionMatchingEngine", () => {

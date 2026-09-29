@@ -158,3 +158,78 @@ Sources:
 - Questions already covered by the user's selected symptoms are skipped.
 - Production requires the question, target symptom and candidate condition to be published and active before a clarifier rule can be activated.
 - Every question remains traceable to a medical source.
+
+
+## Draft source-backed safety / red-flag pack
+
+A focused safety pack has been added for the most important public-checker symptoms. All new entities remain draft/inactive until authorized medical review.
+
+### Headache
+
+Draft safety questions:
+- Did the headache start suddenly and become extremely severe or clearly different from usual?
+- Is there new weakness/numbness or difficulty speaking, seeing, or walking?
+
+Sources:
+- Saudi Ministry of Health — Stroke
+- NHS — Headaches
+
+### Chest pain
+
+Draft safety questions:
+- Does the pain/discomfort spread to the arm, shoulder, back, neck, or jaw?
+- Is it accompanied by shortness of breath, cold sweating, nausea, dizziness, or fainting?
+
+Direct severe-chest-pain matching is also represented as an inactive source-backed red-flag rule.
+
+Source:
+- Saudi Ministry of Health — Heart attacks
+
+### Shortness of breath
+
+Draft safety questions:
+- Is breathing difficulty severe enough that the person is gasping/choking or unable to say a full sentence?
+- Is there blue/very pale skin or lips, or sudden confusion?
+
+A severe shortness-of-breath symptom can also trigger the draft emergency rule after review.
+
+Source:
+- NHS — Shortness of breath
+
+### Fainting
+
+Draft safety questions:
+- Has the person not fully recovered, or is there new difficulty speaking or moving?
+- Was fainting associated with chest pain or a strong/irregular heartbeat?
+
+Source:
+- NHS — Fainting
+
+### Vomiting
+
+Draft safety questions:
+- Is there blood in vomit or coffee-ground-like material? (emergency)
+- Is vomiting continuing so fluids cannot be kept down? (urgent)
+
+Sources:
+- NHS — Vomiting blood
+- NHS — Diarrhoea and vomiting
+
+### Life-threatening external bleeding
+
+A new explicit symptom draft has been added:
+
+- Heavy or continuous bleeding
+
+The source-backed red-flag rule remains inactive until the symptom and flag are medically reviewed and published.
+
+Source:
+- American Red Cross — Life-threatening external bleeding
+
+### Red-flag safety architecture
+
+- Draft/demo database red flags are ignored by the production red-flag engine.
+- Published source-backed rules can only increase urgency.
+- The deterministic legacy safety floor always remains active, so a partially published database rule set cannot remove existing chest-pain, breathing, fainting, sudden-headache, or severe-symptom protection.
+- New clinical rules cannot be activated unless the referenced question/symptom/red flag (and candidate condition where relevant) is published, active, non-demo content.
+- The original database trigger constraint has been aligned to permit the reviewed `condition_candidate` trigger type introduced by smart clarifiers.

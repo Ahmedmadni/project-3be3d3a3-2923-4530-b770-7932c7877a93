@@ -4,6 +4,17 @@
 --   * Clarifier answers may improve condition matching only after review/activation.
 --   * Clarifier-confirmed symptoms are NOT used by the red-flag engine.
 
+-- The original phase-2 schema only allowed three trigger types. Smart
+-- clarifiers introduce condition_candidate, so align the constraint before any
+-- condition_candidate rows are inserted. Keeping this here is important for a
+-- clean database that runs migrations from the beginning.
+ALTER TABLE public.question_rules
+  DROP CONSTRAINT IF EXISTS question_rules_trigger_type_check;
+
+ALTER TABLE public.question_rules
+  ADD CONSTRAINT question_rules_trigger_type_check
+  CHECK (trigger_type IN ('symptom_selected','answer_equals','condition_candidate','always'));
+
 ALTER TABLE public.question_rules
   ADD COLUMN IF NOT EXISTS confirms_symptom_id uuid
   REFERENCES public.symptoms(id) ON DELETE SET NULL;
