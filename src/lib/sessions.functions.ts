@@ -99,7 +99,7 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
       condition_version: conditionVersions.get(r.conditionId) ?? null,
     }))) as never);
     await Promise.all(ops);
-    return { conditionSnapshots: Object.fromEntries(snapshots) as Record<string, ConditionSnapshot>, sessionId: sid, saved: userId ? "account" as const : "guest" as const, knowledgeReleaseVersion: release?.version ?? null };
+    return { conditionSnapshots: Object.fromEntries(snapshots) as unknown as Record<string, ConditionSnapshot>, sessionId: sid, saved: userId ? "account" as const : "guest" as const, knowledgeReleaseVersion: release?.version ?? null };
   });
 
 export interface ConditionSnapshot {
