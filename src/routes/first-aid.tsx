@@ -1,3 +1,4 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/first-aid")({ component: () => <Outlet /> });
+export const Route = createFileRoute("/first-aid")({
+  staticData: { sitemap: false }, component: () => <Outlet /> });

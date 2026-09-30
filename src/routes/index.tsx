@@ -19,6 +19,7 @@ import librarySticker from "@/assets/sticker-health-library.png";
 import safeCareSticker from "@/assets/sticker-safe-care.png";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "مؤشر صحي — افهم أعراضك واتخذ الخطوة المناسبة" },

@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminAccess } from "@/hooks/use-admin-access";
 import { useI18n } from "@/i18n";
 
-export const Route = createFileRoute("/admin/releases")({ component: ReleasesPage });
+export const Route = createFileRoute("/admin/releases")({
+  staticData: { sitemap: false }, component: ReleasesPage });
 
 function ReleasesPage() {
   const access = useAdminAccess();

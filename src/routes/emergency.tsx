@@ -45,6 +45,7 @@ import {
 } from "@/lib/emergency-flow";
 
 export const Route = createFileRoute("/emergency")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "حالة طارئة — مؤشر صحي" },

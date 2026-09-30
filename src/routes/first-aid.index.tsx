@@ -28,6 +28,7 @@ const topicsQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/first-aid/")({
+  staticData: { sitemap: true },
   loader: ({ context }) => context.queryClient.ensureQueryData(topicsQuery),
   head: () => ({
     meta: [

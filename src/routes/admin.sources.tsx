@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { useI18n } from "@/i18n";
-export const Route = createFileRoute("/admin/sources")({ component: Page });
+export const Route = createFileRoute("/admin/sources")({
+  staticData: { sitemap: false }, component: Page });
 function Page() {
   const { t } = useI18n();
   return (

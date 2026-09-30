@@ -13,6 +13,7 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/results")({
+  staticData: { sitemap: false },
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
   head: () => ({
     meta: [

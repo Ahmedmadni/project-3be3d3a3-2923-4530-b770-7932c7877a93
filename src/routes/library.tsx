@@ -12,6 +12,7 @@ import libraryGuide from "@/assets/health-library-guide.jpg";
 import librarySticker from "@/assets/sticker-health-library.png";
 
 export const Route = createFileRoute("/library")({
+  staticData: { sitemap: true },
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
   head: () => ({
     meta: [

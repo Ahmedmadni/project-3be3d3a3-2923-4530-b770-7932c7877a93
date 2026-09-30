@@ -36,6 +36,7 @@ import checkerGuide from "@/assets/symptom-checker-guide.jpg";
 import checkerSticker from "@/assets/sticker-symptom-check.png";
 
 export const Route = createFileRoute("/symptom-checker")({
+  staticData: { sitemap: true },
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
   head: () => ({
     meta: [

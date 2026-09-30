@@ -7,6 +7,7 @@ import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { isTrustedGitHubRepository } from "@/lib/external-source-policy";
 
 export const Route = createFileRoute("/admin/external-sources")({
+  staticData: { sitemap: false },
   component: ExternalSourcesPage,
 });
 

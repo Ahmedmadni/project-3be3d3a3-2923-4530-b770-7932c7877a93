@@ -3,7 +3,8 @@ import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
 import { SourceLinker } from "@/components/admin/SourceLinker";
 import { QuestionBuilder } from "@/components/admin/QuestionBuilder";
-export const Route = createFileRoute("/admin/questions")({ component: Page });
+export const Route = createFileRoute("/admin/questions")({
+  staticData: { sitemap: false }, component: Page });
 function Page() {
   return <><AdminEntityManager table="questions" title="الأسئلة الديناميكية" description="إدارة أسئلة المتابعة. القواعد الشرطية ستظهر في محرر القواعد."
     primaryField="question_ar" orderBy="sort_order"

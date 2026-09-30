@@ -6,7 +6,8 @@ import { useAdminAccess } from "@/hooks/use-admin-access";
 import { grantableRoles, type Role } from "@/lib/governance";
 import { useI18n } from "@/i18n";
 
-export const Route = createFileRoute("/admin/users")({ component: UsersPage });
+export const Route = createFileRoute("/admin/users")({
+  staticData: { sitemap: false }, component: UsersPage });
 
 function UsersPage() {
   const access = useAdminAccess();

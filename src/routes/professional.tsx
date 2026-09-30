@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/professional")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "الوضع المهني — مؤشر صحي" },

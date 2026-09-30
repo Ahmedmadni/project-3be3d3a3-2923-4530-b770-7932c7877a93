@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
 import { SourceLinker } from "@/components/admin/SourceLinker";
-export const Route = createFileRoute("/admin/symptoms")({ component: Page });
+export const Route = createFileRoute("/admin/symptoms")({
+  staticData: { sitemap: false }, component: Page });
 function Page() {
   return <><AdminEntityManager table="symptoms" title="الأعراض" description="إدارة قاموس الأعراض بالعربية والإنجليزية وحالة المراجعة."
     primaryField="name_ar" orderBy="sort_order"

@@ -4,7 +4,8 @@ import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
 import { SourceLinker } from "@/components/admin/SourceLinker";
 import { FirstAidSectionsEditor } from "@/components/admin/FirstAidSectionsEditor";
 import { FirstAidSectionWorkflowPanel } from "@/components/admin/FirstAidSectionWorkflowPanel";
-export const Route = createFileRoute("/admin/first-aid")({ component: Page });
+export const Route = createFileRoute("/admin/first-aid")({
+  staticData: { sitemap: false }, component: Page });
 function Page() {
   return <><AdminEntityManager table="first_aid_topics" title="الإسعافات الأولية" description="إدارة موضوعات الإسعافات. محتوى الخطوات يظل مسودة حتى المراجعة الطبية."
     primaryField="title_ar" orderBy="priority"
