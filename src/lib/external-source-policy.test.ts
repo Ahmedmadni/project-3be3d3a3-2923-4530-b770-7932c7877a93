@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  isTrustedGitHubRepository,
   mayImportClinicalKnowledge,
   mayUseForPopulationContext,
   mayUseForTerminology,
+  normalizeGitHubRepositoryUrl,
+  validateExternalRepositoryPolicy,
   type ExternalSourcePolicy,
 } from "./external-source-policy";
 
@@ -24,6 +27,7 @@ describe("external source policy", () => {
       trustTier: "community_reference",
       integrationMode: "reference_only",
       maySupplyClinicalContent: true,
+      repositoryUrl: "https://github.com/example/symptom-checker",
     }))).toBe(false);
   });
 
@@ -61,5 +65,41 @@ describe("external source policy", () => {
     expect(mayUseForTerminology(blocked)).toBe(false);
     expect(mayUseForPopulationContext(blocked)).toBe(false);
     expect(mayImportClinicalKnowledge(blocked)).toBe(false);
+  });
+
+  it("normalizes repository URLs before trust checks", () => {
+    expect(normalizeGitHubRepositoryUrl("https://github.com/HL7/fhir.git"))
+      .toBe("https://github.com/HL7/fhir");
+    expect(normalizeGitHubRepositoryUrl("https://github.com/OHDSI/CommonDataModel/tree/main"))
+      .toBe("https://github.com/OHDSI/CommonDataModel");
+  });
+
+  it("accepts only the approved organization repositories", () => {
+    expect(isTrustedGitHubRepository("https://github.com/HL7/fhir")).toBe(true);
+    expect(isTrustedGitHubRepository("https://github.com/openmrs/openmrs-core")).toBe(true);
+    expect(isTrustedGitHubRepository("https://github.com/OHDSI/CommonDataModel")).toBe(true);
+    expect(isTrustedGitHubRepository("https://github.com/random-user/medical-ai")).toBe(false);
+  });
+
+  it("never allows an approved GitHub repository to become clinical evidence", () => {
+    const result = validateExternalRepositoryPolicy(source({
+      repositoryUrl: "https://github.com/HL7/fhir",
+      maySupplyClinicalContent: true,
+      integrationMode: "reference_only",
+    }));
+
+    expect(result).toContain("GITHUB_NOT_ALLOWED_AS_CLINICAL_EVIDENCE");
+    expect(mayImportClinicalKnowledge(source({
+      repositoryUrl: "https://github.com/HL7/fhir",
+      maySupplyClinicalContent: true,
+      integrationMode: "reference_only",
+    }))).toBe(false);
+  });
+
+  it("rejects unknown GitHub repositories at registration time", () => {
+    expect(validateExternalRepositoryPolicy(source({
+      repositoryUrl: "https://github.com/LabinatorSolutions/medical-symptom-checker",
+      integrationMode: "reference_only",
+    }))).toContain("UNTRUSTED_GITHUB_REPOSITORY");
   });
 });
