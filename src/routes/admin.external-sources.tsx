@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { isTrustedGitHubRepository } from "@/lib/external-source-policy";
-import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 
 export const Route = createFileRoute("/admin/external-sources")({
   component: ExternalSourcesPage,
