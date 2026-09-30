@@ -138,6 +138,9 @@ function Results() {
           <details className="text-xs text-muted-foreground">
             <summary className="cursor-pointer font-medium">{t("results.moreInfo")}</summary>
             <p className="mt-2">{t("results.release")}: {stored.knowledgeReleaseVersion}</p>
+            {stored.extraction && stored.extraction.source !== "none" ? (
+              <p>{t("results.extraction")}: {stored.extraction.source === "ai" ? t("results.extraction.ai") : t("results.extraction.mock")} · {t("results.extraction.confirmed", { count: stored.extraction.confirmed.length })}</p>
+            ) : null}
             {stored.engineVersion ? <p>{t("results.engine")}: {stored.engineVersion}</p> : null}
             {stored.savedAt ? <p>{t("results.checkedAt")}: {new Date(stored.savedAt).toLocaleString()}</p> : null}
           </details>

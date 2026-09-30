@@ -26,6 +26,14 @@ const input = z.object({
     rank: z.number().int(),
   })).max(10),
   engineVersion: z.string().max(40),
+  extraction: z.object({
+    source: z.enum(["ai", "mock", "none"]),
+    model: z.string().max(60).nullable(),
+    suggested: z.array(z.string().uuid()).max(30),
+    confirmed: z.array(z.string().uuid()).max(30),
+    negated: z.array(z.string().uuid()).max(30),
+    unresolvedCount: z.number().int().min(0).max(50),
+  }).nullable().optional(),
 });
 
 /**
@@ -79,6 +87,9 @@ export const saveSymptomSession = createServerFn({ method: "POST" })
       knowledge_release_id: release?.id ?? null,
       knowledge_release_version: release?.version ?? null,
       completed_at: new Date().toISOString(),
+      extraction_meta: data.extraction
+        ? { ...data.extraction, extractor_version: "extract-v1", knowledge_release: release?.version ?? null, engine_version: data.engineVersion }
+        : null,
     }).select("id").single();
     if (error || !s) throw new Error("تعذر حفظ الفحص");
 

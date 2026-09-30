@@ -1,0 +1,1 @@
+ALTER TABLE public.symptom_sessions ADD COLUMN IF NOT EXISTS extraction_meta jsonb;

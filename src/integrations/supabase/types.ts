@@ -1337,6 +1337,7 @@ export type Database = {
           care_level: Database["public"]["Enums"]["care_level"] | null
           completed_at: string | null
           created_at: string
+          extraction_meta: Json | null
           free_text_description: string | null
           guest_session_id: string | null
           id: string
@@ -1353,6 +1354,7 @@ export type Database = {
           care_level?: Database["public"]["Enums"]["care_level"] | null
           completed_at?: string | null
           created_at?: string
+          extraction_meta?: Json | null
           free_text_description?: string | null
           guest_session_id?: string | null
           id?: string
@@ -1369,6 +1371,7 @@ export type Database = {
           care_level?: Database["public"]["Enums"]["care_level"] | null
           completed_at?: string | null
           created_at?: string
+          extraction_meta?: Json | null
           free_text_description?: string | null
           guest_session_id?: string | null
           id?: string

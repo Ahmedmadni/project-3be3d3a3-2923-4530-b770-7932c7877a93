@@ -90,6 +90,7 @@ function Wizard() {
   const [unresolved, setUnresolved] = useState<string[]>([]);
   const [notice, setNotice] = useState("");
   const extractAI = useServerFn(extractSymptomsAI);
+  const [extraction, setExtraction] = useState<{ source: "ai" | "mock"; suggested: string[]; confirmed: string[]; negated: string[]; unresolvedCount: number } | null>(null);
   const [details, setDetails] = useState<Record<string, SymptomDetail>>({});
   const [answers, setAnswers] = useState<AnswerMap>({});
 
@@ -199,6 +200,9 @@ function Wizard() {
             rank: index + 1,
           })),
           engineVersion: ENGINE_VERSION,
+          extraction: extraction
+            ? { ...extraction, confirmed: extraction.confirmed.filter((id) => selected.includes(id)), model: extraction.source === "ai" ? "openai/gpt-6-astra" : null }
+            : null,
         },
       });
 
@@ -218,6 +222,7 @@ function Wizard() {
       engineVersion: ENGINE_VERSION,
       savedAt: new Date().toISOString(),
       conditionSnapshots,
+      extraction: extraction ? { source: extraction.source, confirmed: extraction.confirmed.filter((id) => selected.includes(id)), negated: extraction.negated } : null,
     });
 
     setBusy(false);
@@ -259,7 +264,14 @@ function Wizard() {
       .filter((id) => !selected.includes(id));
 
     setSuggested(ids);
-    setPicked([]);
+    setPicked(ids);
+    setExtraction({
+      source: result.source,
+      suggested: ids,
+      confirmed: [],
+      negated: result.candidates.filter((c) => c.negated).map((c) => c.symptomId),
+      unresolvedCount: result.unresolvedTerms.length,
+    });
     setNegated(result.candidates.filter((candidate) => candidate.negated).map((candidate) => candidate.symptomId));
     setUnresolved(result.unresolvedTerms);
 
@@ -484,6 +496,7 @@ function Wizard() {
                     type="button"
                     onClick={() => {
                       setSelected((current) => [...new Set([...current, ...picked])]);
+                      setExtraction((current) => current ? { ...current, confirmed: [...new Set([...current.confirmed, ...picked])] } : current);
                       setSuggested([]);
                       setPicked([]);
                       setNotice(t("extract.confirmed"));
