@@ -36,9 +36,12 @@ import checkerGuide from "@/assets/symptom-checker-guide.jpg";
 import checkerSticker from "@/assets/sticker-symptom-check.png";
 
 export const Route = createFileRoute("/symptom-checker")({
+  staticData: { sitemap: true },
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
   head: () => ({
+    links: [{ rel: "canonical", href: "https://pixel-perfect-display-7040.lovable.app/symptom-checker" }],
     meta: [
+      { property: "og:url", content: "https://pixel-perfect-display-7040.lovable.app/symptom-checker" },
       { title: "فحص الأعراض — مؤشر صحي" },
       { name: "description", content: "فحص أعراض سريع يركز على المعلومات التي تؤثر في مستوى الرعاية والنتائج." },
       { property: "og:title", content: "فحص الأعراض — مؤشر صحي" },

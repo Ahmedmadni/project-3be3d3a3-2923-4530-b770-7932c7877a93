@@ -14,8 +14,11 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/professional")({
+  staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "https://pixel-perfect-display-7040.lovable.app/professional" }],
     meta: [
+      { property: "og:url", content: "https://pixel-perfect-display-7040.lovable.app/professional" },
       { title: "الوضع المهني — مؤشر صحي" },
       { name: "description", content: "واجهة عملية للأطباء والتمريض والممارسين الصحيين." },
       { property: "og:title", content: "الوضع المهني — مؤشر صحي" },

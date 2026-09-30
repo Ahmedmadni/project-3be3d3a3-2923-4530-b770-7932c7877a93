@@ -3,7 +3,8 @@ import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
 import { SourceLinker } from "@/components/admin/SourceLinker";
 import { RedFlagRuleBuilder } from "@/components/admin/RedFlagRuleBuilder";
-export const Route = createFileRoute("/admin/red-flags")({ component: Page });
+export const Route = createFileRoute("/admin/red-flags")({
+  staticData: { sitemap: false }, component: Page });
 function Page() {
   return <><AdminEntityManager table="red_flags" title="علامات الخطر" description="قواعد السلامة لها أولوية على النتائج؛ التعديل والنشر يخضعان للمراجعة."
     primaryField="title_ar" orderBy="priority"

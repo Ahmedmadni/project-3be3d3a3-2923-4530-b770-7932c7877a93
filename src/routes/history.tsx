@@ -22,6 +22,7 @@ import { localized, useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/history")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "فحوصاتي السابقة — مؤشر صحي" },

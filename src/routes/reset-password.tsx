@@ -6,6 +6,7 @@ import { Field, inputCls } from "@/components/health/wizard-ui";
 import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/reset-password")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "تعيين كلمة مرور جديدة — مؤشر صحي" },

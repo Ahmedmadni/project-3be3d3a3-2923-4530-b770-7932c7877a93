@@ -7,6 +7,7 @@ import { Field, inputCls } from "@/components/health/wizard-ui";
 import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   validateSearch: z.object({ redirect: z.string().optional() }),
   head: () => ({
     meta: [

@@ -16,6 +16,7 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "حسابي — مؤشر صحي" },

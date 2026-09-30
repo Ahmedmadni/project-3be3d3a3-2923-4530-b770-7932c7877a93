@@ -19,8 +19,11 @@ import librarySticker from "@/assets/sticker-health-library.png";
 import safeCareSticker from "@/assets/sticker-safe-care.png";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "https://pixel-perfect-display-7040.lovable.app/" }],
     meta: [
+      { property: "og:url", content: "https://pixel-perfect-display-7040.lovable.app/" },
       { title: "مؤشر صحي — افهم أعراضك واتخذ الخطوة المناسبة" },
       { name: "description", content: "مساعد صحي عربي لفحص الأعراض والطوارئ والإسعافات الأولية والمعلومات الصحية." },
       { property: "og:title", content: "مؤشر صحي — افهم أعراضك" },

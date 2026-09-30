@@ -25,6 +25,7 @@ const sectionKeys = [
 ] as const;
 
 export const Route = createFileRoute("/first-aid/$slug")({
+  staticData: { sitemap: false },
   loader: async ({ params }) => {
     const { data: topic } = await supabase
       .from("first_aid_topics")

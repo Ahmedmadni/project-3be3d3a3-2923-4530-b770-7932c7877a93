@@ -20,6 +20,7 @@ import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ProfessionalRouteImport } from './routes/professional'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SymptomCheckerRouteImport } from './routes/symptom-checker'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminConditionsRouteImport } from './routes/admin.conditions'
@@ -88,6 +89,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SymptomCheckerRoute = SymptomCheckerRouteImport.update({
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/symptom-checker': typeof SymptomCheckerRoute
   '/admin/conditions': typeof AdminConditionsRoute
   '/admin/external-sources': typeof AdminExternalSourcesRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/symptom-checker': typeof SymptomCheckerRoute
   '/admin/conditions': typeof AdminConditionsRoute
   '/admin/external-sources': typeof AdminExternalSourcesRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/symptom-checker': typeof SymptomCheckerRoute
   '/admin/conditions': typeof AdminConditionsRoute
   '/admin/external-sources': typeof AdminExternalSourcesRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/professional'
     | '/reset-password'
     | '/results'
+    | '/sitemap.xml'
     | '/symptom-checker'
     | '/admin/conditions'
     | '/admin/external-sources'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/professional'
     | '/reset-password'
     | '/results'
+    | '/sitemap.xml'
     | '/symptom-checker'
     | '/admin/conditions'
     | '/admin/external-sources'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/professional'
     | '/reset-password'
     | '/results'
+    | '/sitemap.xml'
     | '/symptom-checker'
     | '/admin/conditions'
     | '/admin/external-sources'
@@ -335,6 +347,7 @@ export interface RootRouteChildren {
   ProfessionalRoute: typeof ProfessionalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResultsRoute: typeof ResultsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SymptomCheckerRoute: typeof SymptomCheckerRoute
   ConditionsConditionIdRoute: typeof ConditionsConditionIdRoute
 }
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/symptom-checker': {
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfessionalRoute: ProfessionalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResultsRoute: ResultsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SymptomCheckerRoute: SymptomCheckerRoute,
   ConditionsConditionIdRoute: ConditionsConditionIdRoute,
 }

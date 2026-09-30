@@ -10,6 +10,7 @@ import { localized, useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/conditions/$conditionId")({
+  staticData: { sitemap: false },
   loader: async ({ params }) => {
     const { data: condition } = await supabase.from("conditions").select("*").eq("id", params.conditionId).maybeSingle();
     if (!condition) throw notFound();

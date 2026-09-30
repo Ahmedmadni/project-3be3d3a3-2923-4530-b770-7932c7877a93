@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
 import { normalizeStatus } from "@/lib/governance";
 
-export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
+export const Route = createFileRoute("/admin/")({
+  staticData: { sitemap: false }, component: AdminDashboard });
 
 type CoverageRow = { id: string; is_active: boolean | null; review_status: string | null };
 type SourceRow = { id: string; is_active: boolean | null; last_verified_at: string | null; expires_review_at: string | null };

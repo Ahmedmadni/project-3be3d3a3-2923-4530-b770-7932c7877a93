@@ -3,7 +3,8 @@ import { AdminEntityManager } from "@/components/admin/AdminEntityManager";
 import { ContentVersionsPanel } from "@/components/admin/ContentVersionsPanel";
 import { SourceLinker } from "@/components/admin/SourceLinker";
 import { ConditionSymptomsEditor } from "@/components/admin/ConditionSymptomsEditor";
-export const Route = createFileRoute("/admin/conditions")({ component: Page });
+export const Route = createFileRoute("/admin/conditions")({
+  staticData: { sitemap: false }, component: Page });
 function Page() {
   return <><AdminEntityManager table="conditions" title="الحالات المحتملة" description="محتوى الحالات المستخدم في محرك المطابقة. لا تُنشر البيانات قبل المراجعة الطبية."
     primaryField="name_ar"
