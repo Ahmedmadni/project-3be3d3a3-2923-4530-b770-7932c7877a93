@@ -4,6 +4,8 @@ import { ExternalLink, Network, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
+import { isTrustedGitHubRepository } from "@/lib/external-source-policy";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 
 export const Route = createFileRoute("/admin/external-sources")({
   component: ExternalSourcesPage,
@@ -66,6 +68,8 @@ function ExternalSourcesPage() {
 
       <MedicalDisclaimer text={t("medical.externalSourcesDisclaimer")} />
 
+      <MedicalDisclaimer text={t("medical.externalSourcesDisclaimer")} />
+
       <section className="grid gap-4 xl:grid-cols-2">
         {q.data.sources.map((source) => (
           <article key={source.id} className="glass rounded-3xl p-5">
@@ -74,9 +78,16 @@ function ExternalSourcesPage() {
                 <h3 className="font-extrabold">{source.display_name}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">{source.provider}</p>
               </div>
-              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                {source.trust_tier}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+                  {source.trust_tier}
+                </span>
+                {source.repository_url && isTrustedGitHubRepository(source.repository_url) ? (
+                  <span className="rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success">
+                    {t("admin.externalVerifiedGithub")}
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
