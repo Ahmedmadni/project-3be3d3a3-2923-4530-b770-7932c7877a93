@@ -152,6 +152,15 @@
   - [x] Added external clinical-engine adapter contract with disabled default and no-PHI default
   - [x] Added read-only admin view for external sources, trust, licenses, capabilities and engine status
   - [x] Added automated source-policy and adapter tests
+- [x] External-source trust hardening
+  - [x] Re-verified approved GitHub repositories are organization-owned: HL7/fhir, openmrs/openmrs-core, OHDSI/CommonDataModel
+  - [x] Added exact GitHub allowlist in application policy
+  - [x] Added database trigger that rejects unapproved GitHub repositories
+  - [x] GitHub repositories are prohibited from supplying primary clinical evidence, including allow-listed standards repositories
+  - [x] Controlled medical-import validator rejects GitHub repository URLs as primary clinical evidence
+  - [x] Added TRUSTED_EXTERNAL_SOURCES.md with allowed uses and explicit community-repository exclusions
+  - [x] Added source-governance disclaimers to internal source administration screens
+  - [x] Strengthened global disclaimer to clarify that external/technical sources are not automatically clinical evidence
 - [x] Medical disclaimer coverage
   - [x] Global disclaimer appears on every application page
   - [x] Context-specific disclaimers added for emergency, first aid and professional mode

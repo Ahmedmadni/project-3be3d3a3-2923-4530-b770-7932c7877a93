@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Network, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
+import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 
 export const Route = createFileRoute("/admin/external-sources")({
   component: ExternalSourcesPage,
@@ -62,6 +63,8 @@ function ExternalSourcesPage() {
           </div>
         </div>
       </header>
+
+      <MedicalDisclaimer text={t("medical.externalSourcesDisclaimer")} />
 
       <section className="grid gap-4 xl:grid-cols-2">
         {q.data.sources.map((source) => (
