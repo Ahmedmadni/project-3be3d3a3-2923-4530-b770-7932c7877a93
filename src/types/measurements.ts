@@ -65,6 +65,8 @@ export interface MeasurementClause {
 export interface MeasurementPredicate {
   all?: MeasurementClause[];
   any?: MeasurementClause[];
+  /** OR between groups, AND inside each group. */
+  anyOf?: MeasurementClause[][];
 }
 
 export interface MeasurementReferenceRule {
@@ -111,5 +113,7 @@ export interface MeasurementEvaluation {
   status: MeasurementEvaluationStatus;
   safetyMatches: MeasurementSafetyRule[];
   referenceMatches: MeasurementReferenceRule[];
+  /** Highest-priority matching reference rule, if any. */
+  primaryReferenceMatch: MeasurementReferenceRule | null;
   errors: string[];
 }

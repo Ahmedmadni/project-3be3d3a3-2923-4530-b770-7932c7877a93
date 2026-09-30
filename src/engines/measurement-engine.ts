@@ -18,8 +18,6 @@ export interface MeasurementEvaluationInput {
    * Code-defined, reviewed safety-floor rules. These are evaluated independently
    * from database visibility so a missing/partial database rule set cannot
    * silently suppress an established safety rule.
-   *
-   * This foundation intentionally ships with no clinical thresholds.
    */
   safetyFloorRules?: MeasurementSafetyRule[];
   mode?: MeasurementContentMode;
@@ -30,12 +28,7 @@ export function evaluateMeasurement(input: MeasurementEvaluationInput): Measurem
   const errors = validateMeasurementReading(input.type, input.reading);
 
   if (errors.length) {
-    return {
-      status: "invalid",
-      safetyMatches: [],
-      referenceMatches: [],
-      errors,
-    };
+    return emptyResult("invalid", errors);
   }
 
   if (
@@ -43,12 +36,7 @@ export function evaluateMeasurement(input: MeasurementEvaluationInput): Measurem
     input.type.canonicalUnit &&
     input.reading.unit !== input.type.canonicalUnit
   ) {
-    return {
-      status: "needs_normalization",
-      safetyMatches: [],
-      referenceMatches: [],
-      errors: [],
-    };
+    return emptyResult("needs_normalization");
   }
 
   const safetyFloorMatches = (input.safetyFloorRules ?? [])
@@ -79,19 +67,28 @@ export function evaluateMeasurement(input: MeasurementEvaluationInput): Measurem
         (rule) => rule.measurementTypeId === input.type.id && contentVisible(rule, mode),
       );
 
-    return {
-      status: hasEligibleRules ? "no_match" : "not_interpreted",
-      safetyMatches: [],
-      referenceMatches: [],
-      errors: [],
-    };
+    return emptyResult(hasEligibleRules ? "no_match" : "not_interpreted");
   }
 
   return {
     status: "matched",
     safetyMatches,
     referenceMatches,
+    primaryReferenceMatch: referenceMatches[0] ?? null,
     errors: [],
+  };
+}
+
+function emptyResult(
+  status: MeasurementEvaluation["status"],
+  errors: string[] = [],
+): MeasurementEvaluation {
+  return {
+    status,
+    safetyMatches: [],
+    referenceMatches: [],
+    primaryReferenceMatch: null,
+    errors,
   };
 }
 
@@ -151,14 +148,17 @@ export function predicateMatches(
 ): boolean {
   const all = predicate.all ?? [];
   const any = predicate.any ?? [];
+  const anyOf = predicate.anyOf ?? [];
 
-  // Empty predicates are deliberately non-matching. This prevents an
-  // accidentally incomplete rule from becoming universally true.
-  if (!all.length && !any.length) return false;
+  if (!all.length && !any.length && !anyOf.length) return false;
 
   const allOk = all.every((clause) => clauseMatches(clause, reading));
   const anyOk = !any.length || any.some((clause) => clauseMatches(clause, reading));
-  return allOk && anyOk;
+  const anyOfOk =
+    !anyOf.length ||
+    anyOf.some((group) => group.length > 0 && group.every((clause) => clauseMatches(clause, reading)));
+
+  return allOk && anyOk && anyOfOk;
 }
 
 function clauseMatches(clause: MeasurementClause, reading: MeasurementReading): boolean {
