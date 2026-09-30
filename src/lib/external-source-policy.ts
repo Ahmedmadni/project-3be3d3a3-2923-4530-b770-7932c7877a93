@@ -76,7 +76,7 @@ export function normalizeGitHubRepositoryUrl(value: string): string | null {
     if (url.hostname.toLowerCase() !== "github.com") return null;
     const parts = url.pathname.split("/").filter(Boolean);
     if (parts.length < 2) return null;
-    return `https://github.com/${parts[0]}/${parts[1].replace(/\.git$/i, "")}`;
+    return `https://github.com/${parts[0]}/${parts[1]!.replace(/\.git$/i, "")}`;
   } catch {
     return null;
   }

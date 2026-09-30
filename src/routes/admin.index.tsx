@@ -125,7 +125,7 @@ function AdminDashboard() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map(([key, label]) => (
           <div key={key} className="glass rounded-3xl p-5">
-            <p className="text-2xl font-extrabold">{q.data.counts[key] ?? 0}</p>
+            <p className="text-2xl font-extrabold">{q.data.counts[key as keyof typeof q.data.counts] ?? 0}</p>
             <p className="mt-2 text-sm font-semibold">{label}</p>
           </div>
         ))}
