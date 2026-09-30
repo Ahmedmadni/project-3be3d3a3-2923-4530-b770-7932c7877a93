@@ -15,7 +15,9 @@ export const Route = createFileRoute("/library")({
   staticData: { sitemap: true },
   loader: ({ context }) => context.queryClient.ensureQueryData(referenceQuery),
   head: () => ({
+    links: [{ rel: "canonical", href: "https://pixel-perfect-display-7040.lovable.app/library" }],
     meta: [
+      { property: "og:url", content: "https://pixel-perfect-display-7040.lovable.app/library" },
       { title: "المكتبة الصحية — مؤشر صحي" },
       { name: "description", content: "معلومات مبسطة عن الأمراض والأعراض الشائعة." },
       { property: "og:title", content: "المكتبة الصحية — مؤشر صحي" },

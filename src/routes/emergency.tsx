@@ -47,7 +47,9 @@ import {
 export const Route = createFileRoute("/emergency")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "https://pixel-perfect-display-7040.lovable.app/emergency" }],
     meta: [
+      { property: "og:url", content: "https://pixel-perfect-display-7040.lovable.app/emergency" },
       { title: "حالة طارئة — مؤشر صحي" },
       { name: "description", content: "أرقام الطوارئ وإرشادات أثناء انتظار الإسعاف." },
       { property: "og:title", content: "حالة طارئة — مؤشر صحي" },

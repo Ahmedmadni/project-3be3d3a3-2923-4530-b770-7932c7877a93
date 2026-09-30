@@ -31,7 +31,9 @@ export const Route = createFileRoute("/first-aid/")({
   staticData: { sitemap: true },
   loader: ({ context }) => context.queryClient.ensureQueryData(topicsQuery),
   head: () => ({
+    links: [{ rel: "canonical", href: "https://pixel-perfect-display-7040.lovable.app/first-aid" }],
     meta: [
+      { property: "og:url", content: "https://pixel-perfect-display-7040.lovable.app/first-aid" },
       { title: "الإسعافات الأولية — مؤشر صحي" },
       { name: "description", content: "دليل مبسط للتعامل الأولي مع الحالات الشائعة." },
       { property: "og:title", content: "الإسعافات الأولية — مؤشر صحي" },
