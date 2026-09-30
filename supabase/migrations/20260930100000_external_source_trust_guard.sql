@@ -67,6 +67,21 @@ EXECUTE FUNCTION public.guard_external_source_registry();
 UPDATE public.external_source_registry
 SET
   last_verified_at = '2026-09-30T09:30:00Z'::timestamptz,
+  license_model = CASE source_key
+    WHEN 'hl7_fhir_github' THEN 'HL7 repository: mixed licenses; FHIR specification has separate HL7 terms'
+    WHEN 'openmrs_core_github' THEN 'Mozilla Public License 2.0'
+    WHEN 'ohdsi_cdm_github' THEN 'Apache License 2.0'
+    ELSE license_model
+  END,
+  license_notes = CASE source_key
+    WHEN 'hl7_fhir_github'
+      THEN 'Repository LICENSE states multiple licenses may apply and the FHIR specification itself has separate license terms. Review file-level/specification terms before copying.'
+    WHEN 'openmrs_core_github'
+      THEN 'OpenMRS Core repository LICENSE is Mozilla Public License 2.0. Use as architecture/interoperability reference unless a deliberate licensed code reuse decision is made.'
+    WHEN 'ohdsi_cdm_github'
+      THEN 'CommonDataModel DESCRIPTION declares Apache License 2.0. Use for CDM/vocabulary interoperability patterns, not patient-level clinical rules.'
+    ELSE license_notes
+  END,
   notes = CASE source_key
     WHEN 'hl7_fhir_github'
       THEN 'Verified organization-owned repository (GitHub owner: HL7). Reference/terminology patterns only; not clinical evidence.'
