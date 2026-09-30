@@ -104,10 +104,16 @@ function AppChrome() {
         {t("a11y.skipToContent")}
       </a>
       <AppHeader />
+      <div className="mx-auto w-full max-w-6xl px-4 pt-3 sm:px-5">
+        <MedicalDisclaimer
+          text={t("medical.globalDisclaimer")}
+          className="border border-primary/10 bg-primary-soft/40"
+        />
+      </div>
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 pt-5 pb-32 sm:px-5 sm:pt-6 md:pb-16">
         <Outlet />
-        <footer className="mt-8 border-t border-border/70 pt-5">
-          <MedicalDisclaimer text={t("medical.globalDisclaimer")} />
+        <footer className="mt-8 border-t border-border/70 pt-5 text-center text-[11px] leading-5 text-muted-foreground">
+          {t("medical.footerDisclaimer")}
         </footer>
       </main>
       <MobileBottomNav />
