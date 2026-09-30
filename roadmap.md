@@ -143,6 +143,11 @@
   - [ ] Authorized medical reviewer approval and activation of the new safety content
 - [x] Medical interoperability and external-source governance
   - [x] Added external source registry with trust tier, integration mode, license notes and allowed-use flags
+  - [x] Hardened GitHub policy to an exact allowlist of verified organization-owned repositories
+  - [x] Database rejects unknown GitHub repositories and forbids GitHub as primary clinical evidence
+  - [x] Controlled medical import rejects GitHub repository URLs as primary clinical evidence
+  - [x] Verified repository ownership/licensing notes for HL7/FHIR, OpenMRS Core and OHDSI CommonDataModel
+  - [x] Added EXTERNAL_SOURCE_REVIEW.md with approved and rejected/reference-only sources
   - [x] Registered authoritative UMLS/NLM and WHO sources
   - [x] Registered Infermedica as disabled shadow-comparison provider only
   - [x] Registered only official/established GitHub organization repositories: HL7/fhir, OpenMRS core and OHDSI CommonDataModel
@@ -162,7 +167,8 @@
   - [x] Added source-governance disclaimers to internal source administration screens
   - [x] Strengthened global disclaimer to clarify that external/technical sources are not automatically clinical evidence
 - [x] Medical disclaimer coverage
-  - [x] Global disclaimer appears on every application page
+  - [x] Global disclaimer appears visibly near the top of every application page
+  - [x] Footer acknowledgement appears on every page
   - [x] Context-specific disclaimers added for emergency, first aid and professional mode
   - [x] Existing symptom-check, results, condition and library disclaimers retained
   - [x] Disclaimer component is exposed as an accessible semantic note
