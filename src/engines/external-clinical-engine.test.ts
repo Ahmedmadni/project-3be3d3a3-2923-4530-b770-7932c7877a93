@@ -6,10 +6,6 @@ describe("external clinical engine", () => {
     const engine = new DisabledExternalClinicalEngine();
 
     expect(engine.mode).toBe("disabled");
-    expect(await engine.compare({
-      age: 30,
-      sex: "male",
-      observations: [{ code: "headache", present: true }],
-    })).toBeNull();
+    expect(await engine.compare()).toBeNull();
   });
 });
