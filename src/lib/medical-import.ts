@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isGitHubUrl } from "./external-source-policy";
 
 const SourceRef = z.string().min(1);
 
@@ -93,10 +94,17 @@ export function validateMedicalImport(input: unknown): MedicalImportValidation {
     item.sourceRefs.filter((ref) => !sourceRefs.has(ref)).map((ref) => `${item.kind}:${item.code} -> ${ref}`),
   );
 
+  const githubClinicalSources = parsed.data.sources
+    .filter((source) => isGitHubUrl(source.url))
+    .map((source) => source.ref);
+
   const errors = [
     ...new Set(duplicateSources.map((ref) => `duplicate source ref: ${ref}`)),
     ...new Set(duplicateCodes.map((key) => `duplicate item code: ${key}`)),
     ...unknownRefs.map((ref) => `unknown source ref: ${ref}`),
+    ...githubClinicalSources.map(
+      (ref) => `GitHub repository URLs are not accepted as primary clinical evidence: ${ref}`,
+    ),
   ];
 
   if (errors.length) return { ok: false, errors };
