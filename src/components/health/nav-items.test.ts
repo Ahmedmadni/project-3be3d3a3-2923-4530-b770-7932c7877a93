@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { mobileNavItems, navItems } from "./nav-items";
 
 describe("navigation items", () => {
-  it("keeps the mobile navigation focused on four primary destinations", () => {
+  it("keeps measurements in the mobile primary navigation", () => {
     expect(mobileNavItems.map((item) => item.to)).toEqual([
       "/",
       "/symptom-checker",
       "/first-aid",
+      "/measurements",
       "/account",
     ]);
   });

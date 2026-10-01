@@ -41,9 +41,9 @@ function visible(
   >,
   mode: KnowledgeContentMode,
 ): boolean {
-  if (!article.isActive || article.reviewStatus === "retired") return false;
+  if (article.reviewStatus === "retired") return false;
   if (mode === "production") {
-    return article.reviewStatus === "published" && !article.isDemo;
+    return article.reviewStatus === "published" && article.isActive && !article.isDemo;
   }
   return true;
 }
