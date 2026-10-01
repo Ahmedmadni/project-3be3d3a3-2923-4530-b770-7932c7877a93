@@ -37,7 +37,14 @@ import {
   normalizeHeightReading,
   normalizeWeightReading,
 } from "@/engines/body-metrics-quality";
-import type { MeasurementReading } from "@/types/measurements";
+import type { MeasurementContext, MeasurementReading } from "@/types/measurements";
+import {
+  assessMeasurementCaptureQuality,
+  captureIssueAr,
+  getCaptureQuestions,
+  isCaptureComplete,
+  type CaptureQuestion,
+} from "@/lib/measurement-capture";
 
 export const Route = createFileRoute("/measurements")({
   staticData: { sitemap: false },
@@ -85,6 +92,7 @@ type DraftValue = {
   diastolic: string;
   unit: string;
   notes: string;
+  context: MeasurementContext;
 };
 
 function MeasurementsPage() {
@@ -98,6 +106,7 @@ function MeasurementsPage() {
     diastolic: "",
     unit: "",
     notes: "",
+    context: {},
   });
 
   const typesQuery = useQuery({
@@ -173,6 +182,9 @@ function MeasurementsPage() {
       if (!user) throw new Error("LOGIN_REQUIRED");
 
       const payload = buildReadingPayload(type, form);
+      const capture = assessMeasurementCaptureQuality(type.code, form.context);
+      if (capture.quality === "unknown") throw new Error("CAPTURE_INCOMPLETE");
+
       const { error } = await measurementsDb.from("measurement_readings").insert({
         user_id: user.id,
         measurement_type_id: type.id,
@@ -180,15 +192,15 @@ function MeasurementsPage() {
         scalar_value: payload.scalarValue,
         unit: payload.unit,
         components: payload.components,
-        context: {},
-        quality: "unknown",
+        context: form.context,
+        quality: capture.quality,
         notes: form.notes.trim() || null,
       });
       if (error) throw error;
     },
     onSuccess: async () => {
       setSelectedTypeId(null);
-      setDraft({ scalar: "", systolic: "", diastolic: "", unit: "", notes: "" });
+      setDraft({ scalar: "", systolic: "", diastolic: "", unit: "", notes: "", context: {} });
       await queryClient.invalidateQueries({
         queryKey: ["measurement-readings", user?.id],
       });
@@ -348,6 +360,7 @@ function MeasurementsPage() {
                             diastolic: "",
                             unit: type.canonical_unit ?? type.allowed_units[0] ?? "",
                             notes: "",
+                            context: {},
                           });
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2.5 text-xs font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-45"
@@ -421,9 +434,12 @@ function MeasurementEntryForm({
   onSave: () => void;
 }) {
   const isBloodPressure = type.code === "blood_pressure";
-  const valid = isBloodPressure
+  const valueValid = isBloodPressure
     ? Number(draft.systolic) > 0 && Number(draft.diastolic) > 0
     : Number(draft.scalar) > 0;
+  const captureComplete = isCaptureComplete(type.code, draft.context);
+  const capture = assessMeasurementCaptureQuality(type.code, draft.context);
+  const valid = valueValid && captureComplete;
 
   return (
     <div className="mt-4 rounded-2xl bg-card p-4 ring-1 ring-primary/15">
@@ -484,6 +500,32 @@ function MeasurementEntryForm({
         </label>
       ) : null}
 
+      <CaptureQuestions
+        code={type.code}
+        context={draft.context}
+        onChange={(context) => setDraft({ ...draft, context })}
+      />
+
+      {capture.quality !== "unknown" ? (
+        <div className="mt-3 rounded-xl bg-background/70 p-3 ring-1 ring-border">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold">جودة ظروف القياس</span>
+            <MeasurementQualityBadge quality={capture.quality} />
+          </div>
+          {capture.issues.length ? (
+            <ul className="mt-2 space-y-1 text-[11px] leading-5 text-muted-foreground">
+              {capture.issues.map((issue) => (
+                <li key={issue}>• {captureIssueAr[issue] ?? issue}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              ظروف القياس المسجلة مناسبة لتقييم الجودة.
+            </p>
+          )}
+        </div>
+      ) : null}
+
       <label className="mt-3 block">
         <span className="text-xs font-bold text-muted-foreground">
           ملاحظة اختيارية
@@ -496,10 +538,11 @@ function MeasurementEntryForm({
         />
       </label>
 
-      <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
-        جودة الالتقاط ستظهر «غير مقيّمة» في هذه النسخة ما لم نجمع سياق القياس
-        الكامل. لن يفترض التطبيق أن القراءة جيدة بدون بيانات كافية.
-      </p>
+      {!captureComplete ? (
+        <p className="mt-3 text-[11px] leading-5 text-warning">
+          أكمل أسئلة ظروف القياس قبل الحفظ حتى نستطيع تقييم جودة القراءة.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="mt-3 text-xs font-semibold text-destructive">
@@ -516,6 +559,113 @@ function MeasurementEntryForm({
         {saving ? "جارٍ الحفظ..." : "حفظ القراءة"}
       </button>
     </div>
+  );
+}
+
+function CaptureQuestions({
+  code,
+  context,
+  onChange,
+}: {
+  code: string;
+  context: MeasurementContext;
+  onChange: (context: MeasurementContext) => void;
+}) {
+  const questions = getCaptureQuestions(code, context);
+  if (!questions.length) return null;
+
+  const setValue = (question: CaptureQuestion, value: string | number | boolean) => {
+    const next = { ...context, [question.key]: value };
+    onChange(next);
+  };
+
+  return (
+    <div className="mt-4 space-y-3 border-t border-border pt-4">
+      <div>
+        <p className="text-xs font-extrabold">ظروف القياس</p>
+        <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+          هذه الأسئلة لا تشخّص حالة؛ هدفها تقييم موثوقية طريقة أخذ القراءة.
+        </p>
+      </div>
+      {questions.map((question) => (
+        <CaptureQuestionField
+          key={question.key}
+          question={question}
+          value={context[question.key]}
+          onChange={(value) => setValue(question, value)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CaptureQuestionField({
+  question,
+  value,
+  onChange,
+}: {
+  question: CaptureQuestion;
+  value: MeasurementContext[string];
+  onChange: (value: string | number | boolean) => void;
+}) {
+  if (question.type === "boolean") {
+    return (
+      <fieldset>
+        <legend className="text-xs font-bold text-muted-foreground">{question.label}</legend>
+        <div className="mt-1.5 grid grid-cols-2 gap-2">
+          {[
+            { value: true, label: "نعم" },
+            { value: false, label: "لا" },
+          ].map((option) => (
+            <button
+              key={String(option.value)}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={cn(
+                "rounded-xl border px-3 py-2 text-xs font-semibold transition",
+                value === option.value
+                  ? "border-primary bg-primary-soft text-primary"
+                  : "border-border bg-background text-muted-foreground",
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+
+  if (question.type === "select") {
+    return (
+      <label className="block">
+        <span className="text-xs font-bold text-muted-foreground">{question.label}</span>
+        <select
+          value={typeof value === "string" ? value : ""}
+          onChange={(event) => onChange(event.target.value)}
+          className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+        >
+          <option value="">اختر...</option>
+          {question.options.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+
+  return (
+    <label className="block">
+      <span className="text-xs font-bold text-muted-foreground">{question.label}</span>
+      <input
+        type="number"
+        inputMode="decimal"
+        min={question.min}
+        value={typeof value === "number" ? value : ""}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+      />
+    </label>
   );
 }
 
