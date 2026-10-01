@@ -1,0 +1,48 @@
+{
+  "name": "مؤشر صحي",
+  "short_name": "مؤشر صحي",
+  "description": "مساعد صحي عربي استرشادي لفحص الأعراض والقياسات الصحية والإسعافات الأولية.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7faf9",
+  "theme_color": "#0ea5a4",
+  "categories": [
+    "health",
+    "medical",
+    "lifestyle"
+  ],
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "فحص الأعراض",
+      "short_name": "الأعراض",
+      "url": "/symptom-checker"
+    },
+    {
+      "name": "قياساتي الصحية",
+      "short_name": "القياسات",
+      "url": "/measurements"
+    },
+    {
+      "name": "الإسعافات الأولية",
+      "short_name": "الإسعافات",
+      "url": "/first-aid"
+    }
+  ]
+}

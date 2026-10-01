@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppHeader } from "@/components/health/AppHeader";
 import { MobileBottomNav } from "@/components/health/MobileBottomNav";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
+import { PwaStatus } from "@/components/health/PwaStatus";
 import { appConfig } from "@/config/app";
 import { I18nProvider, useI18n } from "@/i18n";
 
@@ -64,10 +65,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "افهم أعراضك، تعرّف على الإسعافات الأولية، واعرف نوع الرعاية المناسبة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#0ea5a4" },
+      { name: "application-name", content: "مؤشر صحي" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "مؤشر صحي" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/pwa-192.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" },
@@ -118,6 +126,7 @@ function AppChrome() {
         </footer>
       </main>
       <MobileBottomNav />
+      <PwaStatus />
     </>
   );
 }
