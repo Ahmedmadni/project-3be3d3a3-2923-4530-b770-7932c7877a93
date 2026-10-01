@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  Activity,
   ArrowLeft,
   BookOpen,
   ChevronLeft,
@@ -136,12 +137,21 @@ function Home() {
 
       <section>
         <h2 className="mb-3 text-base font-extrabold">{t("home.quickTitle")}</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <Link to="/first-aid" className="glass flex items-center gap-4 rounded-3xl p-4 transition hover:-translate-y-0.5">
             <img src={firstAidSticker} alt="" width={816} height={816} loading="lazy" className="size-16 shrink-0 object-contain" />
             <div className="min-w-0">
               <h3 className="font-bold">{t("home.quickFirstAid")}</h3>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("home.quickFirstAidDesc")}</p>
+            </div>
+          </Link>
+          <Link to="/measurements" className="glass flex items-center gap-4 rounded-3xl p-4 transition hover:-translate-y-0.5">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+              <Activity className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="font-bold">{t("home.quickMeasurements")}</h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("home.quickMeasurementsDesc")}</p>
             </div>
           </Link>
           <Link to="/history" className="glass flex items-center gap-4 rounded-3xl p-4 transition hover:-translate-y-0.5">

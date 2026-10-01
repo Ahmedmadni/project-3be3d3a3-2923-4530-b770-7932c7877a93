@@ -81,11 +81,11 @@ describe("measurement knowledge selection", () => {
     expect(result).toBeNull();
   });
 
-  it("allows active draft preview in development only", () => {
+  it("allows inactive draft preview in development only", () => {
     const result = selectMeasurementKnowledge({
       measurementTypeId: "bp",
       audience: "general",
-      articles: [{ ...draft, isActive: true }],
+      articles: [draft],
       sections: [],
       sources: [],
       mode: "development",

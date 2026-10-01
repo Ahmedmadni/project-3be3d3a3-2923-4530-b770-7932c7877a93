@@ -1,4 +1,4 @@
-import { Home, Stethoscope, Cross, BookOpen, UserRound } from "lucide-react";
+import { Home, Stethoscope, Cross, BookOpen, UserRound, Activity } from "lucide-react";
 import type { TKey } from "@/i18n";
 
 export const navItems = [
@@ -6,6 +6,7 @@ export const navItems = [
   { to: "/symptom-checker", labelKey: "nav.checker" as TKey, icon: Stethoscope },
   { to: "/first-aid", labelKey: "nav.firstAid" as TKey, icon: Cross },
   { to: "/library", labelKey: "nav.library" as TKey, icon: BookOpen },
+  { to: "/measurements", labelKey: "nav.measurements" as TKey, icon: Activity },
   { to: "/account", labelKey: "nav.account" as TKey, icon: UserRound },
 ] as const;
 
