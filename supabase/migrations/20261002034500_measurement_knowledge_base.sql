@@ -204,7 +204,11 @@ DECLARE
   target_v_article_id uuid;
   published_parent boolean;
 BEGIN
-  target_article_id := COALESCE(NEW.article_id, OLD.article_id);
+  IF TG_OP = 'DELETE' THEN
+    target_article_id := OLD.article_id;
+  ELSE
+    target_article_id := NEW.article_id;
+  END IF;
 
   SELECT EXISTS (
     SELECT 1 FROM public.measurement_knowledge_articles a
@@ -216,9 +220,13 @@ BEGIN
       'PUBLISHED_MEASUREMENT_KNOWLEDGE_IMMUTABLE: create a new draft article version';
   END IF;
 
-  RETURN COALESCE(NEW, OLD);
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+
+  RETURN NEW;
 END
-$$;
+$;
 
 DROP TRIGGER IF EXISTS measurement_knowledge_sections_immutable
   ON public.measurement_knowledge_sections;
