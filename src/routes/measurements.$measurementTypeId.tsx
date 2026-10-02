@@ -40,6 +40,7 @@ import {
   type TrendRange,
 } from "@/lib/measurement-trends";
 import { appConfig } from "@/config/app";
+import { isMeasurementTypeVisible } from "@/lib/measurement-visibility";
 import type { MeasurementContext } from "@/types/measurements";
 
 export const Route = createFileRoute("/measurements/$measurementTypeId")({
@@ -66,7 +67,7 @@ function MeasurementDetailPage() {
   const [range, setRange] = useState<TrendRange>("30d");
 
   const typeQuery = useQuery({
-    queryKey: ["measurement-type", measurementTypeId],
+    queryKey: ["measurement-type", measurementTypeId, appConfig.contentMode],
     queryFn: async () => {
       const { data, error } = await measurementsDb
         .from("measurement_types")
@@ -76,7 +77,10 @@ function MeasurementDetailPage() {
         .eq("id", measurementTypeId)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      return isMeasurementTypeVisible(data, appConfig.contentMode)
+        ? data
+        : null;
     },
   });
 

@@ -40,6 +40,9 @@ import {
 } from "@/engines/body-metrics-quality";
 import type { MeasurementContext, MeasurementReading } from "@/types/measurements";
 import {
+  selectVisibleMeasurementTypes,
+} from "@/lib/measurement-visibility";
+import {
   assessMeasurementCaptureQuality,
   captureIssueAr,
   getCaptureQuestions,
@@ -208,7 +211,14 @@ function MeasurementsPage() {
     },
   });
 
-  const types = typesQuery.data ?? [];
+  const types = useMemo(
+    () =>
+      selectVisibleMeasurementTypes(
+        typesQuery.data ?? [],
+        appConfig.contentMode,
+      ),
+    [typesQuery.data],
+  );
   const readings = readingsQuery.data ?? [];
 
   const latestByType = useMemo(() => {
