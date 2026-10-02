@@ -506,6 +506,7 @@ export const en: Dict = {
   "admin.questions": "Questions",
   "admin.redFlags": "Red flags",
   "admin.firstAid": "First aid",
+  "admin.measurements": "Health measurements",
   "admin.externalVerifiedGithub": "Verified GitHub repository",
   "admin.externalSources": "External sources & integrations",
   "admin.externalSourcesHint": "Trust and usage registry for external sources. A public GitHub repository is not automatically an approved clinical source.",
