@@ -59,7 +59,7 @@ function FirstAid() {
     [q],
   );
   const intentCodes = useMemo(
-    () => new Set(intentMatches.map((match) => match.code)),
+    () => new Set<string>(intentMatches.map((match) => match.code)),
     [intentMatches],
   );
 
@@ -92,7 +92,7 @@ function FirstAid() {
 
     return (
       directMatch ||
-      intentCodes.has(topic.code as never) ||
+      intentCodes.has(topic.code) ||
       matchesFirstAidIntent(needle, topic.code)
     );
   });
