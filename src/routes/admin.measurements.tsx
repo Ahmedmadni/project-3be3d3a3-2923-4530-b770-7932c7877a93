@@ -34,6 +34,10 @@ import {
   type MeasurementAdminStatusFilter,
 } from "@/lib/measurement-admin-review-queue";
 import {
+  buildMeasurementReviewPacks,
+  type MeasurementReviewPack,
+} from "@/lib/measurement-review-packs";
+import {
   measurementReviewPriorityReason,
   sortMeasurementReviewQueue,
 } from "@/lib/measurement-review-priority";
@@ -467,6 +471,19 @@ function MeasurementAdminPage() {
         item.reviewStatus,
       ),
   );
+  const reviewPacks = buildMeasurementReviewPacks(
+    globalQueueItems.map((item) => ({
+      id: item.id,
+      measurementTypeId: item.measurementTypeId,
+      kind: item.kind,
+      reviewStatus: item.reviewStatus,
+      readiness: item.readiness,
+      actionable: canActOnMeasurementReviewItem(
+        access.roles as Role[],
+        item.reviewStatus,
+      ),
+    })),
+  );
 
   const queueItems =
     tab === "types"
@@ -509,6 +526,15 @@ function MeasurementAdminPage() {
     setFocusTargetId(item.id);
   };
 
+  const openReviewPack = (measurementTypeId: string) => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setReadinessFilter("all");
+    setMeasurementTypeFilter(measurementTypeId);
+    setTab("types");
+    setFocusTargetId(measurementTypeId);
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -541,6 +567,14 @@ function MeasurementAdminPage() {
         total={roleActionableGlobalQueue.length}
         pendingTotal={globalActiveQueue.length}
         onOpen={openReviewItem}
+      />
+
+      <ReviewPackGrid
+        packs={reviewPacks}
+        types={data.types}
+        queueItems={globalQueueItems}
+        onOpen={openReviewItem}
+        onViewPack={openReviewPack}
       />
 
       <div className="glass flex flex-wrap gap-2 rounded-2xl p-2">
@@ -923,6 +957,133 @@ function MeasurementAdminPage() {
       {tab === "versions" ? (
         <VersionHistory versions={data.versions} />
       ) : null}
+    </div>
+  );
+}
+
+function ReviewPackGrid({
+  packs,
+  types,
+  queueItems,
+  onOpen,
+  onViewPack,
+}: {
+  packs: MeasurementReviewPack[];
+  types: TypeRow[];
+  queueItems: ReviewQueueItem[];
+  onOpen: (item: ReviewQueueItem) => void;
+  onViewPack: (measurementTypeId: string) => void;
+}) {
+  const typeMap = new Map(types.map((type) => [type.id, type]));
+  const packMap = new Map(
+    packs.map((pack) => [pack.measurementTypeId, pack]),
+  );
+
+  return (
+    <section className="glass rounded-3xl p-5">
+      <div>
+        <p className="text-sm font-extrabold">
+          حزم المراجعة حسب نوع القياس
+        </p>
+        <p className="mt-1 text-xs leading-6 text-muted-foreground">
+          كل حزمة تجمع نوع القياس وقواعده وRed Flags والمحتوى الداخلي المرتبط
+          به، لتسهيل مراجعة القياس كوحدة واحدة.
+        </p>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {types.map((type) => {
+          const pack = packMap.get(type.id);
+          if (!pack) return null;
+
+          const nextItem = pack.nextActionableItemId
+            ? queueItems.find(
+                (item) => item.id === pack.nextActionableItemId,
+              )
+            : undefined;
+
+          return (
+            <article
+              key={type.id}
+              className="rounded-2xl bg-background/70 p-4 ring-1 ring-border"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-extrabold">
+                    {typeMap.get(type.id)?.name_ar ?? type.code}
+                  </h3>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {type.code} · {pack.total} عنصر
+                  </p>
+                </div>
+                <span
+                  className={
+                    pack.actionable > 0
+                      ? "rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-extrabold text-primary"
+                      : "rounded-full bg-muted px-2.5 py-1 text-[10px] font-extrabold text-muted-foreground"
+                  }
+                >
+                  {pack.actionable} متاح لدورك
+                </span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                <span className="rounded-lg bg-card px-2 py-1 ring-1 ring-border">
+                  قواعد {pack.referenceCount}
+                </span>
+                <span className="rounded-lg bg-card px-2 py-1 ring-1 ring-border">
+                  Red Flags {pack.redFlagCount}
+                </span>
+                <span className="rounded-lg bg-card px-2 py-1 ring-1 ring-border">
+                  مقالات {pack.knowledgeCount}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                <PackMetric label="مسودة" value={pack.draft} />
+                <PackMetric label="قيد المراجعة" value={pack.inReview} />
+                <PackMetric label="معتمد" value={pack.approved} />
+                <PackMetric label="منشور" value={pack.published} />
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                <span>موانع نشر: {pack.publishBlocked}</span>
+                <span>جاهز للتفعيل: {pack.activationReady}</span>
+                {pack.changesRequested ? (
+                  <span>تعديلات مطلوبة: {pack.changesRequested}</span>
+                ) : null}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  nextItem
+                    ? onOpen(nextItem)
+                    : onViewPack(type.id)
+                }
+                className="mt-4 w-full rounded-xl bg-card px-3 py-2.5 text-xs font-bold text-primary ring-1 ring-border"
+              >
+                {nextItem ? "فتح التالي في الحزمة" : "عرض الحزمة"}
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function PackMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-xl bg-card p-2.5 ring-1 ring-border">
+      <p className="font-extrabold">{value}</p>
+      <p className="mt-0.5 text-muted-foreground">{label}</p>
     </div>
   );
 }
