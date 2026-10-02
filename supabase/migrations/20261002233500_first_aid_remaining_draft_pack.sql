@@ -179,8 +179,7 @@ WHERE NOT EXISTS (
 INSERT INTO public.first_aid_sources (first_aid_topic_id, source_id)
 SELECT t.id, s.id
 FROM public.first_aid_topics t
-JOIN public.medical_sources s ON s.url = v.url
-CROSS JOIN LATERAL (
+CROSS JOIN (
   VALUES
     ('fainting', 'https://www.nhs.uk/symptoms/fainting/'),
     ('head_injury', 'https://production.redcross.org/take-a-class/learn-fa-head-neck-spinal-injury.html'),
@@ -191,6 +190,7 @@ CROSS JOIN LATERAL (
     ('breathing', 'https://www.nhs.uk/symptoms/shortness-of-breath/'),
     ('eye_injury', 'https://www.nhs.uk/conditions/Eye-injuries/')
 ) AS v(code, url)
+JOIN public.medical_sources s ON s.url = v.url
 WHERE t.code = v.code
 ON CONFLICT DO NOTHING;
 
