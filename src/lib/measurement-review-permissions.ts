@@ -40,3 +40,18 @@ export function measurementReviewPermissions(
       availableTransitions(roles, status).includes("published"),
   };
 }
+
+
+export function canActOnMeasurementReviewItem(
+  roles: Role[],
+  statusRaw: string,
+): boolean {
+  const permissions = measurementReviewPermissions(
+    roles,
+    statusRaw,
+  );
+  return (
+    permissions.transitions.length > 0 ||
+    permissions.canToggleActivation
+  );
+}
