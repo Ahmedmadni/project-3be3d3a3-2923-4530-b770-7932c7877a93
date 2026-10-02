@@ -1,17 +1,13 @@
-const CACHE = "health-indicator-shell-v1";
-const SHELL = ["/", "/manifest.webmanifest", "/pwa-192.png", "/pwa-512.png"];
-const PRIVATE_PREFIXES = [
-  "/account",
-  "/history",
-  "/measurements",
-  "/admin",
-  "/results",
-  "/auth",
-  "/reset-password",
+const CACHE = "health-indicator-static-v2";
+const STATIC_SHELL = [
+  "/offline.html",
+  "/manifest.webmanifest",
+  "/pwa-192.png",
+  "/pwa-512.png",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC_SHELL)));
   self.skipWaiting();
 });
 
@@ -32,30 +28,15 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/") || url.pathname.includes("supabase")) return;
 
-  const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) =>
-    url.pathname.startsWith(prefix),
-  );
-
+  // Never cache navigation HTML. Pages may contain personalized health UI.
   if (request.mode === "navigate") {
-    if (isPrivateRoute) {
-      event.respondWith(fetch(request));
-      return;
-    }
-
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => (await caches.match(request)) || (await caches.match("/"))),
+      fetch(request).catch(() => caches.match("/offline.html")),
     );
     return;
   }
 
+  // Cache only static presentation assets. No API or health-data responses.
   if (["style", "script", "image", "font"].includes(request.destination)) {
     event.respondWith(
       caches.match(request).then((cached) => {
