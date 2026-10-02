@@ -1,10 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Search, ShieldCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowUpLeft, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { appConfig } from "@/config/app";
 import { isPublicFirstAidTopicVisible } from "@/lib/public-content";
+import {
+  classifyFirstAidIntent,
+  matchesFirstAidIntent,
+} from "@/lib/first-aid-intent-router";
 import { FirstAidCard, EmergencyAlert, LoadingState, ErrorState } from "@/components/health/cards";
 import { PageVisualHeader } from "@/components/health/PageVisualHeader";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
@@ -50,14 +54,47 @@ function FirstAid() {
   const { lang, dir, t } = useI18n();
   const [q, setQ] = useState("");
 
+  const intentMatches = useMemo(
+    () => classifyFirstAidIntent(q, 3),
+    [q],
+  );
+  const intentCodes = useMemo(
+    () => new Set<string>(intentMatches.map((match) => match.code)),
+    [intentMatches],
+  );
+
+  const suggestedTopics = useMemo(
+    () =>
+      intentMatches
+        .map((match) =>
+          topics.find((topic) => topic.code === match.code),
+        )
+        .filter((topic): topic is (typeof topics)[number] => Boolean(topic)),
+    [intentMatches, topics],
+  );
+
   const list = topics.filter((topic) => {
-    const label = localized(topic as unknown as Record<string, unknown>, "title", lang);
+    const label = localized(
+      topic as unknown as Record<string, unknown>,
+      "title",
+      lang,
+    );
     if (!label) return false;
+
     const needle = q.trim();
     if (!needle) return true;
-    return lang === "ar"
-      ? arabicIncludes(label, needle)
-      : label.toLowerCase().includes(needle.toLowerCase()) || topic.code.toLowerCase().includes(needle.toLowerCase());
+
+    const directMatch =
+      lang === "ar"
+        ? arabicIncludes(label, needle)
+        : label.toLowerCase().includes(needle.toLowerCase()) ||
+          topic.code.toLowerCase().includes(needle.toLowerCase());
+
+    return (
+      directMatch ||
+      intentCodes.has(topic.code) ||
+      matchesFirstAidIntent(needle, topic.code)
+    );
   });
 
   return (
@@ -84,6 +121,48 @@ function FirstAid() {
           )}
         />
       </label>
+
+      {q.trim() && suggestedTopics.length ? (
+        <section className="mb-6 rounded-3xl bg-primary-soft/70 p-4 ring-1 ring-primary/15">
+          <div className="flex items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-card text-primary ring-1 ring-primary/10">
+              <Sparkles className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-extrabold">
+                اقتراحات من وصفك
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                هذه مطابقة موضوعية محلية وليست تشخيصًا أو قرارًا طبيًا.
+                اختر الموضوع الأقرب لما حدث.
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {suggestedTopics.map((topic) => {
+                  const label =
+                    localized(
+                      topic as unknown as Record<string, unknown>,
+                      "title",
+                      lang,
+                    ) ?? topic.code;
+
+                  return (
+                    <Link
+                      key={topic.id}
+                      to="/first-aid/$slug"
+                      params={{ slug: topic.code }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold text-primary ring-1 ring-border"
+                    >
+                      {label}
+                      <ArrowUpLeft className="size-3.5" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {topics.length === 0 ? (
         <p className="glass rounded-3xl p-8 text-center text-sm text-muted-foreground">
