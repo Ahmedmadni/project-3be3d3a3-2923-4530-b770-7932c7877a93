@@ -28,9 +28,9 @@ describe("measurement snapshot diff", () => {
     expect(diffMeasurementSnapshot(current, previous)).toEqual([
       { path: "label_ar", before: "قديم", after: "جديد" },
       {
-        path: "predicate",
-        before: { all: [{ value: 10 }] },
-        after: { all: [{ value: 12 }] },
+        path: "predicate.all",
+        before: [{ value: 10 }],
+        after: [{ value: 12 }],
       },
     ]);
   });
