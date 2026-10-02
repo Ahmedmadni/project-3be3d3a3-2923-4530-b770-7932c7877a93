@@ -38,6 +38,7 @@ import {
   sortMeasurementReviewQueue,
 } from "@/lib/measurement-review-priority";
 import {
+  canActOnMeasurementReviewItem,
   measurementReviewPermissions,
   type MeasurementReviewPermissions,
 } from "@/lib/measurement-review-permissions";
@@ -459,6 +460,13 @@ function MeasurementAdminPage() {
       item.reviewStatus !== "published" &&
       item.reviewStatus !== "retired",
   );
+  const roleActionableGlobalQueue = globalActiveQueue.filter(
+    (item) =>
+      canActOnMeasurementReviewItem(
+        access.roles as Role[],
+        item.reviewStatus,
+      ),
+  );
 
   const queueItems =
     tab === "types"
@@ -479,16 +487,18 @@ function MeasurementAdminPage() {
     measurementTypeId: measurementTypeFilter,
   });
   const sortedQueueItems = sortMeasurementReviewQueue(filteredQueueItems);
+  const actionableSortedQueueItems = sortedQueueItems.filter(
+    (item) =>
+      canActOnMeasurementReviewItem(
+        access.roles as Role[],
+        item.reviewStatus,
+      ),
+  );
   const queueOrder = new Map(
     sortedQueueItems.map((item, index) => [item.id, index]),
   );
   const visibleIds = new Set(sortedQueueItems.map((item) => item.id));
-  const nextReviewItem =
-    sortedQueueItems.find(
-      (item) =>
-        item.reviewStatus !== "published" &&
-        item.reviewStatus !== "retired",
-    ) ?? sortedQueueItems[0];
+  const nextReviewItem = actionableSortedQueueItems[0];
 
   const openReviewItem = (item: ReviewQueueItem) => {
     setSearchQuery("");
@@ -527,8 +537,9 @@ function MeasurementAdminPage() {
       </div>
 
       <GlobalReviewQueue
-        items={globalActiveQueue.slice(0, 5)}
-        total={globalActiveQueue.length}
+        items={roleActionableGlobalQueue.slice(0, 5)}
+        total={roleActionableGlobalQueue.length}
+        pendingTotal={globalActiveQueue.length}
         onOpen={openReviewItem}
       />
 
@@ -553,7 +564,10 @@ function MeasurementAdminPage() {
       {tab !== "versions" ? (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <StatusMetric label="عناصر هذا التبويب" value={queueSummary.total} />
+            <StatusMetric
+              label={`متاحة لدورك من ${queueSummary.total}`}
+              value={actionableSortedQueueItems.length}
+            />
             <StatusMetric
               label="بدون موانع نشر"
               value={queueSummary.publishReady}
@@ -916,10 +930,12 @@ function MeasurementAdminPage() {
 function GlobalReviewQueue({
   items,
   total,
+  pendingTotal,
   onOpen,
 }: {
   items: ReviewQueueItem[];
   total: number;
+  pendingTotal: number;
   onOpen: (item: ReviewQueueItem) => void;
 }) {
   return (
@@ -928,18 +944,21 @@ function GlobalReviewQueue({
         <div>
           <p className="text-sm font-extrabold">طابور المراجعة الموحد</p>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            ترتيب تشغيلي عبر أنواع القياس والقواعد وRed Flags والمحتوى الداخلي.
-            لا يغيّر هذا الترتيب أي قاعدة أو أولوية سريرية.
+            عناصر قابلة للإجراء حسب صلاحياتك الحالية عبر أنواع القياس والقواعد
+            وRed Flags والمحتوى الداخلي. لا يغيّر هذا الترتيب أي قاعدة أو
+            أولوية سريرية.
           </p>
         </div>
         <span className="rounded-full bg-primary-soft px-3 py-1 text-[10px] font-extrabold text-primary">
-          {total} عنصر نشط في دورة المراجعة
+          {total} متاح لدورك من {pendingTotal} معلّق
         </span>
       </div>
 
       {!items.length ? (
         <div className="mt-4 rounded-2xl bg-success-soft/60 p-4 text-xs text-success ring-1 ring-success/15">
-          لا توجد عناصر غير منشورة أو غير متقاعدة في طابور المراجعة الحالي.
+          {pendingTotal > 0
+            ? "توجد عناصر معلّقة، لكنها تنتظر إجراءً من دور آخر حسب دورة الحوكمة."
+            : "لا توجد عناصر غير منشورة أو غير متقاعدة في طابور المراجعة الحالي."}
         </div>
       ) : (
         <div className="mt-4 space-y-2">
