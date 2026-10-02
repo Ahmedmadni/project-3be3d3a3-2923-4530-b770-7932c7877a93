@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { measurementReviewPermissions } from "./measurement-review-permissions";
+import {
+  canActOnMeasurementReviewItem,
+  measurementReviewPermissions,
+} from "./measurement-review-permissions";
 
 describe("measurement review permissions", () => {
   it("lets a content editor submit drafts but not approve, publish, or activate", () => {
@@ -61,6 +64,33 @@ describe("measurement review permissions", () => {
         "published",
       ).canToggleActivation,
     ).toBe(false);
+  });
+
+  it("makes the queue role-aware", () => {
+    expect(
+      canActOnMeasurementReviewItem(["content_editor"], "draft"),
+    ).toBe(true);
+    expect(
+      canActOnMeasurementReviewItem(
+        ["content_editor"],
+        "in_review",
+      ),
+    ).toBe(false);
+    expect(
+      canActOnMeasurementReviewItem(
+        ["medical_reviewer"],
+        "draft",
+      ),
+    ).toBe(false);
+    expect(
+      canActOnMeasurementReviewItem(
+        ["medical_reviewer"],
+        "in_review",
+      ),
+    ).toBe(true);
+    expect(
+      canActOnMeasurementReviewItem(["admin"], "approved"),
+    ).toBe(true);
   });
 
   it("gives ordinary users no review actions", () => {
