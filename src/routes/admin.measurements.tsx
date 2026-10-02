@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useAdminAccess } from "@/hooks/use-admin-access";
 import {
   availableTransitions,
@@ -34,104 +35,52 @@ export const Route = createFileRoute("/admin/measurements")({
 type EntityKind = "type" | "reference" | "red_flag" | "knowledge";
 type Tab = "types" | "reference" | "red_flags" | "knowledge" | "versions";
 
-type GovernedRow = {
-  id: string;
-  review_status: string;
-  is_active: boolean;
-  is_demo: boolean;
-  version: number;
-  review_note: string | null;
-  change_reason: string | null;
-  created_by: string | null;
-  submitted_at?: string | null;
-  reviewed_at: string | null;
-  approved_at: string | null;
-  published_at: string | null;
-};
+type MeasurementTypeRow = Tables<"measurement_types">;
+type MeasurementRuleRow = Tables<"measurement_reference_rules">;
+type MeasurementRedFlagRow = Tables<"measurement_red_flags">;
+type MeasurementKnowledgeRow = Tables<"measurement_knowledge_articles">;
+type MeasurementSectionRow = Tables<"measurement_knowledge_sections">;
+type MeasurementSourceRow = Tables<"measurement_sources">;
+type MeasurementKnowledgeSourceRow = Tables<"measurement_knowledge_sources">;
+type MedicalSourceRow = Tables<"medical_sources">;
+type ContentVersionRow = Tables<"content_versions">;
 
-type TypeRow = GovernedRow & {
-  code: string;
-  name_ar: string;
-  name_en: string | null;
-  description_ar: string | null;
-  canonical_unit: string | null;
-  value_kind: string;
-};
+type GovernedRow =
+  | MeasurementTypeRow
+  | MeasurementRuleRow
+  | MeasurementRedFlagRow
+  | MeasurementKnowledgeRow;
 
-type RuleRow = GovernedRow & {
-  measurement_type_id: string;
-  code: string;
-  label_ar: string;
-  interpretation_code: string;
-  predicate: unknown;
-  care_level: string | null;
-  source_id: string;
-  priority: number;
-};
+type TypeRow = MeasurementTypeRow;
+type RuleRow = MeasurementRuleRow;
+type FlagRow = MeasurementRedFlagRow;
+type KnowledgeRow = MeasurementKnowledgeRow;
+type SectionRow = MeasurementSectionRow;
+type KnowledgeSourceRow = MeasurementKnowledgeSourceRow;
 
-type FlagRow = GovernedRow & {
-  measurement_type_id: string;
-  code: string;
-  title_ar: string;
-  predicate: unknown;
-  care_level: string;
-  source_id: string;
-  priority: number;
-};
+type SourceRow = Pick<
+  MedicalSourceRow,
+  | "id"
+  | "title"
+  | "organization"
+  | "url"
+  | "is_active"
+  | "last_verified_at"
+  | "expires_review_at"
+>;
 
-type KnowledgeRow = GovernedRow & {
-  measurement_type_id: string;
-  code: string;
-  audience: "general" | "professional";
-  title_ar: string;
-  summary_ar: string;
-  last_medical_review_at: string | null;
-};
-
-type SectionRow = {
-  id: string;
-  article_id: string;
-  section_type: string;
-  title_ar: string;
-  body_ar: string;
-  sort_order: number;
-};
-
-type MeasurementSourceRow = {
-  id: string;
-  measurement_type_id: string;
-  source_id: string;
-  use_scope: string;
-  last_verified_at: string | null;
-};
-
-type KnowledgeSourceRow = {
-  article_id: string;
-  source_id: string;
-  source_role: string;
-};
-
-type SourceRow = {
-  id: string;
-  title: string;
-  organization: string | null;
-  url: string | null;
-  is_active: boolean;
-  last_verified_at: string | null;
-  expires_review_at: string | null;
-};
-
-type VersionRow = {
-  id: string;
-  entity_type: string;
-  entity_id: string;
-  version: number;
-  status: string;
-  snapshot: unknown;
-  change_reason: string | null;
-  published_at: string | null;
-  created_at: string;
-};
+type VersionRow = Pick<
+  ContentVersionRow,
+  | "id"
+  | "entity_type"
+  | "entity_id"
+  | "version"
+  | "status"
+  | "snapshot"
+  | "change_reason"
+  | "published_at"
+  | "created_at"
+>;
 
 const tabs: Array<{ value: Tab; label: string; icon: typeof Activity }> = [
   { value: "types", label: "أنواع القياس", icon: Gauge },
@@ -162,13 +111,13 @@ function MeasurementAdminPage() {
         sourcesResult,
         versionsResult,
       ] = await Promise.all([
-        supabase.from("measurement_types" as never).select("*").order("name_ar" as never),
-        supabase.from("measurement_reference_rules" as never).select("*").order("priority" as never),
-        supabase.from("measurement_red_flags" as never).select("*").order("priority" as never),
-        supabase.from("measurement_knowledge_articles" as never).select("*").order("version" as never, { ascending: false }),
-        supabase.from("measurement_knowledge_sections" as never).select("*").order("sort_order" as never),
-        supabase.from("measurement_sources" as never).select("*"),
-        supabase.from("measurement_knowledge_sources" as never).select("*"),
+        supabase.from("measurement_types").select("*").order("name_ar"),
+        supabase.from("measurement_reference_rules").select("*").order("priority"),
+        supabase.from("measurement_red_flags").select("*").order("priority"),
+        supabase.from("measurement_knowledge_articles").select("*").order("version", { ascending: false }),
+        supabase.from("measurement_knowledge_sections").select("*").order("sort_order"),
+        supabase.from("measurement_sources").select("*"),
+        supabase.from("measurement_knowledge_sources").select("*"),
         supabase.from("medical_sources").select("id,title,organization,url,is_active,last_verified_at,expires_review_at"),
         supabase
           .from("content_versions")
@@ -199,13 +148,13 @@ function MeasurementAdminPage() {
       }
 
       return {
-        types: (typesResult.data ?? []) as unknown as TypeRow[],
-        reference: (referenceResult.data ?? []) as unknown as RuleRow[],
-        flags: (flagsResult.data ?? []) as unknown as FlagRow[],
-        knowledge: (knowledgeResult.data ?? []) as unknown as KnowledgeRow[],
-        sections: (sectionsResult.data ?? []) as unknown as SectionRow[],
-        measurementSources: (measurementSourcesResult.data ?? []) as unknown as MeasurementSourceRow[],
-        knowledgeSources: (knowledgeSourcesResult.data ?? []) as unknown as KnowledgeSourceRow[],
+        types: typesResult.data ?? [],
+        reference: referenceResult.data ?? [],
+        flags: flagsResult.data ?? [],
+        knowledge: knowledgeResult.data ?? [],
+        sections: sectionsResult.data ?? [],
+        measurementSources: measurementSourcesResult.data ?? [],
+        knowledgeSources: knowledgeSourcesResult.data ?? [],
         sources: (sourcesResult.data ?? []) as SourceRow[],
         versions: (versionsResult.data ?? []) as VersionRow[],
       };
@@ -227,11 +176,10 @@ function MeasurementAdminPage() {
         throw new Error("اكتب ملاحظة توضّح التعديلات المطلوبة قبل إرسال العنصر.");
       }
 
-      const table = tableFor(kind);
-      const { error } = await supabase
-        .from(table as never)
-        .update({ review_status: to, review_note: note } as never)
-        .eq("id" as never, row.id as never);
+      const error = await updateGovernedMeasurement(kind, row.id, {
+        review_status: to,
+        review_note: note,
+      });
 
       if (error) throw error;
     },
@@ -252,11 +200,9 @@ function MeasurementAdminPage() {
       kind: EntityKind;
       row: GovernedRow;
     }) => {
-      const table = tableFor(kind);
-      const { error } = await supabase
-        .from(table as never)
-        .update({ is_active: !row.is_active } as never)
-        .eq("id" as never, row.id as never);
+      const error = await updateGovernedMeasurement(kind, row.id, {
+        is_active: !row.is_active,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -827,16 +773,46 @@ function summarizeStatuses(rows: GovernedRow[]) {
   );
 }
 
-function tableFor(kind: EntityKind) {
+type GovernedUpdate = {
+  review_status?: Tables<"measurement_types">["review_status"];
+  review_note?: string | null;
+  is_active?: boolean;
+};
+
+async function updateGovernedMeasurement(
+  kind: EntityKind,
+  id: string,
+  update: GovernedUpdate,
+) {
   switch (kind) {
-    case "type":
-      return "measurement_types";
-    case "reference":
-      return "measurement_reference_rules";
-    case "red_flag":
-      return "measurement_red_flags";
-    case "knowledge":
-      return "measurement_knowledge_articles";
+    case "type": {
+      const { error } = await supabase
+        .from("measurement_types")
+        .update(update)
+        .eq("id", id);
+      return error;
+    }
+    case "reference": {
+      const { error } = await supabase
+        .from("measurement_reference_rules")
+        .update(update)
+        .eq("id", id);
+      return error;
+    }
+    case "red_flag": {
+      const { error } = await supabase
+        .from("measurement_red_flags")
+        .update(update)
+        .eq("id", id);
+      return error;
+    }
+    case "knowledge": {
+      const { error } = await supabase
+        .from("measurement_knowledge_articles")
+        .update(update)
+        .eq("id", id);
+      return error;
+    }
   }
 }
 
