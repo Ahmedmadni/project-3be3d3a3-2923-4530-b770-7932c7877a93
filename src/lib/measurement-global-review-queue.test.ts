@@ -9,7 +9,8 @@ const route = readFileSync(
 describe("measurement global review queue UI", () => {
   it("renders a unified queue across governed measurement entities", () => {
     expect(route).toContain("طابور المراجعة الموحد");
-    expect(route).toContain("globalActiveQueue.slice(0, 5)");
+    expect(route).toContain("roleActionableGlobalQueue.slice(0, 5)");
+    expect(route).toContain("canActOnMeasurementReviewItem");
     expect(route).toContain("sortMeasurementReviewQueue([");
     expect(route).toContain("...typeQueueItems");
     expect(route).toContain("...referenceQueueItems");
@@ -24,6 +25,7 @@ describe("measurement global review queue UI", () => {
     expect(route).toContain('setMeasurementTypeFilter("all");');
     expect(route).toContain("setTab(tabForReviewKind(item.kind));");
     expect(route).toContain("setFocusTargetId(item.id);");
+    expect(route).toContain("actionableSortedQueueItems");
   });
 
   it("scrolls to the selected review card after the tab changes", () => {
