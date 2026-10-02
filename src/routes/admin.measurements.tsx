@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -68,6 +68,19 @@ type MedicalSourceRow = Tables<"medical_sources">;
 type ContentVersionRow = Tables<"content_versions">;
 type AuditRow = Tables<"audit_logs">;
 
+type ReviewQueueItem = {
+  id: string;
+  kind: EntityKind;
+  title: string;
+  measurementTypeId: string;
+  searchText: string;
+  reviewStatus: WorkflowStatus;
+  priority: number | null;
+  submittedAt: string | null;
+  updatedAt: string | null;
+  readiness: MeasurementReleaseReadiness;
+};
+
 type GovernedRow =
   | MeasurementTypeRow
   | MeasurementRuleRow
@@ -125,6 +138,7 @@ function MeasurementAdminPage() {
   const [readinessFilter, setReadinessFilter] =
     useState<MeasurementAdminReadinessFilter>("all");
   const [measurementTypeFilter, setMeasurementTypeFilter] = useState("all");
+  const [focusTargetId, setFocusTargetId] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["admin", "measurements", "review"],
@@ -275,6 +289,25 @@ function MeasurementAdminPage() {
     }
     return map;
   }, [data?.versions]);
+  useEffect(() => {
+    if (!focusTargetId) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const element = document.getElementById(
+        `measurement-review-${focusTargetId}`,
+      );
+      if (!element) return;
+
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      setFocusTargetId(null);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusTargetId, tab]);
+
 
   if (query.isPending) {
     return (
@@ -308,109 +341,131 @@ function MeasurementAdminPage() {
     auditMap.set(key, existing);
   }
 
+  const typeQueueItems: ReviewQueueItem[] = data.types.map((row) => {
+    const sources = data.measurementSources
+      .filter((link) => link.measurement_type_id === row.id)
+      .map((link) => sourceMap.get(link.source_id));
+
+    return {
+      id: row.id,
+      kind: "type",
+      title: row.name_ar,
+      measurementTypeId: row.id,
+      searchText: `${row.name_ar} ${row.name_en ?? ""} ${row.code}`,
+      reviewStatus: normalizeStatus(row.review_status),
+      priority: null,
+      submittedAt: row.submitted_at,
+      updatedAt: row.updated_at,
+      readiness: measurementReleaseReadiness({
+        kind: "type",
+        reviewStatus: row.review_status,
+        isDemo: row.is_demo,
+        sourceCount: sources.length,
+        activeSourceCount: sources.filter((source) => source?.is_active).length,
+      }),
+    };
+  });
+
+  const referenceQueueItems: ReviewQueueItem[] = data.reference.map((row) => ({
+    id: row.id,
+    kind: "reference",
+    title: row.label_ar,
+    measurementTypeId: row.measurement_type_id,
+    searchText: `${row.label_ar} ${row.label_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
+    reviewStatus: normalizeStatus(row.review_status),
+    priority: row.priority,
+    submittedAt: row.submitted_at,
+    updatedAt: row.updated_at,
+    readiness: measurementReleaseReadiness({
+      kind: "reference",
+      reviewStatus: row.review_status,
+      isDemo: row.is_demo,
+      sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
+      sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
+      parentReviewStatus:
+        typeMap.get(row.measurement_type_id)?.review_status ?? null,
+      parentActive:
+        typeMap.get(row.measurement_type_id)?.is_active ?? false,
+    }),
+  }));
+
+  const redFlagQueueItems: ReviewQueueItem[] = data.flags.map((row) => ({
+    id: row.id,
+    kind: "red_flag",
+    title: row.title_ar,
+    measurementTypeId: row.measurement_type_id,
+    searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
+    reviewStatus: normalizeStatus(row.review_status),
+    priority: row.priority,
+    submittedAt: row.submitted_at,
+    updatedAt: row.updated_at,
+    readiness: measurementReleaseReadiness({
+      kind: "red_flag",
+      reviewStatus: row.review_status,
+      isDemo: row.is_demo,
+      sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
+      sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
+      parentReviewStatus:
+        typeMap.get(row.measurement_type_id)?.review_status ?? null,
+      parentActive:
+        typeMap.get(row.measurement_type_id)?.is_active ?? false,
+    }),
+  }));
+
+  const knowledgeQueueItems: ReviewQueueItem[] = data.knowledge.map((row) => {
+    const sources = data.knowledgeSources
+      .filter((link) => link.article_id === row.id)
+      .map((link) => sourceMap.get(link.source_id));
+    const sectionCount = data.sections.filter(
+      (section) => section.article_id === row.id,
+    ).length;
+
+    return {
+      id: row.id,
+      kind: "knowledge",
+      title: row.title_ar,
+      measurementTypeId: row.measurement_type_id,
+      searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
+      reviewStatus: normalizeStatus(row.review_status),
+      priority: null,
+      submittedAt: row.submitted_at,
+      updatedAt: row.updated_at,
+      readiness: measurementReleaseReadiness({
+        kind: "knowledge",
+        reviewStatus: row.review_status,
+        isDemo: row.is_demo,
+        sourceCount: sources.length,
+        activeSourceCount: sources.filter((source) => source?.is_active).length,
+        sectionCount,
+        parentReviewStatus:
+          typeMap.get(row.measurement_type_id)?.review_status ?? null,
+        parentActive:
+          typeMap.get(row.measurement_type_id)?.is_active ?? false,
+      }),
+    };
+  });
+
+  const globalQueueItems = sortMeasurementReviewQueue([
+    ...typeQueueItems,
+    ...referenceQueueItems,
+    ...redFlagQueueItems,
+    ...knowledgeQueueItems,
+  ]);
+  const globalActiveQueue = globalQueueItems.filter(
+    (item) =>
+      item.reviewStatus !== "published" &&
+      item.reviewStatus !== "retired",
+  );
+
   const queueItems =
     tab === "types"
-      ? data.types.map((row) => {
-          const sources = data.measurementSources
-            .filter((link) => link.measurement_type_id === row.id)
-            .map((link) => sourceMap.get(link.source_id));
-          return {
-            id: row.id,
-            kind: "type" as const,
-            title: row.name_ar,
-            measurementTypeId: row.id,
-            searchText: `${row.name_ar} ${row.name_en ?? ""} ${row.code}`,
-            reviewStatus: normalizeStatus(row.review_status),
-            priority: null,
-            submittedAt: row.submitted_at,
-            updatedAt: row.updated_at,
-            readiness: measurementReleaseReadiness({
-              kind: "type",
-              reviewStatus: row.review_status,
-              isDemo: row.is_demo,
-              sourceCount: sources.length,
-              activeSourceCount: sources.filter((source) => source?.is_active).length,
-            }),
-          };
-        })
+      ? typeQueueItems
       : tab === "reference"
-        ? data.reference.map((row) => ({
-            id: row.id,
-            kind: "reference" as const,
-            title: row.label_ar,
-            measurementTypeId: row.measurement_type_id,
-            searchText: `${row.label_ar} ${row.label_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
-            reviewStatus: normalizeStatus(row.review_status),
-            priority: row.priority,
-            submittedAt: row.submitted_at,
-            updatedAt: row.updated_at,
-            readiness: measurementReleaseReadiness({
-              kind: "reference",
-              reviewStatus: row.review_status,
-              isDemo: row.is_demo,
-              sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
-              sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
-              parentReviewStatus:
-                typeMap.get(row.measurement_type_id)?.review_status ?? null,
-              parentActive:
-                typeMap.get(row.measurement_type_id)?.is_active ?? false,
-            }),
-          }))
+        ? referenceQueueItems
         : tab === "red_flags"
-          ? data.flags.map((row) => ({
-              id: row.id,
-              kind: "red_flag" as const,
-              title: row.title_ar,
-              measurementTypeId: row.measurement_type_id,
-              searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
-              reviewStatus: normalizeStatus(row.review_status),
-              priority: row.priority,
-              submittedAt: row.submitted_at,
-              updatedAt: row.updated_at,
-              readiness: measurementReleaseReadiness({
-                kind: "red_flag",
-                reviewStatus: row.review_status,
-                isDemo: row.is_demo,
-                sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
-                sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
-                parentReviewStatus:
-                  typeMap.get(row.measurement_type_id)?.review_status ?? null,
-                parentActive:
-                  typeMap.get(row.measurement_type_id)?.is_active ?? false,
-              }),
-            }))
+          ? redFlagQueueItems
           : tab === "knowledge"
-            ? data.knowledge.map((row) => {
-                const sources = data.knowledgeSources
-                  .filter((link) => link.article_id === row.id)
-                  .map((link) => sourceMap.get(link.source_id));
-                const sectionCount = data.sections.filter(
-                  (section) => section.article_id === row.id,
-                ).length;
-                return {
-                  id: row.id,
-                  kind: "knowledge" as const,
-                  title: row.title_ar,
-                  measurementTypeId: row.measurement_type_id,
-                  searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
-                  reviewStatus: normalizeStatus(row.review_status),
-                  priority: null,
-                  submittedAt: row.submitted_at,
-                  updatedAt: row.updated_at,
-                  readiness: measurementReleaseReadiness({
-                    kind: "knowledge",
-                    reviewStatus: row.review_status,
-                    isDemo: row.is_demo,
-                    sourceCount: sources.length,
-                    activeSourceCount: sources.filter((source) => source?.is_active).length,
-                    sectionCount,
-                    parentReviewStatus:
-                      typeMap.get(row.measurement_type_id)?.review_status ?? null,
-                    parentActive:
-                      typeMap.get(row.measurement_type_id)?.is_active ?? false,
-                  }),
-                };
-              })
+            ? knowledgeQueueItems
             : [];
 
   const queueSummary = summarizeMeasurementAdminQueue(queueItems);
@@ -431,6 +486,15 @@ function MeasurementAdminPage() {
         item.reviewStatus !== "published" &&
         item.reviewStatus !== "retired",
     ) ?? sortedQueueItems[0];
+
+  const openReviewItem = (item: ReviewQueueItem) => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setReadinessFilter("all");
+    setMeasurementTypeFilter("all");
+    setTab(tabForReviewKind(item.kind));
+    setFocusTargetId(item.id);
+  };
 
   return (
     <div className="space-y-5">
@@ -458,6 +522,12 @@ function MeasurementAdminPage() {
         <StatusMetric label="معتمدة" value={counts.approved} />
         <StatusMetric label="منشورة" value={counts.published} />
       </div>
+
+      <GlobalReviewQueue
+        items={globalActiveQueue.slice(0, 5)}
+        total={globalActiveQueue.length}
+        onOpen={openReviewItem}
+      />
 
       <div className="glass flex flex-wrap gap-2 rounded-2xl p-2">
         {tabs.map(({ value, label, icon: Icon }) => (
@@ -517,16 +587,7 @@ function MeasurementAdminPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() =>
-                    document
-                      .getElementById(
-                        `measurement-review-${nextReviewItem.id}`,
-                      )
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      })
-                  }
+                  onClick={() => openReviewItem(nextReviewItem)}
                   className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
                 >
                   فتح العنصر التالي
@@ -853,6 +914,71 @@ function MeasurementAdminPage() {
   );
 }
 
+function GlobalReviewQueue({
+  items,
+  total,
+  onOpen,
+}: {
+  items: ReviewQueueItem[];
+  total: number;
+  onOpen: (item: ReviewQueueItem) => void;
+}) {
+  return (
+    <section className="glass rounded-3xl p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-extrabold">طابور المراجعة الموحد</p>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            ترتيب تشغيلي عبر أنواع القياس والقواعد وRed Flags والمحتوى الداخلي.
+            لا يغيّر هذا الترتيب أي قاعدة أو أولوية سريرية.
+          </p>
+        </div>
+        <span className="rounded-full bg-primary-soft px-3 py-1 text-[10px] font-extrabold text-primary">
+          {total} عنصر نشط في دورة المراجعة
+        </span>
+      </div>
+
+      {!items.length ? (
+        <div className="mt-4 rounded-2xl bg-success-soft/60 p-4 text-xs text-success ring-1 ring-success/15">
+          لا توجد عناصر غير منشورة أو غير متقاعدة في طابور المراجعة الحالي.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {items.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onOpen(item)}
+              className="flex w-full items-start gap-3 rounded-2xl bg-background/70 p-3 text-start ring-1 ring-border transition hover:ring-primary/30"
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary-soft text-xs font-extrabold text-primary">
+                {index + 1}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-extrabold">
+                  {item.title}
+                </span>
+                <span className="mt-1 block text-[10px] text-muted-foreground">
+                  {reviewKindAr(item.kind)} ·{" "}
+                  {workflowStatusAr(
+                    normalizeStatus(item.reviewStatus),
+                  )}
+                </span>
+                <span className="mt-1 block text-[10px] leading-5 text-muted-foreground">
+                  {measurementReviewPriorityReason(item)}
+                </span>
+              </span>
+              <span className="shrink-0 text-[10px] font-bold text-primary">
+                فتح
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ReviewCard({
   kind,
   row,
@@ -1082,6 +1208,32 @@ function ReadinessBox({
       )}
     </div>
   );
+}
+
+function tabForReviewKind(kind: EntityKind): Tab {
+  switch (kind) {
+    case "type":
+      return "types";
+    case "reference":
+      return "reference";
+    case "red_flag":
+      return "red_flags";
+    case "knowledge":
+      return "knowledge";
+  }
+}
+
+function reviewKindAr(kind: EntityKind): string {
+  switch (kind) {
+    case "type":
+      return "نوع قياس";
+    case "reference":
+      return "قاعدة مرجعية";
+    case "red_flag":
+      return "Red Flag";
+    case "knowledge":
+      return "مقال داخلي";
+  }
 }
 
 function workflowStatusAr(status: WorkflowStatus): string {
