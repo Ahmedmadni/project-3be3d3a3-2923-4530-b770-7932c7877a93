@@ -60,7 +60,7 @@ export const ar = {
   "measurements.dashboard.unknownTitle": "جودة غير مقيّمة",
   "measurements.dashboard.unknownHint": "هذه قراءات قديمة أو ناقصة السياق؛ لن نفترض جودتها من الرقم وحده.",
   "measurements.dashboard.latestTitle": "آخر القياسات",
-  "measurements.dashboard.timeline": "آخر النشاطات"
+  "measurements.dashboard.timeline": "آخر النشاطات",
   "home.professionalQuestion": "هل أنت طبيب أو ممرض أو ممارس صحي؟",
   "home.professionalAction": "الدخول إلى الوضع المهني",
   "home.professionalHint": "واجهة منفصلة لتنظيم التقييم السريع، علامات الخطر والمراجع العملية.",

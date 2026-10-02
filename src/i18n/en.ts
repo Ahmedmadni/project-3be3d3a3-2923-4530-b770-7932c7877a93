@@ -62,7 +62,7 @@ export const en: Dict = {
   "measurements.dashboard.unknownTitle": "Quality not assessed",
   "measurements.dashboard.unknownHint": "These may be older readings or missing capture context; quality is not inferred from the number.",
   "measurements.dashboard.latestTitle": "Latest measurements",
-  "measurements.dashboard.timeline": "Recent activity"
+  "measurements.dashboard.timeline": "Recent activity",
   "home.professionalQuestion": "Are you a doctor, nurse, or healthcare practitioner?",
   "home.professionalAction": "Enter professional mode",
   "home.professionalHint": "A separate workspace for structured rapid assessment, red flags, and practical references.",
