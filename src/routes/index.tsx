@@ -10,6 +10,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
+import { MeasurementDashboardSection } from "@/components/health/MeasurementDashboardSection";
 import { ProfessionalBadge } from "@/components/health/badges";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -165,6 +166,8 @@ function Home() {
           </Link>
         </div>
       </section>
+
+      <MeasurementDashboardSection />
 
       <Link
         to="/professional"
