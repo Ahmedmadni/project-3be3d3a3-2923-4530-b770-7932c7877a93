@@ -23,7 +23,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAdminAccess } from "@/hooks/use-admin-access";
 import {
-  availableTransitions,
   normalizeStatus,
   type Role,
   type WorkflowStatus,
@@ -38,6 +37,10 @@ import {
   measurementReviewPriorityReason,
   sortMeasurementReviewQueue,
 } from "@/lib/measurement-review-priority";
+import {
+  measurementReviewPermissions,
+  type MeasurementReviewPermissions,
+} from "@/lib/measurement-review-permissions";
 import {
   measurementReleaseReadiness,
   readinessReasonAr,
@@ -695,7 +698,6 @@ function MeasurementAdminPage() {
                 title={row.name_ar}
                 subtitle={`${row.code} · ${row.value_kind} · ${row.canonical_unit ?? "بدون وحدة"}`}
                 accessRoles={access.roles as Role[]}
-                isAdmin={access.isAdmin}
                 readiness={measurementReleaseReadiness({
                   kind: "type",
                   reviewStatus: row.review_status,
@@ -749,7 +751,6 @@ function MeasurementAdminPage() {
               title={row.label_ar}
               subtitle={`${typeMap.get(row.measurement_type_id)?.name_ar ?? "قياس"} · ${row.code}`}
               accessRoles={access.roles as Role[]}
-              isAdmin={access.isAdmin}
               readiness={measurementReleaseReadiness({
                 kind: "reference",
                 reviewStatus: row.review_status,
@@ -798,7 +799,6 @@ function MeasurementAdminPage() {
               title={row.title_ar}
               subtitle={`${typeMap.get(row.measurement_type_id)?.name_ar ?? "قياس"} · ${row.code}`}
               accessRoles={access.roles as Role[]}
-              isAdmin={access.isAdmin}
               readiness={measurementReleaseReadiness({
                 kind: "red_flag",
                 reviewStatus: row.review_status,
@@ -854,7 +854,6 @@ function MeasurementAdminPage() {
                 title={row.title_ar}
                 subtitle={`${typeMap.get(row.measurement_type_id)?.name_ar ?? "قياس"} · ${row.audience} · ${row.code}`}
                 accessRoles={access.roles as Role[]}
-                isAdmin={access.isAdmin}
                 readiness={measurementReleaseReadiness({
                   kind: "knowledge",
                   reviewStatus: row.review_status,
@@ -985,7 +984,6 @@ function ReviewCard({
   title,
   subtitle,
   accessRoles,
-  isAdmin,
   readiness,
   note,
   setNote,
@@ -1001,7 +999,6 @@ function ReviewCard({
   title: string;
   subtitle: string;
   accessRoles: Role[];
-  isAdmin: boolean;
   readiness: MeasurementReleaseReadiness;
   note: string;
   setNote: (value: string) => void;
@@ -1014,7 +1011,11 @@ function ReviewCard({
 }) {
   const { t } = useI18n();
   const status = normalizeStatus(row.review_status);
-  const transitions = availableTransitions(accessRoles, status);
+  const permissions = measurementReviewPermissions(
+    accessRoles,
+    status,
+  );
+  const transitions = permissions.transitions;
 
   return (
     <article
@@ -1046,7 +1047,7 @@ function ReviewCard({
           </p>
         </div>
 
-        {isAdmin && status === "published" ? (
+        {permissions.canToggleActivation ? (
           <button
             type="button"
             disabled={
@@ -1078,7 +1079,9 @@ function ReviewCard({
       <SnapshotDiff current={row} previousVersion={previousVersion} />
 
       <div className="mt-4 rounded-2xl bg-card/70 p-4 ring-1 ring-border">
-        <label className="block text-xs font-bold text-muted-foreground">
+        <ReviewPermissionSummary permissions={permissions} />
+
+        <label className="mt-4 block text-xs font-bold text-muted-foreground">
           ملاحظة المراجعة
           <textarea
             value={note}
@@ -1124,6 +1127,44 @@ function ReviewCard({
 
       <AuditTimeline audits={audits} />
     </article>
+  );
+}
+
+function ReviewPermissionSummary({
+  permissions,
+}: {
+  permissions: MeasurementReviewPermissions;
+}) {
+  const messages: string[] = [];
+
+  if (permissions.canReviewClinicalContent) {
+    messages.push("يمكنك اعتماد المحتوى أو طلب تعديلات.");
+  }
+  if (permissions.canPublish) {
+    messages.push("يمكنك نشر النسخة المعتمدة.");
+  }
+  if (
+    permissions.canEditClinicalContent &&
+    !permissions.canReviewClinicalContent &&
+    !permissions.canPublish
+  ) {
+    messages.push("يمكنك تجهيز المحتوى وإرساله للمراجعة.");
+  }
+  if (permissions.canToggleActivation) {
+    messages.push("يمكنك تشغيل أو إيقاف المحتوى المنشور.");
+  }
+
+  if (!messages.length) {
+    messages.push("لا توجد إجراءات حوكمة متاحة لدورك على هذه الحالة.");
+  }
+
+  return (
+    <div className="rounded-xl bg-background/70 px-3 py-2.5 text-[10px] leading-5 text-muted-foreground ring-1 ring-border">
+      <span className="font-extrabold text-foreground">
+        صلاحياتك على هذا العنصر:
+      </span>{" "}
+      {messages.join(" ")}
+    </div>
   );
 }
 
