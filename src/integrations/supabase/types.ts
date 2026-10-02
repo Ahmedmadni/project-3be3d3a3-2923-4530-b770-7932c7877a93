@@ -504,7 +504,15 @@ export type Database = {
           content_en: string | null
           id: string
           review_status: Database["public"]["Enums"]["review_status"]
-          section_type: string
+          section_type:
+            | "overview"
+            | "how_to_measure"
+            | "common_errors"
+            | "what_it_means"
+            | "when_to_repeat"
+            | "warning_signs"
+            | "special_context"
+            | "limitations"
           sort_order: number
           title_ar: string
           title_en: string | null
@@ -515,7 +523,15 @@ export type Database = {
           content_en?: string | null
           id?: string
           review_status?: Database["public"]["Enums"]["review_status"]
-          section_type: string
+          section_type:
+            | "overview"
+            | "how_to_measure"
+            | "common_errors"
+            | "what_it_means"
+            | "when_to_repeat"
+            | "warning_signs"
+            | "special_context"
+            | "limitations"
           sort_order?: number
           title_ar: string
           title_en?: string | null
@@ -526,7 +542,15 @@ export type Database = {
           content_en?: string | null
           id?: string
           review_status?: Database["public"]["Enums"]["review_status"]
-          section_type?: string
+          section_type?:
+            | "overview"
+            | "how_to_measure"
+            | "common_errors"
+            | "what_it_means"
+            | "when_to_repeat"
+            | "warning_signs"
+            | "special_context"
+            | "limitations"
           sort_order?: number
           title_ar?: string
           title_en?: string | null
@@ -699,7 +723,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          audience: string
+          audience: "general" | "professional"
           change_reason: string | null
           code: string
           created_at: string
@@ -726,7 +750,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          audience: string
+          audience: "general" | "professional"
           change_reason?: string | null
           code: string
           created_at?: string
@@ -753,7 +777,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          audience?: string
+          audience?: "general" | "professional"
           change_reason?: string | null
           code?: string
           created_at?: string
@@ -794,7 +818,15 @@ export type Database = {
           body_en: string | null
           created_at: string
           id: string
-          section_type: string
+          section_type:
+            | "overview"
+            | "how_to_measure"
+            | "common_errors"
+            | "what_it_means"
+            | "when_to_repeat"
+            | "warning_signs"
+            | "special_context"
+            | "limitations"
           sort_order: number
           title_ar: string
           title_en: string | null
@@ -806,7 +838,15 @@ export type Database = {
           body_en?: string | null
           created_at?: string
           id?: string
-          section_type: string
+          section_type:
+            | "overview"
+            | "how_to_measure"
+            | "common_errors"
+            | "what_it_means"
+            | "when_to_repeat"
+            | "warning_signs"
+            | "special_context"
+            | "limitations"
           sort_order?: number
           title_ar: string
           title_en?: string | null
@@ -818,7 +858,15 @@ export type Database = {
           body_en?: string | null
           created_at?: string
           id?: string
-          section_type?: string
+          section_type?:
+            | "overview"
+            | "how_to_measure"
+            | "common_errors"
+            | "what_it_means"
+            | "when_to_repeat"
+            | "warning_signs"
+            | "special_context"
+            | "limitations"
           sort_order?: number
           title_ar?: string
           title_en?: string | null
@@ -840,21 +888,21 @@ export type Database = {
           created_at: string
           notes: string | null
           source_id: string
-          source_role: string
+          source_role: "primary" | "supporting" | "safety" | "capture"
         }
         Insert: {
           article_id: string
           created_at?: string
           notes?: string | null
           source_id: string
-          source_role: string
+          source_role: "primary" | "supporting" | "safety" | "capture"
         }
         Update: {
           article_id?: string
           created_at?: string
           notes?: string | null
           source_id?: string
-          source_role?: string
+          source_role?: "primary" | "supporting" | "safety" | "capture"
         }
         Relationships: [
           {
@@ -882,7 +930,7 @@ export type Database = {
           measured_at: string
           measurement_type_id: string
           notes: string | null
-          quality: string
+          quality: "unknown" | "good" | "questionable"
           scalar_value: number | null
           unit: string | null
           updated_at: string
@@ -896,7 +944,7 @@ export type Database = {
           measured_at: string
           measurement_type_id: string
           notes?: string | null
-          quality?: string
+          quality?: "unknown" | "good" | "questionable"
           scalar_value?: number | null
           unit?: string | null
           updated_at?: string
@@ -910,7 +958,7 @@ export type Database = {
           measured_at?: string
           measurement_type_id?: string
           notes?: string | null
-          quality?: string
+          quality?: "unknown" | "good" | "questionable"
           scalar_value?: number | null
           unit?: string | null
           updated_at?: string
@@ -1135,7 +1183,11 @@ export type Database = {
           measurement_type_id: string
           notes: string | null
           source_id: string
-          use_scope: string
+          use_scope:
+            | "capture_guidance"
+            | "reference_range"
+            | "safety_threshold"
+            | "terminology"
         }
         Insert: {
           created_at?: string
@@ -1144,7 +1196,11 @@ export type Database = {
           measurement_type_id: string
           notes?: string | null
           source_id: string
-          use_scope: string
+          use_scope:
+            | "capture_guidance"
+            | "reference_range"
+            | "safety_threshold"
+            | "terminology"
         }
         Update: {
           created_at?: string
@@ -1153,7 +1209,11 @@ export type Database = {
           measurement_type_id?: string
           notes?: string | null
           source_id?: string
-          use_scope?: string
+          use_scope?:
+            | "capture_guidance"
+            | "reference_range"
+            | "safety_threshold"
+            | "terminology"
         }
         Relationships: [
           {
@@ -1199,7 +1259,7 @@ export type Database = {
           reviewed_by: string | null
           submitted_at: string | null
           updated_at: string
-          value_kind: string
+          value_kind: "scalar" | "compound"
           version: number
         }
         Insert: {
@@ -1228,7 +1288,7 @@ export type Database = {
           reviewed_by?: string | null
           submitted_at?: string | null
           updated_at?: string
-          value_kind: string
+          value_kind: "scalar" | "compound"
           version?: number
         }
         Update: {
@@ -1257,7 +1317,7 @@ export type Database = {
           reviewed_by?: string | null
           submitted_at?: string | null
           updated_at?: string
-          value_kind?: string
+          value_kind?: "scalar" | "compound"
           version?: number
         }
         Relationships: []
