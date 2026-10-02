@@ -10,10 +10,13 @@ import {
   FileCheck2,
   FlagTriangleRight,
   Gauge,
+  History,
   Link2,
   Power,
   PowerOff,
   ScrollText,
+  Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +28,12 @@ import {
   type Role,
   type WorkflowStatus,
 } from "@/lib/governance";
+import {
+  filterMeasurementAdminQueue,
+  summarizeMeasurementAdminQueue,
+  type MeasurementAdminReadinessFilter,
+  type MeasurementAdminStatusFilter,
+} from "@/lib/measurement-admin-review-queue";
 import {
   measurementReleaseReadiness,
   readinessReasonAr,
@@ -49,6 +58,7 @@ type MeasurementSourceRow = Tables<"measurement_sources">;
 type MeasurementKnowledgeSourceRow = Tables<"measurement_knowledge_sources">;
 type MedicalSourceRow = Tables<"medical_sources">;
 type ContentVersionRow = Tables<"content_versions">;
+type AuditRow = Tables<"audit_logs">;
 
 type GovernedRow =
   | MeasurementTypeRow
@@ -101,6 +111,12 @@ function MeasurementAdminPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("types");
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<MeasurementAdminStatusFilter>("all");
+  const [readinessFilter, setReadinessFilter] =
+    useState<MeasurementAdminReadinessFilter>("all");
+  const [measurementTypeFilter, setMeasurementTypeFilter] = useState("all");
 
   const query = useQuery({
     queryKey: ["admin", "measurements", "review"],
@@ -115,6 +131,7 @@ function MeasurementAdminPage() {
         knowledgeSourcesResult,
         sourcesResult,
         versionsResult,
+        auditResult,
       ] = await Promise.all([
         supabase.from("measurement_types").select("*").order("name_ar"),
         supabase.from("measurement_reference_rules").select("*").order("priority"),
@@ -135,6 +152,19 @@ function MeasurementAdminPage() {
           ])
           .order("created_at", { ascending: false })
           .limit(100),
+        supabase
+          .from("audit_logs")
+          .select(
+            "id,actor_user_id,action,entity_type,entity_id,entity_version,metadata,created_at",
+          )
+          .in("entity_type", [
+            "measurement_types",
+            "measurement_reference_rules",
+            "measurement_red_flags",
+            "measurement_knowledge_articles",
+          ])
+          .order("created_at", { ascending: false })
+          .limit(400),
       ]);
 
       const results = [
@@ -147,6 +177,7 @@ function MeasurementAdminPage() {
         knowledgeSourcesResult,
         sourcesResult,
         versionsResult,
+        auditResult,
       ];
       for (const result of results) {
         if (result.error) throw result.error;
@@ -162,6 +193,7 @@ function MeasurementAdminPage() {
         knowledgeSources: knowledgeSourcesResult.data ?? [],
         sources: (sourcesResult.data ?? []) as SourceRow[],
         versions: (versionsResult.data ?? []) as VersionRow[],
+        audits: auditResult.data ?? [],
       };
     },
   });
@@ -251,6 +283,109 @@ function MeasurementAdminPage() {
     ...data.knowledge,
   ]);
 
+  const auditMap = new Map<string, AuditRow[]>();
+  for (const audit of data.audits) {
+    if (!audit.entity_id) continue;
+    const key = `${audit.entity_type}:${audit.entity_id}`;
+    const existing = auditMap.get(key) ?? [];
+    existing.push(audit);
+    auditMap.set(key, existing);
+  }
+
+  const queueItems =
+    tab === "types"
+      ? data.types.map((row) => {
+          const sources = data.measurementSources
+            .filter((link) => link.measurement_type_id === row.id)
+            .map((link) => sourceMap.get(link.source_id));
+          return {
+            id: row.id,
+            measurementTypeId: row.id,
+            searchText: `${row.name_ar} ${row.name_en ?? ""} ${row.code}`,
+            reviewStatus: normalizeStatus(row.review_status),
+            readiness: measurementReleaseReadiness({
+              kind: "type",
+              reviewStatus: row.review_status,
+              isDemo: row.is_demo,
+              sourceCount: sources.length,
+              activeSourceCount: sources.filter((source) => source?.is_active).length,
+            }),
+          };
+        })
+      : tab === "reference"
+        ? data.reference.map((row) => ({
+            id: row.id,
+            measurementTypeId: row.measurement_type_id,
+            searchText: `${row.label_ar} ${row.label_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
+            reviewStatus: normalizeStatus(row.review_status),
+            readiness: measurementReleaseReadiness({
+              kind: "reference",
+              reviewStatus: row.review_status,
+              isDemo: row.is_demo,
+              sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
+              sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
+              parentReviewStatus:
+                typeMap.get(row.measurement_type_id)?.review_status ?? null,
+              parentActive:
+                typeMap.get(row.measurement_type_id)?.is_active ?? false,
+            }),
+          }))
+        : tab === "red_flags"
+          ? data.flags.map((row) => ({
+              id: row.id,
+              measurementTypeId: row.measurement_type_id,
+              searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
+              reviewStatus: normalizeStatus(row.review_status),
+              readiness: measurementReleaseReadiness({
+                kind: "red_flag",
+                reviewStatus: row.review_status,
+                isDemo: row.is_demo,
+                sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
+                sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
+                parentReviewStatus:
+                  typeMap.get(row.measurement_type_id)?.review_status ?? null,
+                parentActive:
+                  typeMap.get(row.measurement_type_id)?.is_active ?? false,
+              }),
+            }))
+          : tab === "knowledge"
+            ? data.knowledge.map((row) => {
+                const sources = data.knowledgeSources
+                  .filter((link) => link.article_id === row.id)
+                  .map((link) => sourceMap.get(link.source_id));
+                const sectionCount = data.sections.filter(
+                  (section) => section.article_id === row.id,
+                ).length;
+                return {
+                  id: row.id,
+                  measurementTypeId: row.measurement_type_id,
+                  searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
+                  reviewStatus: normalizeStatus(row.review_status),
+                  readiness: measurementReleaseReadiness({
+                    kind: "knowledge",
+                    reviewStatus: row.review_status,
+                    isDemo: row.is_demo,
+                    sourceCount: sources.length,
+                    activeSourceCount: sources.filter((source) => source?.is_active).length,
+                    sectionCount,
+                    parentReviewStatus:
+                      typeMap.get(row.measurement_type_id)?.review_status ?? null,
+                    parentActive:
+                      typeMap.get(row.measurement_type_id)?.is_active ?? false,
+                  }),
+                };
+              })
+            : [];
+
+  const queueSummary = summarizeMeasurementAdminQueue(queueItems);
+  const filteredQueueItems = filterMeasurementAdminQueue(queueItems, {
+    search: searchQuery,
+    status: statusFilter,
+    readiness: readinessFilter,
+    measurementTypeId: measurementTypeFilter,
+  });
+  const visibleIds = new Set(filteredQueueItems.map((item) => item.id));
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -296,9 +431,105 @@ function MeasurementAdminPage() {
         ))}
       </div>
 
+      {tab !== "versions" ? (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <StatusMetric label="عناصر هذا التبويب" value={queueSummary.total} />
+            <StatusMetric
+              label="بدون موانع نشر"
+              value={queueSummary.publishReady}
+            />
+            <StatusMetric
+              label="بها موانع نشر"
+              value={queueSummary.publishBlocked}
+            />
+            <StatusMetric
+              label="جاهزة للتفعيل الآن"
+              value={queueSummary.activationReady}
+            />
+          </div>
+
+          <div className="glass rounded-3xl p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <SlidersHorizontal className="size-4 text-primary" />
+              <p className="text-sm font-extrabold">فرز قائمة المراجعة</p>
+              <span className="text-[10px] text-muted-foreground">
+                {filteredQueueItems.length} من {queueSummary.total}
+              </span>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_repeat(3,minmax(150px,220px))_auto]">
+              <label className="relative">
+                <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="ابحث بالاسم أو الكود..."
+                  className="h-11 w-full rounded-xl border border-border bg-background ps-10 pe-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+
+              <FilterSelect
+                label="الحالة"
+                value={statusFilter}
+                onChange={(value) =>
+                  setStatusFilter(value as MeasurementAdminStatusFilter)
+                }
+                options={[
+                  ["all", "كل الحالات"],
+                  ["draft", "مسودة"],
+                  ["in_review", "قيد المراجعة"],
+                  ["changes_requested", "تعديلات مطلوبة"],
+                  ["approved", "معتمد"],
+                  ["published", "منشور"],
+                  ["retired", "متقاعد"],
+                ]}
+              />
+
+              <FilterSelect
+                label="الجاهزية"
+                value={readinessFilter}
+                onChange={(value) =>
+                  setReadinessFilter(value as MeasurementAdminReadinessFilter)
+                }
+                options={[
+                  ["all", "كل حالات الجاهزية"],
+                  ["publish_ready", "بدون موانع نشر"],
+                  ["publish_blocked", "بها موانع نشر"],
+                  ["activation_ready", "جاهز للتفعيل"],
+                  ["activation_blocked", "غير جاهز للتفعيل"],
+                ]}
+              />
+
+              <FilterSelect
+                label="نوع القياس"
+                value={measurementTypeFilter}
+                onChange={setMeasurementTypeFilter}
+                options={[
+                  ["all", "كل أنواع القياس"],
+                  ...data.types.map((type) => [type.id, type.name_ar] as [string, string]),
+                ]}
+              />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                  setReadinessFilter("all");
+                  setMeasurementTypeFilter("all");
+                }}
+                className="h-11 rounded-xl bg-card px-4 text-xs font-bold text-primary ring-1 ring-border"
+              >
+                إعادة الضبط
+              </button>
+            </div>
+          </div>
+        </>
+      ) : null}
+
       {tab === "types" ? (
         <div className="space-y-3">
-          {data.types.map((row) => {
+          {data.types.filter((row) => visibleIds.has(row.id)).map((row) => {
             const sources = data.measurementSources
               .filter((link) => link.measurement_type_id === row.id)
               .map((link) => ({ link, source: sourceMap.get(link.source_id) }));
@@ -327,6 +558,7 @@ function MeasurementAdminPage() {
                 onTransition={(to) => transition.mutate({ kind: "type", row, to })}
                 onToggle={() => activation.mutate({ kind: "type", row })}
                 busy={transition.isPending || activation.isPending}
+                audits={auditMap.get(`measurement_types:${row.id}`) ?? []}
               >
                 {row.description_ar ? (
                   <p className="text-sm leading-7 text-muted-foreground">{row.description_ar}</p>
@@ -353,7 +585,7 @@ function MeasurementAdminPage() {
 
       {tab === "reference" ? (
         <div className="space-y-3">
-          {data.reference.map((row) => (
+          {data.reference.filter((row) => visibleIds.has(row.id)).map((row) => (
             <ReviewCard
               key={row.id}
               kind="reference"
@@ -378,6 +610,9 @@ function MeasurementAdminPage() {
               onTransition={(to) => transition.mutate({ kind: "reference", row, to })}
               onToggle={() => activation.mutate({ kind: "reference", row })}
               busy={transition.isPending || activation.isPending}
+              audits={
+                auditMap.get(`measurement_reference_rules:${row.id}`) ?? []
+              }
             >
               <div className="grid gap-2 sm:grid-cols-3">
                 <TextMetric label="Interpretation" value={row.interpretation_code} />
@@ -393,7 +628,7 @@ function MeasurementAdminPage() {
 
       {tab === "red_flags" ? (
         <div className="space-y-3">
-          {data.flags.map((row) => (
+          {data.flags.filter((row) => visibleIds.has(row.id)).map((row) => (
             <ReviewCard
               key={row.id}
               kind="red_flag"
@@ -418,6 +653,7 @@ function MeasurementAdminPage() {
               onTransition={(to) => transition.mutate({ kind: "red_flag", row, to })}
               onToggle={() => activation.mutate({ kind: "red_flag", row })}
               busy={transition.isPending || activation.isPending}
+              audits={auditMap.get(`measurement_red_flags:${row.id}`) ?? []}
             >
               <div className="grid gap-2 sm:grid-cols-2">
                 <TextMetric label="مستوى الرعاية" value={row.care_level} />
@@ -432,7 +668,7 @@ function MeasurementAdminPage() {
 
       {tab === "knowledge" ? (
         <div className="space-y-3">
-          {data.knowledge.map((row) => {
+          {data.knowledge.filter((row) => visibleIds.has(row.id)).map((row) => {
             const sections = data.sections.filter((section) => section.article_id === row.id);
             const sources = data.knowledgeSources
               .filter((link) => link.article_id === row.id)
@@ -468,6 +704,9 @@ function MeasurementAdminPage() {
                 onTransition={(to) => transition.mutate({ kind: "knowledge", row, to })}
                 onToggle={() => activation.mutate({ kind: "knowledge", row })}
                 busy={transition.isPending || activation.isPending}
+                audits={
+                  auditMap.get(`measurement_knowledge_articles:${row.id}`) ?? []
+                }
               >
                 <p className="text-sm leading-7 text-muted-foreground">{row.summary_ar}</p>
                 <div className="mt-4 space-y-2">
@@ -515,6 +754,7 @@ function ReviewCard({
   onTransition,
   onToggle,
   busy,
+  audits,
   children,
 }: {
   kind: EntityKind;
@@ -529,6 +769,7 @@ function ReviewCard({
   onTransition: (to: WorkflowStatus) => void;
   onToggle: () => void;
   busy: boolean;
+  audits: AuditRow[];
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -635,6 +876,8 @@ function ReviewCard({
           {row.published_at ? <span>النشر: {formatDate(row.published_at)}</span> : null}
         </div>
       </div>
+
+      <AuditTimeline audits={audits} />
     </article>
   );
 }
@@ -737,6 +980,129 @@ function workflowStatusAr(status: WorkflowStatus): string {
     case "retired":
       return "متقاعد";
   }
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<[string, string]>;
+}) {
+  return (
+    <label className="text-[10px] font-bold text-muted-foreground">
+      <span className="sr-only">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+      >
+        {options.map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function AuditTimeline({ audits }: { audits: AuditRow[] }) {
+  return (
+    <details className="mt-4 rounded-2xl bg-background/60 p-4 ring-1 ring-border">
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-extrabold">
+        <History className="size-4 text-primary" />
+        سجل التدقيق
+        <span className="text-[10px] font-normal text-muted-foreground">
+          {audits.length} حدث
+        </span>
+      </summary>
+
+      {!audits.length ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          لا توجد أحداث مسجلة لهذا العنصر حتى الآن.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {audits.slice(0, 8).map((audit) => (
+            <div
+              key={audit.id}
+              className="border-s-2 border-border ps-3 text-xs"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-extrabold">
+                  {auditActionAr(audit.action)}
+                </span>
+                {audit.entity_version != null ? (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                    v{audit.entity_version}
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                {formatDate(audit.created_at)}
+                {" · "}
+                {audit.actor_user_id
+                  ? `المستخدم ${audit.actor_user_id.slice(0, 8)}…`
+                  : "النظام"}
+              </p>
+              {hasAuditMetadata(audit.metadata) ? (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-[10px] font-bold text-primary">
+                    تفاصيل الحدث
+                  </summary>
+                  <pre
+                    dir="ltr"
+                    className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-card p-3 text-[10px] leading-5 text-muted-foreground"
+                  >
+                    {JSON.stringify(audit.metadata, null, 2)}
+                  </pre>
+                </details>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
+    </details>
+  );
+}
+
+function auditActionAr(action: string): string {
+  switch (action) {
+    case "submit_review":
+      return "إرسال للمراجعة";
+    case "request_changes":
+      return "طلب تعديلات";
+    case "approve":
+      return "اعتماد";
+    case "publish":
+      return "نشر";
+    case "retire":
+      return "إيقاف/تقاعد";
+    case "restore":
+      return "استعادة";
+    case "insert":
+    case "create":
+      return "إنشاء";
+    case "delete":
+      return "حذف";
+    case "update":
+      return "تحديث";
+    default:
+      return action;
+  }
+}
+
+function hasAuditMetadata(metadata: AuditRow["metadata"]): boolean {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+  return Object.keys(metadata).length > 0;
 }
 
 function SourceList({
