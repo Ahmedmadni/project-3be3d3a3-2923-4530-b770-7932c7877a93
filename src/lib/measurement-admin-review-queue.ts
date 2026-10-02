@@ -33,10 +33,12 @@ export type MeasurementAdminQueueFilters = {
   measurementTypeId: string;
 };
 
-export function filterMeasurementAdminQueue(
-  items: MeasurementAdminQueueItem[],
+export function filterMeasurementAdminQueue<
+  T extends MeasurementAdminQueueItem,
+>(
+  items: T[],
   filters: MeasurementAdminQueueFilters,
-): MeasurementAdminQueueItem[] {
+): T[] {
   const search = normalize(filters.search);
 
   return items.filter((item) => {
