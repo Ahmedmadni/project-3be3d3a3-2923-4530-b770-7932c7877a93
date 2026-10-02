@@ -39,11 +39,9 @@ describe("measurement Supabase schema typing", () => {
     ]) {
       const start = generatedTypes.indexOf(`      ${table}: {`);
       expect(start).toBeGreaterThanOrEqual(0);
-      const next = generatedTypes.indexOf("\n      ", start + 8);
-      const block =
-        next > start
-          ? generatedTypes.slice(start, next)
-          : generatedTypes.slice(start);
+      const end = generatedTypes.indexOf("\n      }", start);
+      expect(end).toBeGreaterThan(start);
+      const block = generatedTypes.slice(start, end);
       expect(block).toContain("submitted_at:");
     }
   });
