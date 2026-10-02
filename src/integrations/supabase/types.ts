@@ -695,6 +695,573 @@ export type Database = {
         }
         Relationships: []
       }
+      measurement_knowledge_articles: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audience: string
+          change_reason: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_demo: boolean
+          last_medical_review_at: string | null
+          measurement_type_id: string
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_at: string | null
+          summary_ar: string
+          summary_en: string | null
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience: string
+          change_reason?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          last_medical_review_at?: string | null
+          measurement_type_id: string
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
+          summary_ar: string
+          summary_en?: string | null
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience?: string
+          change_reason?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          last_medical_review_at?: string | null
+          measurement_type_id?: string
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
+          summary_ar?: string
+          summary_en?: string | null
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_knowledge_articles_measurement_type_id_fkey"
+            columns: ["measurement_type_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_knowledge_sections: {
+        Row: {
+          article_id: string
+          body_ar: string
+          body_en: string | null
+          created_at: string
+          id: string
+          section_type: string
+          sort_order: number
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          body_ar: string
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          section_type: string
+          sort_order?: number
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          body_ar?: string
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          section_type?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_knowledge_sections_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_knowledge_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_knowledge_sources: {
+        Row: {
+          article_id: string
+          created_at: string
+          notes: string | null
+          source_id: string
+          source_role: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          notes?: string | null
+          source_id: string
+          source_role: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          notes?: string | null
+          source_id?: string
+          source_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_knowledge_sources_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_knowledge_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "measurement_knowledge_sources_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_readings: {
+        Row: {
+          components: Json | null
+          context: Json
+          created_at: string
+          id: string
+          measured_at: string
+          measurement_type_id: string
+          notes: string | null
+          quality: string
+          scalar_value: number | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          components?: Json | null
+          context?: Json
+          created_at?: string
+          id?: string
+          measured_at: string
+          measurement_type_id: string
+          notes?: string | null
+          quality?: string
+          scalar_value?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          components?: Json | null
+          context?: Json
+          created_at?: string
+          id?: string
+          measured_at?: string
+          measurement_type_id?: string
+          notes?: string | null
+          quality?: string
+          scalar_value?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_readings_measurement_type_id_fkey"
+            columns: ["measurement_type_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_red_flags: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          care_level: Database["public"]["Enums"]["care_level"]
+          change_reason: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_demo: boolean
+          measurement_type_id: string
+          predicate: Json
+          priority: number
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_id: string
+          submitted_at: string | null
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          care_level: Database["public"]["Enums"]["care_level"]
+          change_reason?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          measurement_type_id: string
+          predicate: Json
+          priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_id: string
+          submitted_at?: string | null
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          care_level?: Database["public"]["Enums"]["care_level"]
+          change_reason?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          measurement_type_id?: string
+          predicate?: Json
+          priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_id?: string
+          submitted_at?: string | null
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_red_flags_measurement_type_id_fkey"
+            columns: ["measurement_type_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "measurement_red_flags_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_reference_rules: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          care_level: Database["public"]["Enums"]["care_level"] | null
+          change_reason: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          interpretation_code: string
+          is_active: boolean
+          is_demo: boolean
+          label_ar: string
+          label_en: string | null
+          measurement_type_id: string
+          predicate: Json
+          priority: number
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_id: string
+          submitted_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          care_level?: Database["public"]["Enums"]["care_level"] | null
+          change_reason?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          interpretation_code: string
+          is_active?: boolean
+          is_demo?: boolean
+          label_ar: string
+          label_en?: string | null
+          measurement_type_id: string
+          predicate: Json
+          priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_id: string
+          submitted_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          care_level?: Database["public"]["Enums"]["care_level"] | null
+          change_reason?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          interpretation_code?: string
+          is_active?: boolean
+          is_demo?: boolean
+          label_ar?: string
+          label_en?: string | null
+          measurement_type_id?: string
+          predicate?: Json
+          priority?: number
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_id?: string
+          submitted_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_reference_rules_measurement_type_id_fkey"
+            columns: ["measurement_type_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "measurement_reference_rules_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_sources: {
+        Row: {
+          created_at: string
+          id: string
+          last_verified_at: string | null
+          measurement_type_id: string
+          notes: string | null
+          source_id: string
+          use_scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          measurement_type_id: string
+          notes?: string | null
+          source_id: string
+          use_scope: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          measurement_type_id?: string
+          notes?: string | null
+          source_id?: string
+          use_scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_sources_measurement_type_id_fkey"
+            columns: ["measurement_type_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "measurement_sources_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "medical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurement_types: {
+        Row: {
+          allowed_units: string[]
+          approved_at: string | null
+          approved_by: string | null
+          canonical_unit: string | null
+          capture_context_schema: Json
+          change_reason: string | null
+          code: string
+          component_schema: Json
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          id: string
+          is_active: boolean
+          is_demo: boolean
+          last_medical_review_at: string | null
+          name_ar: string
+          name_en: string | null
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_at: string | null
+          updated_at: string
+          value_kind: string
+          version: number
+        }
+        Insert: {
+          allowed_units?: string[]
+          approved_at?: string | null
+          approved_by?: string | null
+          canonical_unit?: string | null
+          capture_context_schema?: Json
+          change_reason?: string | null
+          code: string
+          component_schema?: Json
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          last_medical_review_at?: string | null
+          name_ar: string
+          name_en?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          value_kind: string
+          version?: number
+        }
+        Update: {
+          allowed_units?: string[]
+          approved_at?: string | null
+          approved_by?: string | null
+          canonical_unit?: string | null
+          capture_context_schema?: Json
+          change_reason?: string | null
+          code?: string
+          component_schema?: Json
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo?: boolean
+          last_medical_review_at?: string | null
+          name_ar?: string
+          name_en?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          value_kind?: string
+          version?: number
+        }
+        Relationships: []
+      }
       medical_sources: {
         Row: {
           country: string | null
