@@ -25,6 +25,11 @@ import {
   type Role,
   type WorkflowStatus,
 } from "@/lib/governance";
+import {
+  measurementReleaseReadiness,
+  readinessReasonAr,
+  type MeasurementReleaseReadiness,
+} from "@/lib/measurement-release-readiness";
 import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/admin/measurements")({
@@ -310,6 +315,13 @@ function MeasurementAdminPage() {
                 subtitle={`${row.code} · ${row.value_kind} · ${row.canonical_unit ?? "بدون وحدة"}`}
                 accessRoles={access.roles as Role[]}
                 isAdmin={access.isAdmin}
+                readiness={measurementReleaseReadiness({
+                  kind: "type",
+                  reviewStatus: row.review_status,
+                  isDemo: row.is_demo,
+                  sourceCount: sources.length,
+                  activeSourceCount: sources.filter(({ source }) => source?.is_active).length,
+                })}
                 note={notes[row.id] ?? row.review_note ?? ""}
                 setNote={(value) => setNotes((prev) => ({ ...prev, [row.id]: value }))}
                 onTransition={(to) => transition.mutate({ kind: "type", row, to })}
@@ -350,6 +362,17 @@ function MeasurementAdminPage() {
               subtitle={`${typeMap.get(row.measurement_type_id)?.name_ar ?? "قياس"} · ${row.code}`}
               accessRoles={access.roles as Role[]}
               isAdmin={access.isAdmin}
+              readiness={measurementReleaseReadiness({
+                kind: "reference",
+                reviewStatus: row.review_status,
+                isDemo: row.is_demo,
+                sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
+                sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
+                parentReviewStatus:
+                  typeMap.get(row.measurement_type_id)?.review_status ?? null,
+                parentActive:
+                  typeMap.get(row.measurement_type_id)?.is_active ?? false,
+              })}
               note={notes[row.id] ?? row.review_note ?? ""}
               setNote={(value) => setNotes((prev) => ({ ...prev, [row.id]: value }))}
               onTransition={(to) => transition.mutate({ kind: "reference", row, to })}
@@ -379,6 +402,17 @@ function MeasurementAdminPage() {
               subtitle={`${typeMap.get(row.measurement_type_id)?.name_ar ?? "قياس"} · ${row.code}`}
               accessRoles={access.roles as Role[]}
               isAdmin={access.isAdmin}
+              readiness={measurementReleaseReadiness({
+                kind: "red_flag",
+                reviewStatus: row.review_status,
+                isDemo: row.is_demo,
+                sourceCount: sourceMap.get(row.source_id) ? 1 : 0,
+                sourceActive: sourceMap.get(row.source_id)?.is_active ?? false,
+                parentReviewStatus:
+                  typeMap.get(row.measurement_type_id)?.review_status ?? null,
+                parentActive:
+                  typeMap.get(row.measurement_type_id)?.is_active ?? false,
+              })}
               note={notes[row.id] ?? row.review_note ?? ""}
               setNote={(value) => setNotes((prev) => ({ ...prev, [row.id]: value }))}
               onTransition={(to) => transition.mutate({ kind: "red_flag", row, to })}
@@ -417,6 +451,18 @@ function MeasurementAdminPage() {
                 subtitle={`${typeMap.get(row.measurement_type_id)?.name_ar ?? "قياس"} · ${row.audience} · ${row.code}`}
                 accessRoles={access.roles as Role[]}
                 isAdmin={access.isAdmin}
+                readiness={measurementReleaseReadiness({
+                  kind: "knowledge",
+                  reviewStatus: row.review_status,
+                  isDemo: row.is_demo,
+                  sourceCount: sources.length,
+                  activeSourceCount: sources.filter(({ source }) => source?.is_active).length,
+                  sectionCount: sections.length,
+                  parentReviewStatus:
+                    typeMap.get(row.measurement_type_id)?.review_status ?? null,
+                  parentActive:
+                    typeMap.get(row.measurement_type_id)?.is_active ?? false,
+                })}
                 note={notes[row.id] ?? row.review_note ?? ""}
                 setNote={(value) => setNotes((prev) => ({ ...prev, [row.id]: value }))}
                 onTransition={(to) => transition.mutate({ kind: "knowledge", row, to })}
@@ -463,6 +509,7 @@ function ReviewCard({
   subtitle,
   accessRoles,
   isAdmin,
+  readiness,
   note,
   setNote,
   onTransition,
@@ -476,6 +523,7 @@ function ReviewCard({
   subtitle: string;
   accessRoles: Role[];
   isAdmin: boolean;
+  readiness: MeasurementReleaseReadiness;
   note: string;
   setNote: (value: string) => void;
   onTransition: (to: WorkflowStatus) => void;
@@ -517,7 +565,15 @@ function ReviewCard({
         {isAdmin && status === "published" ? (
           <button
             type="button"
-            disabled={busy}
+            disabled={
+              busy ||
+              (!row.is_active && readiness.activationBlockers.length > 0)
+            }
+            title={
+              !row.is_active && readiness.activationBlockers.length
+                ? readinessReasonAr(readiness.activationBlockers[0])
+                : undefined
+            }
             onClick={onToggle}
             className={
               row.is_active
@@ -530,6 +586,8 @@ function ReviewCard({
           </button>
         ) : null}
       </div>
+
+      <ReadinessPanel readiness={readiness} />
 
       <div className="mt-4">{children}</div>
 
@@ -553,7 +611,16 @@ function ReviewCard({
             <button
               key={to}
               type="button"
-              disabled={busy || (to === "changes_requested" && !note.trim())}
+              disabled={
+                busy ||
+                (to === "changes_requested" && !note.trim()) ||
+                (to === "published" && readiness.publishBlockers.length > 0)
+              }
+              title={
+                to === "published" && readiness.publishBlockers.length
+                  ? readinessReasonAr(readiness.publishBlockers[0])
+                  : undefined
+              }
               onClick={() => onTransition(to)}
               className="rounded-xl bg-background px-3 py-2 text-xs font-bold text-primary ring-1 ring-border disabled:opacity-40"
             >
@@ -586,9 +653,90 @@ function StatusBadge({ status }: { status: WorkflowStatus }) {
 
   return (
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${classes}`}>
-      {status}
+      {workflowStatusAr(status)}
     </span>
   );
+}
+
+function ReadinessPanel({
+  readiness,
+}: {
+  readiness: MeasurementReleaseReadiness;
+}) {
+  const publishReady = readiness.publishBlockers.length === 0;
+  const activationReady = readiness.activationBlockers.length === 0;
+
+  return (
+    <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <ReadinessBox
+        title="جاهزية النشر"
+        ready={publishReady}
+        blockers={readiness.publishBlockers}
+      />
+      <ReadinessBox
+        title="جاهزية التفعيل"
+        ready={activationReady}
+        blockers={readiness.activationBlockers}
+      />
+    </div>
+  );
+}
+
+function ReadinessBox({
+  title,
+  ready,
+  blockers,
+}: {
+  title: string;
+  ready: boolean;
+  blockers: MeasurementReleaseReadiness["publishBlockers"];
+}) {
+  return (
+    <div
+      className={
+        ready
+          ? "rounded-2xl bg-success-soft/60 p-4 ring-1 ring-success/15"
+          : "rounded-2xl bg-warning-soft/60 p-4 ring-1 ring-warning/15"
+      }
+    >
+      <div className="flex items-center gap-2">
+        {ready ? (
+          <CheckCircle2 className="size-4 text-success" />
+        ) : (
+          <AlertTriangle className="size-4 text-warning" />
+        )}
+        <p className="text-xs font-extrabold">{title}</p>
+      </div>
+      {ready ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          لا توجد موانع حوكمة ظاهرة في البيانات الحالية.
+        </p>
+      ) : (
+        <ul className="mt-2 space-y-1 text-xs leading-5 text-muted-foreground">
+          {blockers.map((reason) => (
+            <li key={reason}>• {readinessReasonAr(reason)}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function workflowStatusAr(status: WorkflowStatus): string {
+  switch (status) {
+    case "draft":
+      return "مسودة";
+    case "in_review":
+      return "قيد المراجعة";
+    case "changes_requested":
+      return "تعديلات مطلوبة";
+    case "approved":
+      return "معتمد";
+    case "published":
+      return "منشور";
+    case "retired":
+      return "متقاعد";
+  }
 }
 
 function SourceList({
