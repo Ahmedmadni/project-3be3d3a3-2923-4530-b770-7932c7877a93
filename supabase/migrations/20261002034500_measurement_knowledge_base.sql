@@ -201,7 +201,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  target_v_article_id uuid;
+  target_article_id uuid;
   published_parent boolean;
 BEGIN
   IF TG_OP = 'DELETE' THEN

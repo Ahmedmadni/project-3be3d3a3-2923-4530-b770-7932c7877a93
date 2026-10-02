@@ -504,6 +504,7 @@ export const ar = {
   "admin.questions": "الأسئلة",
   "admin.redFlags": "علامات الخطر",
   "admin.firstAid": "الإسعافات الأولية",
+  "admin.measurements": "القياسات الصحية",
   "admin.externalVerifiedGithub": "مستودع GitHub موثوق",
   "admin.externalSources": "المصادر والتكاملات الخارجية",
   "admin.externalSourcesHint": "سجل ثقة واستخدام للمصادر الخارجية. المستودع العام على GitHub لا يُعد مصدرًا سريريًا موثوقًا تلقائيًا.",
