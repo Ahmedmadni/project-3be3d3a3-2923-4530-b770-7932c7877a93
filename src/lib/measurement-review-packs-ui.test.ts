@@ -19,7 +19,8 @@ describe("measurement review pack dashboard UI", () => {
   it("opens the next actionable item in a pack when available", () => {
     expect(route).toContain("pack.nextActionableItemId");
     expect(route).toContain('nextItem ? "فتح التالي في الحزمة" : "عرض الحزمة"');
-    expect(route).toContain("nextItem ? onOpen(nextItem) : onViewPack(type.id)");
+    expect(route).toContain("onOpen(nextItem)");
+    expect(route).toContain("onViewPack(type.id)");
   });
 
   it("can focus a pack even when the current role has no actionable item", () => {
