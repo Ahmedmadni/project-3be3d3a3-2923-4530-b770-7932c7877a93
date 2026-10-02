@@ -10,6 +10,7 @@ import {
   Gauge,
   HeartPulse,
   History,
+  LineChart,
   Plus,
   Ruler,
   Scale,
@@ -380,6 +381,14 @@ function MeasurementsPage() {
                         <BookOpen className="size-4" />
                         دليل القياس
                       </button>
+                      <Link
+                        to="/measurements/$measurementTypeId"
+                        params={{ measurementTypeId: type.id }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-card px-3.5 py-2.5 text-xs font-bold text-primary ring-1 ring-border"
+                      >
+                        <LineChart className="size-4" />
+                        التفاصيل والاتجاه
+                      </Link>
                     </div>
 
                     {selectedTypeId === type.id ? (
