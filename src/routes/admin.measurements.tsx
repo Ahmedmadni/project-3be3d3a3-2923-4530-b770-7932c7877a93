@@ -35,10 +35,18 @@ import {
   type MeasurementAdminStatusFilter,
 } from "@/lib/measurement-admin-review-queue";
 import {
+  measurementReviewPriorityReason,
+  sortMeasurementReviewQueue,
+} from "@/lib/measurement-review-priority";
+import {
   measurementReleaseReadiness,
   readinessReasonAr,
   type MeasurementReleaseReadiness,
 } from "@/lib/measurement-release-readiness";
+import {
+  diffMeasurementSnapshot,
+  formatMeasurementDiffValue,
+} from "@/lib/measurement-snapshot-diff";
 import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/admin/measurements")({
@@ -259,6 +267,14 @@ function MeasurementAdminPage() {
     () => new Map((data?.types ?? []).map((type) => [type.id, type])),
     [data?.types],
   );
+  const versionMap = useMemo(() => {
+    const map = new Map<string, VersionRow>();
+    for (const version of data?.versions ?? []) {
+      const key = `${version.entity_type}:${version.entity_id}`;
+      if (!map.has(key)) map.set(key, version);
+    }
+    return map;
+  }, [data?.versions]);
 
   if (query.isPending) {
     return (
@@ -300,9 +316,14 @@ function MeasurementAdminPage() {
             .map((link) => sourceMap.get(link.source_id));
           return {
             id: row.id,
+            kind: "type" as const,
+            title: row.name_ar,
             measurementTypeId: row.id,
             searchText: `${row.name_ar} ${row.name_en ?? ""} ${row.code}`,
             reviewStatus: normalizeStatus(row.review_status),
+            priority: null,
+            submittedAt: row.submitted_at,
+            updatedAt: row.updated_at,
             readiness: measurementReleaseReadiness({
               kind: "type",
               reviewStatus: row.review_status,
@@ -315,9 +336,14 @@ function MeasurementAdminPage() {
       : tab === "reference"
         ? data.reference.map((row) => ({
             id: row.id,
+            kind: "reference" as const,
+            title: row.label_ar,
             measurementTypeId: row.measurement_type_id,
             searchText: `${row.label_ar} ${row.label_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
             reviewStatus: normalizeStatus(row.review_status),
+            priority: row.priority,
+            submittedAt: row.submitted_at,
+            updatedAt: row.updated_at,
             readiness: measurementReleaseReadiness({
               kind: "reference",
               reviewStatus: row.review_status,
@@ -333,9 +359,14 @@ function MeasurementAdminPage() {
         : tab === "red_flags"
           ? data.flags.map((row) => ({
               id: row.id,
+              kind: "red_flag" as const,
+              title: row.title_ar,
               measurementTypeId: row.measurement_type_id,
               searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
               reviewStatus: normalizeStatus(row.review_status),
+              priority: row.priority,
+              submittedAt: row.submitted_at,
+              updatedAt: row.updated_at,
               readiness: measurementReleaseReadiness({
                 kind: "red_flag",
                 reviewStatus: row.review_status,
@@ -358,9 +389,14 @@ function MeasurementAdminPage() {
                 ).length;
                 return {
                   id: row.id,
+                  kind: "knowledge" as const,
+                  title: row.title_ar,
                   measurementTypeId: row.measurement_type_id,
                   searchText: `${row.title_ar} ${row.title_en ?? ""} ${row.code} ${typeMap.get(row.measurement_type_id)?.name_ar ?? ""}`,
                   reviewStatus: normalizeStatus(row.review_status),
+                  priority: null,
+                  submittedAt: row.submitted_at,
+                  updatedAt: row.updated_at,
                   readiness: measurementReleaseReadiness({
                     kind: "knowledge",
                     reviewStatus: row.review_status,
@@ -384,7 +420,17 @@ function MeasurementAdminPage() {
     readiness: readinessFilter,
     measurementTypeId: measurementTypeFilter,
   });
-  const visibleIds = new Set(filteredQueueItems.map((item) => item.id));
+  const sortedQueueItems = sortMeasurementReviewQueue(filteredQueueItems);
+  const queueOrder = new Map(
+    sortedQueueItems.map((item, index) => [item.id, index]),
+  );
+  const visibleIds = new Set(sortedQueueItems.map((item) => item.id));
+  const nextReviewItem =
+    sortedQueueItems.find(
+      (item) =>
+        item.reviewStatus !== "published" &&
+        item.reviewStatus !== "retired",
+    ) ?? sortedQueueItems[0];
 
   return (
     <div className="space-y-5">
@@ -448,6 +494,46 @@ function MeasurementAdminPage() {
               value={queueSummary.activationReady}
             />
           </div>
+
+          {nextReviewItem ? (
+            <section className="rounded-3xl bg-primary-soft p-5 ring-1 ring-primary/15">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-primary">
+                    التالي في قائمة المراجعة
+                  </p>
+                  <h3 className="mt-1 font-extrabold">
+                    {nextReviewItem.title}
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-xs leading-6 text-muted-foreground">
+                    {measurementReviewPriorityReason(nextReviewItem)}
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    ترتيب تشغيلي داخل التبويب الحالي · الحالة:{" "}
+                    {workflowStatusAr(
+                      normalizeStatus(nextReviewItem.reviewStatus),
+                    )}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById(
+                        `measurement-review-${nextReviewItem.id}`,
+                      )
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      })
+                  }
+                  className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
+                >
+                  فتح العنصر التالي
+                </button>
+              </div>
+            </section>
+          ) : null}
 
           <div className="glass rounded-3xl p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -529,7 +615,10 @@ function MeasurementAdminPage() {
 
       {tab === "types" ? (
         <div className="space-y-3">
-          {data.types.filter((row) => visibleIds.has(row.id)).map((row) => {
+          {sortRowsByQueueOrder(
+            data.types.filter((row) => visibleIds.has(row.id)),
+            queueOrder,
+          ).map((row) => {
             const sources = data.measurementSources
               .filter((link) => link.measurement_type_id === row.id)
               .map((link) => ({ link, source: sourceMap.get(link.source_id) }));
@@ -559,6 +648,9 @@ function MeasurementAdminPage() {
                 onToggle={() => activation.mutate({ kind: "type", row })}
                 busy={transition.isPending || activation.isPending}
                 audits={auditMap.get(`measurement_types:${row.id}`) ?? []}
+                previousVersion={
+                  versionMap.get(`measurement_types:${row.id}`)
+                }
               >
                 {row.description_ar ? (
                   <p className="text-sm leading-7 text-muted-foreground">{row.description_ar}</p>
@@ -585,7 +677,10 @@ function MeasurementAdminPage() {
 
       {tab === "reference" ? (
         <div className="space-y-3">
-          {data.reference.filter((row) => visibleIds.has(row.id)).map((row) => (
+          {sortRowsByQueueOrder(
+            data.reference.filter((row) => visibleIds.has(row.id)),
+            queueOrder,
+          ).map((row) => (
             <ReviewCard
               key={row.id}
               kind="reference"
@@ -613,6 +708,9 @@ function MeasurementAdminPage() {
               audits={
                 auditMap.get(`measurement_reference_rules:${row.id}`) ?? []
               }
+              previousVersion={
+                versionMap.get(`measurement_reference_rules:${row.id}`)
+              }
             >
               <div className="grid gap-2 sm:grid-cols-3">
                 <TextMetric label="Interpretation" value={row.interpretation_code} />
@@ -628,7 +726,10 @@ function MeasurementAdminPage() {
 
       {tab === "red_flags" ? (
         <div className="space-y-3">
-          {data.flags.filter((row) => visibleIds.has(row.id)).map((row) => (
+          {sortRowsByQueueOrder(
+            data.flags.filter((row) => visibleIds.has(row.id)),
+            queueOrder,
+          ).map((row) => (
             <ReviewCard
               key={row.id}
               kind="red_flag"
@@ -654,6 +755,9 @@ function MeasurementAdminPage() {
               onToggle={() => activation.mutate({ kind: "red_flag", row })}
               busy={transition.isPending || activation.isPending}
               audits={auditMap.get(`measurement_red_flags:${row.id}`) ?? []}
+              previousVersion={
+                versionMap.get(`measurement_red_flags:${row.id}`)
+              }
             >
               <div className="grid gap-2 sm:grid-cols-2">
                 <TextMetric label="مستوى الرعاية" value={row.care_level} />
@@ -668,7 +772,10 @@ function MeasurementAdminPage() {
 
       {tab === "knowledge" ? (
         <div className="space-y-3">
-          {data.knowledge.filter((row) => visibleIds.has(row.id)).map((row) => {
+          {sortRowsByQueueOrder(
+            data.knowledge.filter((row) => visibleIds.has(row.id)),
+            queueOrder,
+          ).map((row) => {
             const sections = data.sections.filter((section) => section.article_id === row.id);
             const sources = data.knowledgeSources
               .filter((link) => link.article_id === row.id)
@@ -706,6 +813,11 @@ function MeasurementAdminPage() {
                 busy={transition.isPending || activation.isPending}
                 audits={
                   auditMap.get(`measurement_knowledge_articles:${row.id}`) ?? []
+                }
+                previousVersion={
+                  versionMap.get(
+                    `measurement_knowledge_articles:${row.id}`,
+                  )
                 }
               >
                 <p className="text-sm leading-7 text-muted-foreground">{row.summary_ar}</p>
@@ -755,6 +867,7 @@ function ReviewCard({
   onToggle,
   busy,
   audits,
+  previousVersion,
   children,
 }: {
   kind: EntityKind;
@@ -770,6 +883,7 @@ function ReviewCard({
   onToggle: () => void;
   busy: boolean;
   audits: AuditRow[];
+  previousVersion?: VersionRow;
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -777,7 +891,10 @@ function ReviewCard({
   const transitions = availableTransitions(accessRoles, status);
 
   return (
-    <article className="glass rounded-3xl p-5">
+    <article
+      id={`measurement-review-${row.id}`}
+      className="glass scroll-mt-24 rounded-3xl p-5"
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -831,6 +948,8 @@ function ReviewCard({
       <ReadinessPanel readiness={readiness} />
 
       <div className="mt-4">{children}</div>
+
+      <SnapshotDiff current={row} previousVersion={previousVersion} />
 
       <div className="mt-4 rounded-2xl bg-card/70 p-4 ring-1 ring-border">
         <label className="block text-xs font-bold text-muted-foreground">
@@ -1009,6 +1128,109 @@ function FilterSelect({
         ))}
       </select>
     </label>
+  );
+}
+
+function SnapshotDiff({
+  current,
+  previousVersion,
+}: {
+  current: GovernedRow;
+  previousVersion?: VersionRow;
+}) {
+  if (!previousVersion) {
+    return (
+      <div className="mt-4 rounded-2xl bg-background/60 p-4 text-xs text-muted-foreground ring-1 ring-border">
+        <p className="font-extrabold text-foreground">
+          مقارنة بآخر نسخة منشورة
+        </p>
+        <p className="mt-2 leading-6">
+          لا يوجد Snapshot منشور سابق لنفس العنصر؛ هذه المراجعة تُعامل كنسخة
+          أولى من ناحية المقارنة.
+        </p>
+      </div>
+    );
+  }
+
+  const changes = diffMeasurementSnapshot(
+    current,
+    previousVersion.snapshot,
+  );
+
+  return (
+    <details
+      className="mt-4 rounded-2xl bg-background/60 p-4 ring-1 ring-border"
+      open={changes.length > 0 && current.review_status !== "published"}
+    >
+      <summary className="cursor-pointer text-xs font-extrabold">
+        مقارنة بآخر Snapshot منشور · {changes.length} تغيير
+        <span className="ms-2 text-[10px] font-normal text-muted-foreground">
+          v{previousVersion.version} ·{" "}
+          {formatDate(
+            previousVersion.published_at ?? previousVersion.created_at,
+          )}
+        </span>
+      </summary>
+
+      {!changes.length ? (
+        <p className="mt-3 text-xs leading-6 text-muted-foreground">
+          لا توجد فروق في حقول المحتوى بعد استبعاد بيانات الحوكمة والتواريخ.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {changes.slice(0, 30).map((change) => (
+            <div
+              key={change.path}
+              className="rounded-xl bg-card p-3 ring-1 ring-border"
+            >
+              <p
+                dir="ltr"
+                className="text-[10px] font-extrabold text-primary"
+              >
+                {change.path}
+              </p>
+              <div className="mt-2 grid gap-2 md:grid-cols-2">
+                <DiffValue
+                  label="قبل"
+                  value={formatMeasurementDiffValue(change.before)}
+                />
+                <DiffValue
+                  label="الآن"
+                  value={formatMeasurementDiffValue(change.after)}
+                />
+              </div>
+            </div>
+          ))}
+          {changes.length > 30 ? (
+            <p className="text-[10px] text-muted-foreground">
+              تم عرض أول 30 تغييرًا من أصل {changes.length}.
+            </p>
+          ) : null}
+        </div>
+      )}
+    </details>
+  );
+}
+
+function DiffValue({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-lg bg-background/70 p-2.5">
+      <p className="text-[10px] font-bold text-muted-foreground">
+        {label}
+      </p>
+      <pre
+        dir="auto"
+        className="mt-1 whitespace-pre-wrap break-words font-sans text-xs leading-5"
+      >
+        {value}
+      </pre>
+    </div>
   );
 }
 
@@ -1328,6 +1550,17 @@ async function updateGovernedMeasurement(
       return error;
     }
   }
+}
+
+function sortRowsByQueueOrder<T extends { id: string }>(
+  rows: T[],
+  queueOrder: Map<string, number>,
+): T[] {
+  return [...rows].sort(
+    (a, b) =>
+      (queueOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (queueOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  );
 }
 
 function formatDate(value: string) {
