@@ -500,61 +500,88 @@ export type Database = {
       }
       first_aid_sections: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_reason: string | null
           content_ar: string | null
           content_en: string | null
+          created_by: string | null
           id: string
+          published_at: string | null
+          published_by: string | null
+          review_note: string | null
           review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
           section_type:
-            | "overview"
-            | "how_to_measure"
-            | "common_errors"
-            | "what_it_means"
-            | "when_to_repeat"
-            | "warning_signs"
-            | "special_context"
-            | "limitations"
+            | "what_is_happening"
+            | "when_to_call"
+            | "do_now"
+            | "dont_do"
+            | "while_waiting"
           sort_order: number
+          submitted_at: string | null
           title_ar: string
           title_en: string | null
           topic_id: string
+          translation_status: Database["public"]["Enums"]["translation_status"]
+          version: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
           content_ar?: string | null
           content_en?: string | null
+          created_by?: string | null
           id?: string
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           section_type:
-            | "overview"
-            | "how_to_measure"
-            | "common_errors"
-            | "what_it_means"
-            | "when_to_repeat"
-            | "warning_signs"
-            | "special_context"
-            | "limitations"
+            | "what_is_happening"
+            | "when_to_call"
+            | "do_now"
+            | "dont_do"
+            | "while_waiting"
           sort_order?: number
+          submitted_at?: string | null
           title_ar: string
           title_en?: string | null
           topic_id: string
+          translation_status?: Database["public"]["Enums"]["translation_status"]
+          version?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
           content_ar?: string | null
           content_en?: string | null
+          created_by?: string | null
           id?: string
+          published_at?: string | null
+          published_by?: string | null
+          review_note?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           section_type?:
-            | "overview"
-            | "how_to_measure"
-            | "common_errors"
-            | "what_it_means"
-            | "when_to_repeat"
-            | "warning_signs"
-            | "special_context"
-            | "limitations"
+            | "what_is_happening"
+            | "when_to_call"
+            | "do_now"
+            | "dont_do"
+            | "while_waiting"
           sort_order?: number
+          submitted_at?: string | null
           title_ar?: string
           title_en?: string | null
           topic_id?: string
+          translation_status?: Database["public"]["Enums"]["translation_status"]
+          version?: number
         }
         Relationships: [
           {
