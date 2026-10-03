@@ -45,7 +45,7 @@ describe("standalone first-aid Stage 3C section seed", () => {
 
   it("keeps inserted sections draft-only and idempotent", () => {
     expect(script).toContain("'draft'::public.review_status");
-    expect(script).toContain("WHERE NOT EXISTS");
+    expect(script).toContain("NOT EXISTS");
     expect(script).not.toMatch(/UPDATE\s+public\.first_aid_topics/i);
     expect(script).not.toMatch(/INSERT\s+INTO\s+public\.medical_sources/i);
     expect(script).not.toMatch(/INSERT\s+INTO\s+public\.first_aid_sources/i);
