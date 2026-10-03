@@ -948,6 +948,149 @@ export type Database = {
           },
         ]
       }
+      health_journal_entries: {
+        Row: {
+          created_at: string
+          energy_score: number | null
+          entry_type: "general" | "symptom_note" | "mood" | "care_note"
+          id: string
+          mood_score: number | null
+          note: string
+          occurred_at: string
+          related_measurement_reading_id: string | null
+          related_symptom_session_id: string | null
+          tags: string[]
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          energy_score?: number | null
+          entry_type?: "general" | "symptom_note" | "mood" | "care_note"
+          id?: string
+          mood_score?: number | null
+          note: string
+          occurred_at?: string
+          related_measurement_reading_id?: string | null
+          related_symptom_session_id?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          energy_score?: number | null
+          entry_type?: "general" | "symptom_note" | "mood" | "care_note"
+          id?: string
+          mood_score?: number | null
+          note?: string
+          occurred_at?: string
+          related_measurement_reading_id?: string | null
+          related_symptom_session_id?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_journal_entries_related_measurement_reading_id_fkey"
+            columns: ["related_measurement_reading_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_readings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_journal_entries_related_symptom_session_id_fkey"
+            columns: ["related_symptom_session_id"]
+            isOneToOne: false
+            referencedRelation: "symptom_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_dose_events: {
+        Row: {
+          created_at: string
+          event_at: string
+          id: string
+          medication_id: string
+          note: string | null
+          status: "taken" | "skipped"
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_at?: string
+          id?: string
+          medication_id: string
+          note?: string | null
+          status: "taken" | "skipped"
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_at?: string
+          id?: string
+          medication_id?: string
+          note?: string | null
+          status?: "taken" | "skipped"
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_dose_events_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "user_medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_medications: {
+        Row: {
+          created_at: string
+          dose_text: string | null
+          end_date: string | null
+          id: string
+          instructions_text: string | null
+          is_active: boolean
+          name: string
+          schedule_text: string | null
+          start_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dose_text?: string | null
+          end_date?: string | null
+          id?: string
+          instructions_text?: string | null
+          is_active?: boolean
+          name: string
+          schedule_text?: string | null
+          start_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dose_text?: string | null
+          end_date?: string | null
+          id?: string
+          instructions_text?: string | null
+          is_active?: boolean
+          name?: string
+          schedule_text?: string | null
+          start_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       measurement_readings: {
         Row: {
           components: Json | null

@@ -11,7 +11,7 @@ export function MobileBottomNav() {
       aria-label={t("nav.main")}
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
-      <div className="glass mx-auto grid max-w-md grid-cols-4 rounded-3xl px-1.5 py-1.5">
+      <div className="glass mx-auto grid max-w-md grid-cols-5 rounded-3xl px-1.5 py-1.5">
         {mobileNavItems.map(({ to, labelKey, icon: Icon }) => (
           <Link
             key={to}

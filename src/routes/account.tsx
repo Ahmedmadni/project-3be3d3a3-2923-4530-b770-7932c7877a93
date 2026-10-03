@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  BookHeart,
   ChevronLeft,
   HeartHandshake,
   History,
@@ -116,7 +117,7 @@ function Account() {
 
       <section>
         <h2 className="mb-3 font-extrabold">{t("account.quickActions")}</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <QuickAction
             to="/history"
             icon={History}
@@ -133,6 +134,12 @@ function Account() {
             to="/first-aid"
             icon={HeartHandshake}
             label={t("account.firstAid")}
+            dir={dir}
+          />
+          <QuickAction
+            to="/journal"
+            icon={BookHeart}
+            label={t("nav.journal")}
             dir={dir}
           />
         </div>
@@ -166,7 +173,7 @@ function QuickAction({
   label,
   dir,
 }: {
-  to: "/history" | "/symptom-checker" | "/first-aid";
+  to: "/history" | "/symptom-checker" | "/first-aid" | "/journal";
   icon: typeof History;
   label: string;
   dir: "rtl" | "ltr";
