@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Activity,
   ArrowLeft,
+  BookHeart,
   BookOpen,
   ChevronLeft,
   History,
@@ -138,7 +139,7 @@ function Home() {
 
       <section>
         <h2 className="mb-3 text-base font-extrabold">{t("home.quickTitle")}</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Link to="/first-aid" className="glass flex items-center gap-4 rounded-3xl p-4 transition hover:-translate-y-0.5">
             <img src={firstAidSticker} alt="" width={816} height={816} loading="lazy" className="size-16 shrink-0 object-contain" />
             <div className="min-w-0">
@@ -162,6 +163,15 @@ function Home() {
             <div className="min-w-0">
               <h3 className="font-bold">{t("home.quickHistory")}</h3>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("home.quickHistoryDesc")}</p>
+            </div>
+          </Link>
+          <Link to="/journal" className="glass flex items-center gap-4 rounded-3xl p-4 transition hover:-translate-y-0.5">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+              <BookHeart className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="font-bold">{t("home.quickJournal")}</h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("home.quickJournalDesc")}</p>
             </div>
           </Link>
         </div>
