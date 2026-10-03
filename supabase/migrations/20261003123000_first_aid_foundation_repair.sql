@@ -1137,34 +1137,8 @@ WHERE t.code = 'eye_injury'
   );
 
 
--- ---------------------------------------------------------------------------
--- Final safety normalization for inserted section bodies.
--- Existing topics themselves are intentionally not activated/deactivated here.
--- ---------------------------------------------------------------------------
 
-UPDATE public.first_aid_sections s
-SET review_status = 'draft'::public.review_status,
-    version = GREATEST(COALESCE(version, 1), 1),
-    translation_status = COALESCE(
-      translation_status,
-      'not_started'::public.translation_status
-    )
-FROM public.first_aid_topics t
-WHERE t.id = s.topic_id
-  AND t.code IN (
-    'bleeding',
-    'burns',
-    'choking',
-    'seizures',
-    'fainting',
-    'head_injury',
-    'fractures',
-    'poisoning',
-    'anaphylaxis',
-    'chest_pain',
-    'breathing',
-    'eye_injury'
-  )
-  AND s.review_status::text <> 'published';
+-- The INSERT statements above are idempotent and add only missing section types.
+-- Existing workflow states are deliberately preserved on re-run.
 
 COMMIT;
