@@ -1,4 +1,4 @@
-import { Home, Stethoscope, Cross, BookOpen, UserRound, Activity } from "lucide-react";
+import { Home, Stethoscope, Cross, BookOpen, UserRound, Activity, BookHeart } from "lucide-react";
 import type { TKey } from "@/i18n";
 
 export const navItems = [
@@ -7,6 +7,7 @@ export const navItems = [
   { to: "/first-aid", labelKey: "nav.firstAid" as TKey, icon: Cross },
   { to: "/library", labelKey: "nav.library" as TKey, icon: BookOpen },
   { to: "/measurements", labelKey: "nav.measurements" as TKey, icon: Activity },
+  { to: "/journal", labelKey: "nav.journal" as TKey, icon: BookHeart },
   { to: "/account", labelKey: "nav.account" as TKey, icon: UserRound },
 ] as const;
 
@@ -14,4 +15,6 @@ export const navItems = [
  * Mobile keeps the primary actions intentionally small.
  * The health library remains a primary home-page entry and desktop nav item.
  */
-export const mobileNavItems = navItems.filter((item) => item.to !== "/library");
+export const mobileNavItems = navItems.filter(
+  (item) => item.to !== "/library" && item.to !== "/journal",
+);
