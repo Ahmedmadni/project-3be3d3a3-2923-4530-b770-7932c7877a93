@@ -30,7 +30,9 @@ describe("health journal foundation migration", () => {
     expect(migration).toContain("status IN ('taken','skipped')");
     expect(migration).not.toContain("recommended_dose");
     expect(migration).not.toContain("prescribed_dose");
-    expect(migration).not.toContain("diagnosis");
+    expect(migration).not.toContain("diagnosis_code");
+    expect(migration).not.toContain("diagnosis_id");
+    expect(migration).not.toContain("treatment_recommendation");
   });
 
   it("keeps useful chronological indexes", () => {
