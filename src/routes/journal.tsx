@@ -4,13 +4,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
+  Bell,
   BookHeart,
   CalendarClock,
   Check,
   ClipboardList,
+  Clock3,
   FileText,
   History,
   NotebookPen,
@@ -18,6 +20,7 @@ import {
   Plus,
   Search,
   SkipForward,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -33,6 +36,14 @@ import {
   type HealthTimelineKind,
   type HealthTimelineRangeDays,
 } from "@/lib/health-timeline";
+import {
+  browserTimezone,
+  buildTodayMedicationOccurrences,
+  isReminderDue,
+  medicationOccurrenceState,
+  type MedicationDayCode,
+  type MedicationOccurrence,
+} from "@/lib/medication-schedule";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/journal")({
@@ -53,6 +64,7 @@ export const Route = createFileRoute("/journal")({
 type JournalRow = Tables<"health_journal_entries">;
 type MedicationRow = Tables<"user_medications">;
 type DoseEventRow = Tables<"medication_dose_events">;
+type MedicationScheduleRow = Tables<"medication_schedules">;
 type MeasurementReadingRow = Tables<"measurement_readings">;
 type MeasurementTypeRow = Tables<"measurement_types">;
 
@@ -86,6 +98,10 @@ function HealthJournalPage() {
   const [medicationName, setMedicationName] = useState("");
   const [doseText, setDoseText] = useState("");
   const [scheduleText, setScheduleText] = useState("");
+  const [clockNow, setClockNow] = useState(() => new Date());
+  const [notificationPermission, setNotificationPermission] = useState<
+    NotificationPermission | "unsupported"
+  >("unsupported");
 
   const journalQuery = useQuery({
     queryKey: ["health-journal", user?.id],
@@ -126,6 +142,20 @@ function HealthJournalPage() {
         .eq("user_id", user!.id)
         .order("event_at", { ascending: false })
         .limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const schedulesQuery = useQuery({
+    queryKey: ["medication-schedules", user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medication_schedules")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("time_local", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -178,6 +208,7 @@ function HealthJournalPage() {
       qc.invalidateQueries({ queryKey: ["health-journal", user?.id] }),
       qc.invalidateQueries({ queryKey: ["user-medications", user?.id] }),
       qc.invalidateQueries({ queryKey: ["medication-dose-events", user?.id] }),
+      qc.invalidateQueries({ queryKey: ["medication-schedules", user?.id] }),
     ]);
   };
 
@@ -242,6 +273,88 @@ function HealthJournalPage() {
       const { error } = await supabase.from("medication_dose_events").insert({
         user_id: user.id,
         medication_id: medicationId,
+        status,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidatePersonalHealth,
+  });
+
+  const createMedicationSchedule = useMutation({
+    mutationFn: async ({
+      medicationId,
+      timeLocal,
+      daysOfWeek,
+      reminderEnabled,
+    }: {
+      medicationId: string;
+      timeLocal: string;
+      daysOfWeek: MedicationDayCode[];
+      reminderEnabled: boolean;
+    }) => {
+      if (!user) return;
+      const { error } = await supabase.from("medication_schedules").insert({
+        user_id: user.id,
+        medication_id: medicationId,
+        time_local: timeLocal,
+        days_of_week: daysOfWeek,
+        reminder_enabled: reminderEnabled,
+        timezone: browserTimezone(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidatePersonalHealth,
+  });
+
+  const deleteMedicationSchedule = useMutation({
+    mutationFn: async (scheduleId: string) => {
+      const { error } = await supabase
+        .from("medication_schedules")
+        .delete()
+        .eq("id", scheduleId);
+      if (error) throw error;
+    },
+    onSuccess: invalidatePersonalHealth,
+  });
+
+  const recordScheduledDose = useMutation({
+    mutationFn: async ({
+      occurrence,
+      status,
+    }: {
+      occurrence: MedicationOccurrence;
+      status: DoseEventRow["status"];
+    }) => {
+      if (!user) return;
+
+      const { data: existing, error: readError } = await supabase
+        .from("medication_dose_events")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("schedule_id", occurrence.scheduleId)
+        .eq("scheduled_for", occurrence.scheduledFor)
+        .maybeSingle();
+
+      if (readError) throw readError;
+
+      if (existing) {
+        const { error } = await supabase
+          .from("medication_dose_events")
+          .update({
+            status,
+            event_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+        if (error) throw error;
+        return;
+      }
+
+      const { error } = await supabase.from("medication_dose_events").insert({
+        user_id: user.id,
+        medication_id: occurrence.medicationId,
+        schedule_id: occurrence.scheduleId,
+        scheduled_for: occurrence.scheduledFor,
+        event_at: new Date().toISOString(),
         status,
       });
       if (error) throw error;
@@ -394,11 +507,87 @@ function HealthJournalPage() {
     [timeline, timelineKind, timelineQuery, timelineRange],
   );
 
+  const activeMedicationIds = useMemo(
+    () =>
+      new Set(
+        (medicationsQuery.data ?? [])
+          .filter((medication) => medication.is_active)
+          .map((medication) => medication.id),
+      ),
+    [medicationsQuery.data],
+  );
+
+  const todayOccurrences = useMemo(
+    () =>
+      buildTodayMedicationOccurrences(
+        (schedulesQuery.data ?? []).filter((schedule) =>
+          activeMedicationIds.has(schedule.medication_id),
+        ),
+        clockNow,
+      ),
+    [activeMedicationIds, clockNow, schedulesQuery.data],
+  );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    setNotificationPermission(Notification.permission);
+  }, []);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof Notification === "undefined" ||
+      Notification.permission !== "granted"
+    ) {
+      return;
+    }
+
+    const currentTimezone = browserTimezone();
+
+    for (const occurrence of todayOccurrences) {
+      if (occurrence.timezone !== currentTimezone) continue;
+      if (!isReminderDue(occurrence, eventsQuery.data ?? [], clockNow)) continue;
+
+      const key = `health-med-reminder:${occurrence.scheduleId}:${occurrence.scheduledFor}`;
+      if (window.localStorage.getItem(key)) continue;
+
+      new Notification(
+        lang === "ar" ? "تذكير صحي" : "Health reminder",
+        {
+          body:
+            lang === "ar"
+              ? "لديك موعد دواء مسجل في مؤشر صحي."
+              : "You have a medication time recorded in Health Indicator.",
+          tag: key,
+        },
+      );
+      window.localStorage.setItem(key, "shown");
+    }
+  }, [clockNow, eventsQuery.data, lang, todayOccurrences]);
+
+  const requestMedicationNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
+
   const eventSummary = medicationEventSummary(eventsQuery.data ?? []);
   const isLoading =
     journalQuery.isLoading ||
     medicationsQuery.isLoading ||
     eventsQuery.isLoading ||
+    schedulesQuery.isLoading ||
     measurementsQuery.isLoading ||
     measurementTypesQuery.isLoading ||
     symptomSessionsQuery.isLoading;
@@ -407,6 +596,7 @@ function HealthJournalPage() {
     journalQuery.error ||
     medicationsQuery.error ||
     eventsQuery.error ||
+    schedulesQuery.error ||
     measurementsQuery.error ||
     measurementTypesQuery.error ||
     symptomSessionsQuery.error;
@@ -540,19 +730,51 @@ function HealthJournalPage() {
             saving={addMedication.isPending}
             onSave={() => addMedication.mutate()}
           />
-          <MedicationList
-            medications={medicationsQuery.data ?? []}
-            events={eventsQuery.data ?? []}
-            summary={eventSummary}
-            lang={lang}
-            busy={addDoseEvent.isPending || toggleMedication.isPending}
-            onEvent={(medicationId, status) =>
-              addDoseEvent.mutate({ medicationId, status })
-            }
-            onToggle={(medicationId, isActive) =>
-              toggleMedication.mutate({ medicationId, isActive })
-            }
-          />
+          <div className="space-y-4">
+            <TodayDosesPanel
+              lang={lang}
+              occurrences={todayOccurrences}
+              medications={medicationsQuery.data ?? []}
+              events={eventsQuery.data ?? []}
+              now={clockNow}
+              busy={recordScheduledDose.isPending}
+              notificationPermission={notificationPermission}
+              onRequestNotifications={requestMedicationNotifications}
+              onRecord={(occurrence, status) =>
+                recordScheduledDose.mutate({ occurrence, status })
+              }
+            />
+            <MedicationList
+              medications={medicationsQuery.data ?? []}
+              schedules={schedulesQuery.data ?? []}
+              events={eventsQuery.data ?? []}
+              summary={eventSummary}
+              lang={lang}
+              busy={
+                addDoseEvent.isPending ||
+                toggleMedication.isPending ||
+                createMedicationSchedule.isPending ||
+                deleteMedicationSchedule.isPending
+              }
+              onEvent={(medicationId, status) =>
+                addDoseEvent.mutate({ medicationId, status })
+              }
+              onToggle={(medicationId, isActive) =>
+                toggleMedication.mutate({ medicationId, isActive })
+              }
+              onCreateSchedule={(medicationId, timeLocal, daysOfWeek, reminderEnabled) =>
+                createMedicationSchedule.mutate({
+                  medicationId,
+                  timeLocal,
+                  daysOfWeek,
+                  reminderEnabled,
+                })
+              }
+              onDeleteSchedule={(scheduleId) =>
+                deleteMedicationSchedule.mutate(scheduleId)
+              }
+            />
+          </div>
         </div>
       )}
     </div>
@@ -886,22 +1108,225 @@ function MedicationForm({
   );
 }
 
+function TodayDosesPanel({
+  lang,
+  occurrences,
+  medications,
+  events,
+  now,
+  busy,
+  notificationPermission,
+  onRequestNotifications,
+  onRecord,
+}: {
+  lang: "ar" | "en";
+  occurrences: MedicationOccurrence[];
+  medications: MedicationRow[];
+  events: DoseEventRow[];
+  now: Date;
+  busy: boolean;
+  notificationPermission: NotificationPermission | "unsupported";
+  onRequestNotifications: () => void;
+  onRecord: (
+    occurrence: MedicationOccurrence,
+    status: DoseEventRow["status"],
+  ) => void;
+}) {
+  const medicationsById = new Map(
+    medications.map((item) => [item.id, item] as const),
+  );
+  const currentTimezone = browserTimezone();
+  const reminderCount = occurrences.filter(
+    (occurrence) => occurrence.reminderEnabled,
+  ).length;
+
+  return (
+    <section className="glass rounded-3xl p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-2xl bg-primary-soft text-primary">
+            <Clock3 className="size-5" />
+          </span>
+          <div>
+            <h2 className="font-extrabold">
+              {lang === "ar" ? "جرعات اليوم" : "Today's doses"}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {lang === "ar"
+                ? "المواعيد أدخلتها أنت. التطبيق لا يحدد الجرعة أو التكرار."
+                : "These times were entered by you. The app does not determine dose or frequency."}
+            </p>
+          </div>
+        </div>
+
+        {reminderCount > 0 && notificationPermission !== "granted" ? (
+          <button
+            type="button"
+            onClick={onRequestNotifications}
+            disabled={notificationPermission === "denied"}
+            className="inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold text-primary ring-1 ring-border disabled:opacity-50"
+          >
+            <Bell className="size-4" />
+            {notificationPermission === "denied"
+              ? lang === "ar"
+                ? "التنبيهات محظورة من المتصفح"
+                : "Notifications blocked"
+              : lang === "ar"
+                ? "تفعيل تنبيهات المتصفح"
+                : "Enable browser reminders"}
+          </button>
+        ) : null}
+      </div>
+
+      {notificationPermission === "granted" && reminderCount > 0 ? (
+        <p className="mt-3 rounded-xl bg-primary-soft/60 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
+          {lang === "ar"
+            ? "التنبيه عام ولا يعرض اسم الدواء حفاظًا على الخصوصية. يعمل أثناء بقاء التطبيق مفتوحًا في هذه المرحلة."
+            : "The notification is generic and does not show the medication name for privacy. At this stage it works while the app remains open."}
+        </p>
+      ) : null}
+
+      {!occurrences.length ? (
+        <p className="mt-4 rounded-2xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
+          {lang === "ar"
+            ? "لا توجد مواعيد دواء مجدولة لهذا اليوم."
+            : "No medication times are scheduled for today."}
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {occurrences.map((occurrence) => {
+            const medication = medicationsById.get(occurrence.medicationId);
+            const state = medicationOccurrenceState(occurrence, events, now);
+            const timezoneMismatch = occurrence.timezone !== currentTimezone;
+
+            return (
+              <article
+                key={`${occurrence.scheduleId}-${occurrence.scheduledFor}`}
+                className="rounded-2xl bg-card p-4 ring-1 ring-border"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-extrabold">
+                      {medication?.name ??
+                        (lang === "ar" ? "دواء مسجل" : "Recorded medication")}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {new Date(occurrence.scheduledFor).toLocaleTimeString(
+                        lang === "ar" ? "ar-SA" : "en",
+                        { hour: "2-digit", minute: "2-digit" },
+                      )}
+                      {medication?.dose_text ? ` • ${medication.dose_text}` : ""}
+                    </p>
+                  </div>
+                  <OccurrenceBadge state={state} lang={lang} />
+                </div>
+
+                {timezoneMismatch ? (
+                  <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-[11px] leading-5 text-warning">
+                    {lang === "ar"
+                      ? `تم إنشاء هذا الموعد على منطقة زمنية مختلفة (${occurrence.timezone}). تحقق من الوقت يدويًا؛ لن نرسل تنبيهًا تلقائيًا له.`
+                      : `This time was created in a different timezone (${occurrence.timezone}). Verify it manually; automatic reminders are suppressed.`}
+                  </p>
+                ) : null}
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onRecord(occurrence, "taken")}
+                    className={cn(
+                      "inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold",
+                      state === "taken"
+                        ? "bg-success text-white"
+                        : "bg-success-soft text-success",
+                    )}
+                  >
+                    <Check className="size-4" />
+                    {lang === "ar" ? "تم أخذها" : "Taken"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onRecord(occurrence, "skipped")}
+                    className={cn(
+                      "inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold ring-1 ring-border",
+                      state === "skipped"
+                        ? "bg-muted text-foreground"
+                        : "bg-card text-muted-foreground",
+                    )}
+                  >
+                    <SkipForward className="size-4" />
+                    {lang === "ar" ? "تم التخطي" : "Skipped"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function OccurrenceBadge({
+  state,
+  lang,
+}: {
+  state: ReturnType<typeof medicationOccurrenceState>;
+  lang: "ar" | "en";
+}) {
+  const labels = {
+    upcoming: lang === "ar" ? "قادم" : "Upcoming",
+    unrecorded: lang === "ar" ? "غير مسجل" : "Unrecorded",
+    taken: lang === "ar" ? "تم أخذها" : "Taken",
+    skipped: lang === "ar" ? "تم التخطي" : "Skipped",
+  } as const;
+
+  return (
+    <span
+      className={cn(
+        "rounded-full px-3 py-1 text-[11px] font-bold",
+        state === "taken"
+          ? "bg-success-soft text-success"
+          : state === "skipped"
+            ? "bg-muted text-muted-foreground"
+            : state === "unrecorded"
+              ? "bg-warning-soft text-warning"
+              : "bg-primary-soft text-primary",
+      )}
+    >
+      {labels[state]}
+    </span>
+  );
+}
+
 function MedicationList({
   medications,
+  schedules,
   events,
   summary,
   lang,
   busy,
   onEvent,
   onToggle,
+  onCreateSchedule,
+  onDeleteSchedule,
 }: {
   medications: MedicationRow[];
+  schedules: MedicationScheduleRow[];
   events: DoseEventRow[];
   summary: { total: number; taken: number; skipped: number };
   lang: "ar" | "en";
   busy: boolean;
   onEvent: (medicationId: string, status: DoseEventRow["status"]) => void;
   onToggle: (medicationId: string, isActive: boolean) => void;
+  onCreateSchedule: (
+    medicationId: string,
+    timeLocal: string,
+    daysOfWeek: MedicationDayCode[],
+    reminderEnabled: boolean,
+  ) => void;
+  onDeleteSchedule: (scheduleId: string) => void;
 }) {
   return (
     <section className="space-y-3">
@@ -934,6 +1359,9 @@ function MedicationList({
           const latestEvents = events
             .filter((item) => item.medication_id === medication.id)
             .slice(0, 3);
+          const medicationSchedules = schedules.filter(
+            (item) => item.medication_id === medication.id,
+          );
 
           return (
             <article key={medication.id} className="glass rounded-3xl p-5">
@@ -973,26 +1401,37 @@ function MedicationList({
               </div>
 
               {medication.is_active ? (
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => onEvent(medication.id, "taken")}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-success-soft px-3 py-2.5 text-xs font-bold text-success"
-                  >
-                    <Check className="size-4" />
-                    {lang === "ar" ? "تم أخذ الجرعة" : "Taken"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => onEvent(medication.id, "skipped")}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-3 py-2.5 text-xs font-bold text-muted-foreground ring-1 ring-border"
-                  >
-                    <SkipForward className="size-4" />
-                    {lang === "ar" ? "تم التخطي" : "Skipped"}
-                  </button>
-                </div>
+                <>
+                  <MedicationScheduleEditor
+                    medicationId={medication.id}
+                    schedules={medicationSchedules}
+                    lang={lang}
+                    busy={busy}
+                    onCreate={onCreateSchedule}
+                    onDelete={onDeleteSchedule}
+                  />
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => onEvent(medication.id, "taken")}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-success-soft px-3 py-2.5 text-xs font-bold text-success"
+                    >
+                      <Check className="size-4" />
+                      {lang === "ar" ? "تسجيل يدوي: تم أخذها" : "Manual: taken"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => onEvent(medication.id, "skipped")}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-3 py-2.5 text-xs font-bold text-muted-foreground ring-1 ring-border"
+                    >
+                      <SkipForward className="size-4" />
+                      {lang === "ar" ? "تسجيل يدوي: تخطي" : "Manual: skipped"}
+                    </button>
+                  </div>
+                </>
               ) : null}
 
               {latestEvents.length ? (
@@ -1025,6 +1464,178 @@ function MedicationList({
         })
       )}
     </section>
+  );
+}
+
+function MedicationScheduleEditor({
+  medicationId,
+  schedules,
+  lang,
+  busy,
+  onCreate,
+  onDelete,
+}: {
+  medicationId: string;
+  schedules: MedicationScheduleRow[];
+  lang: "ar" | "en";
+  busy: boolean;
+  onCreate: (
+    medicationId: string,
+    timeLocal: string,
+    daysOfWeek: MedicationDayCode[],
+    reminderEnabled: boolean,
+  ) => void;
+  onDelete: (scheduleId: string) => void;
+}) {
+  const [timeLocal, setTimeLocal] = useState("09:00");
+  const [days, setDays] = useState<MedicationDayCode[]>([
+    "sun",
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
+  ]);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+
+  const dayOptions: { code: MedicationDayCode; ar: string; en: string }[] = [
+    { code: "sun", ar: "أحد", en: "Sun" },
+    { code: "mon", ar: "اثن", en: "Mon" },
+    { code: "tue", ar: "ثلا", en: "Tue" },
+    { code: "wed", ar: "أرب", en: "Wed" },
+    { code: "thu", ar: "خمي", en: "Thu" },
+    { code: "fri", ar: "جمع", en: "Fri" },
+    { code: "sat", ar: "سبت", en: "Sat" },
+  ];
+
+  const toggleDay = (code: MedicationDayCode) => {
+    setDays((current) =>
+      current.includes(code)
+        ? current.filter((item) => item !== code)
+        : [...current, code],
+    );
+  };
+
+  return (
+    <div className="mt-4 rounded-2xl bg-card/70 p-4 ring-1 ring-border">
+      <div className="flex items-center gap-2">
+        <CalendarClock className="size-4 text-primary" />
+        <p className="text-xs font-extrabold">
+          {lang === "ar" ? "المواعيد المسجلة" : "Recorded schedule"}
+        </p>
+      </div>
+      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+        {lang === "ar"
+          ? "أدخل فقط الموعد الذي وصفه لك مختص الرعاية أو الذي تعرفه مسبقًا. لا يقوم التطبيق بحساب عدد الجرعات."
+          : "Enter only times you already know or were instructed to follow. The app does not calculate dose frequency."}
+      </p>
+
+      {schedules.length ? (
+        <div className="mt-3 space-y-2">
+          {schedules.map((schedule) => (
+            <div
+              key={schedule.id}
+              className="flex items-center justify-between gap-3 rounded-xl bg-background p-3 ring-1 ring-border"
+            >
+              <div>
+                <p className="text-sm font-bold">
+                  {schedule.time_local.slice(0, 5)}
+                  {schedule.reminder_enabled ? (
+                    <Bell className="ms-2 inline size-3.5 text-primary" />
+                  ) : null}
+                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {schedule.days_of_week
+                    .map(
+                      (code) =>
+                        dayOptions.find((item) => item.code === code)?.[lang] ??
+                        code,
+                    )
+                    .join(" • ")}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onDelete(schedule.id)}
+                className="grid size-8 place-items-center rounded-lg text-muted-foreground hover:bg-danger-soft hover:text-danger"
+                aria-label={lang === "ar" ? "حذف الموعد" : "Delete schedule"}
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-3 grid gap-3">
+        <label>
+          <span className="text-[11px] font-bold text-muted-foreground">
+            {lang === "ar" ? "الوقت" : "Time"}
+          </span>
+          <input
+            type="time"
+            value={timeLocal}
+            onChange={(event) => setTimeLocal(event.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+          />
+        </label>
+
+        <div>
+          <span className="text-[11px] font-bold text-muted-foreground">
+            {lang === "ar" ? "أيام الأسبوع" : "Days"}
+          </span>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {dayOptions.map((day) => (
+              <button
+                key={day.code}
+                type="button"
+                onClick={() => toggleDay(day.code)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1.5 text-[10px] font-bold",
+                  days.includes(day.code)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-muted-foreground ring-1 ring-border",
+                )}
+              >
+                {day[lang]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="flex items-start gap-2 rounded-xl bg-background p-3 ring-1 ring-border">
+          <input
+            type="checkbox"
+            checked={reminderEnabled}
+            onChange={(event) => setReminderEnabled(event.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="block text-xs font-bold">
+              {lang === "ar" ? "تنبيه المتصفح" : "Browser reminder"}
+            </span>
+            <span className="mt-0.5 block text-[10px] leading-4 text-muted-foreground">
+              {lang === "ar"
+                ? "اختياري. التنبيه عام ولا يعرض اسم الدواء."
+                : "Optional. The notification is generic and does not show the medication name."}
+            </span>
+          </span>
+        </label>
+
+        <button
+          type="button"
+          disabled={busy || !timeLocal || days.length === 0}
+          onClick={() =>
+            onCreate(medicationId, timeLocal, days, reminderEnabled)
+          }
+          className="rounded-xl bg-primary-soft px-3 py-2.5 text-xs font-bold text-primary disabled:opacity-45"
+        >
+          {lang === "ar" ? "إضافة موعد" : "Add time"}
+        </button>
+      </div>
+    </div>
   );
 }
 
