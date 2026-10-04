@@ -27,6 +27,19 @@ describe("health journal UI safety and integration", () => {
     expect(route.toLowerCase()).not.toContain("prescribedose");
   });
 
+  it("links journal entries to existing measurements or symptom checks without inference", () => {
+    expect(route).toContain("related_measurement_reading_id");
+    expect(route).toContain("related_symptom_session_id");
+    expect(route).toContain("بدون استنتاج طبي تلقائي");
+  });
+
+  it("adds searchable, typed, date-ranged timeline controls", () => {
+    expect(route).toContain("filterHealthTimeline");
+    expect(route).toContain("timelineQuery");
+    expect(route).toContain("timelineKind");
+    expect(route).toContain("timelineRange");
+  });
+
   it("requires sign-in for the personal journal surface", () => {
     expect(route).toContain('search={{ redirect: "/journal" }}');
   });
