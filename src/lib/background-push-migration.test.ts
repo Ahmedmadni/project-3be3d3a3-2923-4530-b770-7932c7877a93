@@ -25,6 +25,13 @@ describe("background push reminder migration", () => {
     );
   });
 
+  it("uses valid PostgreSQL dollar quoting for the claim RPC", () => {
+    expect(migration).toContain("AS $$\nDECLARE");
+    expect(migration).toContain("END\n$$;");
+    expect(migration).not.toContain("AS $\nDECLARE");
+    expect(migration).not.toContain("END\n$;");
+  });
+
   it("claims a browser endpoint for only the currently authenticated account", () => {
     expect(migration).toContain(
       "CREATE OR REPLACE FUNCTION public.claim_web_push_subscription",
