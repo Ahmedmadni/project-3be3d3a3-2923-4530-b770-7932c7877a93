@@ -730,19 +730,51 @@ function HealthJournalPage() {
             saving={addMedication.isPending}
             onSave={() => addMedication.mutate()}
           />
-          <MedicationList
-            medications={medicationsQuery.data ?? []}
-            events={eventsQuery.data ?? []}
-            summary={eventSummary}
-            lang={lang}
-            busy={addDoseEvent.isPending || toggleMedication.isPending}
-            onEvent={(medicationId, status) =>
-              addDoseEvent.mutate({ medicationId, status })
-            }
-            onToggle={(medicationId, isActive) =>
-              toggleMedication.mutate({ medicationId, isActive })
-            }
-          />
+          <div className="space-y-4">
+            <TodayDosesPanel
+              lang={lang}
+              occurrences={todayOccurrences}
+              medications={medicationsQuery.data ?? []}
+              events={eventsQuery.data ?? []}
+              now={clockNow}
+              busy={recordScheduledDose.isPending}
+              notificationPermission={notificationPermission}
+              onRequestNotifications={requestMedicationNotifications}
+              onRecord={(occurrence, status) =>
+                recordScheduledDose.mutate({ occurrence, status })
+              }
+            />
+            <MedicationList
+              medications={medicationsQuery.data ?? []}
+              schedules={schedulesQuery.data ?? []}
+              events={eventsQuery.data ?? []}
+              summary={eventSummary}
+              lang={lang}
+              busy={
+                addDoseEvent.isPending ||
+                toggleMedication.isPending ||
+                createMedicationSchedule.isPending ||
+                deleteMedicationSchedule.isPending
+              }
+              onEvent={(medicationId, status) =>
+                addDoseEvent.mutate({ medicationId, status })
+              }
+              onToggle={(medicationId, isActive) =>
+                toggleMedication.mutate({ medicationId, isActive })
+              }
+              onCreateSchedule={(medicationId, timeLocal, daysOfWeek, reminderEnabled) =>
+                createMedicationSchedule.mutate({
+                  medicationId,
+                  timeLocal,
+                  daysOfWeek,
+                  reminderEnabled,
+                })
+              }
+              onDeleteSchedule={(scheduleId) =>
+                deleteMedicationSchedule.mutate(scheduleId)
+              }
+            />
+          </div>
         </div>
       )}
     </div>
