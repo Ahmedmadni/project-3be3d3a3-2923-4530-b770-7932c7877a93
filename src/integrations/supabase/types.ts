@@ -1018,6 +1018,8 @@ export type Database = {
           id: string
           medication_id: string
           note: string | null
+          schedule_id: string | null
+          scheduled_for: string | null
           status: "taken" | "skipped"
           user_id: string
         }
@@ -1027,6 +1029,8 @@ export type Database = {
           id?: string
           medication_id: string
           note?: string | null
+          schedule_id?: string | null
+          scheduled_for?: string | null
           status: "taken" | "skipped"
           user_id: string
         }
@@ -1036,12 +1040,74 @@ export type Database = {
           id?: string
           medication_id?: string
           note?: string | null
+          schedule_id?: string | null
+          scheduled_for?: string | null
           status?: "taken" | "skipped"
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "medication_dose_events_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "user_medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_dose_events_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "medication_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_schedules: {
+        Row: {
+          created_at: string
+          days_of_week: string[]
+          end_date: string | null
+          id: string
+          label: string | null
+          medication_id: string
+          reminder_enabled: boolean
+          start_date: string | null
+          time_local: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_of_week?: string[]
+          end_date?: string | null
+          id?: string
+          label?: string | null
+          medication_id: string
+          reminder_enabled?: boolean
+          start_date?: string | null
+          time_local: string
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days_of_week?: string[]
+          end_date?: string | null
+          id?: string
+          label?: string | null
+          medication_id?: string
+          reminder_enabled?: boolean
+          start_date?: string | null
+          time_local?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_schedules_medication_id_fkey"
             columns: ["medication_id"]
             isOneToOne: false
             referencedRelation: "user_medications"
