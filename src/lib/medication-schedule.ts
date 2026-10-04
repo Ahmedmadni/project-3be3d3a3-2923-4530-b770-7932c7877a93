@@ -105,10 +105,12 @@ export function medicationOccurrenceState(
   events: readonly MedicationDoseEventLike[],
   now: Date,
 ): MedicationOccurrenceState {
+  const scheduledTime = new Date(occurrence.scheduledFor).getTime();
   const recorded = events.find(
     (event) =>
       event.schedule_id === occurrence.scheduleId &&
-      event.scheduled_for === occurrence.scheduledFor,
+      event.scheduled_for != null &&
+      new Date(event.scheduled_for).getTime() === scheduledTime,
   );
 
   if (recorded) return recorded.status;
