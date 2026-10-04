@@ -2542,6 +2542,16 @@ export type Database = {
         Args: { _bucket: string; _limit: number; _window_seconds: number }
         Returns: boolean
       }
+      claim_web_push_subscription: {
+        Args: {
+          p_auth_secret: string
+          p_endpoint: string
+          p_expiration_time?: number | null
+          p_p256dh: string
+          p_user_agent?: string | null
+        }
+        Returns: string
+      }
       content_visible: {
         Args: { _is_demo: boolean; _status: string }
         Returns: boolean
