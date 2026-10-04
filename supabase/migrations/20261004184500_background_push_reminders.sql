@@ -98,7 +98,7 @@ RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   current_user_id uuid := auth.uid();
   subscription_id uuid;
@@ -144,7 +144,7 @@ BEGIN
 
   RETURN subscription_id;
 END
-$;
+$$;
 
 REVOKE EXECUTE
 ON FUNCTION public.claim_web_push_subscription(text, text, text, bigint, text)
