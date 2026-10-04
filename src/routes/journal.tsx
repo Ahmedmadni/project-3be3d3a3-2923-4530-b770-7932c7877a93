@@ -4,13 +4,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
+  Bell,
   BookHeart,
   CalendarClock,
   Check,
   ClipboardList,
+  Clock3,
   FileText,
   History,
   NotebookPen,
@@ -18,6 +20,7 @@ import {
   Plus,
   Search,
   SkipForward,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -33,6 +36,14 @@ import {
   type HealthTimelineKind,
   type HealthTimelineRangeDays,
 } from "@/lib/health-timeline";
+import {
+  browserTimezone,
+  buildTodayMedicationOccurrences,
+  isReminderDue,
+  medicationOccurrenceState,
+  type MedicationDayCode,
+  type MedicationOccurrence,
+} from "@/lib/medication-schedule";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/journal")({
@@ -53,6 +64,7 @@ export const Route = createFileRoute("/journal")({
 type JournalRow = Tables<"health_journal_entries">;
 type MedicationRow = Tables<"user_medications">;
 type DoseEventRow = Tables<"medication_dose_events">;
+type MedicationScheduleRow = Tables<"medication_schedules">;
 type MeasurementReadingRow = Tables<"measurement_readings">;
 type MeasurementTypeRow = Tables<"measurement_types">;
 
@@ -86,6 +98,10 @@ function HealthJournalPage() {
   const [medicationName, setMedicationName] = useState("");
   const [doseText, setDoseText] = useState("");
   const [scheduleText, setScheduleText] = useState("");
+  const [clockNow, setClockNow] = useState(() => new Date());
+  const [notificationPermission, setNotificationPermission] = useState<
+    NotificationPermission | "unsupported"
+  >("unsupported");
 
   const journalQuery = useQuery({
     queryKey: ["health-journal", user?.id],
@@ -126,6 +142,20 @@ function HealthJournalPage() {
         .eq("user_id", user!.id)
         .order("event_at", { ascending: false })
         .limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const schedulesQuery = useQuery({
+    queryKey: ["medication-schedules", user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medication_schedules")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("time_local", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -178,6 +208,7 @@ function HealthJournalPage() {
       qc.invalidateQueries({ queryKey: ["health-journal", user?.id] }),
       qc.invalidateQueries({ queryKey: ["user-medications", user?.id] }),
       qc.invalidateQueries({ queryKey: ["medication-dose-events", user?.id] }),
+      qc.invalidateQueries({ queryKey: ["medication-schedules", user?.id] }),
     ]);
   };
 
@@ -242,6 +273,88 @@ function HealthJournalPage() {
       const { error } = await supabase.from("medication_dose_events").insert({
         user_id: user.id,
         medication_id: medicationId,
+        status,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidatePersonalHealth,
+  });
+
+  const createMedicationSchedule = useMutation({
+    mutationFn: async ({
+      medicationId,
+      timeLocal,
+      daysOfWeek,
+      reminderEnabled,
+    }: {
+      medicationId: string;
+      timeLocal: string;
+      daysOfWeek: MedicationDayCode[];
+      reminderEnabled: boolean;
+    }) => {
+      if (!user) return;
+      const { error } = await supabase.from("medication_schedules").insert({
+        user_id: user.id,
+        medication_id: medicationId,
+        time_local: timeLocal,
+        days_of_week: daysOfWeek,
+        reminder_enabled: reminderEnabled,
+        timezone: browserTimezone(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidatePersonalHealth,
+  });
+
+  const deleteMedicationSchedule = useMutation({
+    mutationFn: async (scheduleId: string) => {
+      const { error } = await supabase
+        .from("medication_schedules")
+        .delete()
+        .eq("id", scheduleId);
+      if (error) throw error;
+    },
+    onSuccess: invalidatePersonalHealth,
+  });
+
+  const recordScheduledDose = useMutation({
+    mutationFn: async ({
+      occurrence,
+      status,
+    }: {
+      occurrence: MedicationOccurrence;
+      status: DoseEventRow["status"];
+    }) => {
+      if (!user) return;
+
+      const { data: existing, error: readError } = await supabase
+        .from("medication_dose_events")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("schedule_id", occurrence.scheduleId)
+        .eq("scheduled_for", occurrence.scheduledFor)
+        .maybeSingle();
+
+      if (readError) throw readError;
+
+      if (existing) {
+        const { error } = await supabase
+          .from("medication_dose_events")
+          .update({
+            status,
+            event_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+        if (error) throw error;
+        return;
+      }
+
+      const { error } = await supabase.from("medication_dose_events").insert({
+        user_id: user.id,
+        medication_id: occurrence.medicationId,
+        schedule_id: occurrence.scheduleId,
+        scheduled_for: occurrence.scheduledFor,
+        event_at: new Date().toISOString(),
         status,
       });
       if (error) throw error;
@@ -394,11 +507,87 @@ function HealthJournalPage() {
     [timeline, timelineKind, timelineQuery, timelineRange],
   );
 
+  const activeMedicationIds = useMemo(
+    () =>
+      new Set(
+        (medicationsQuery.data ?? [])
+          .filter((medication) => medication.is_active)
+          .map((medication) => medication.id),
+      ),
+    [medicationsQuery.data],
+  );
+
+  const todayOccurrences = useMemo(
+    () =>
+      buildTodayMedicationOccurrences(
+        (schedulesQuery.data ?? []).filter((schedule) =>
+          activeMedicationIds.has(schedule.medication_id),
+        ),
+        clockNow,
+      ),
+    [activeMedicationIds, clockNow, schedulesQuery.data],
+  );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    setNotificationPermission(Notification.permission);
+  }, []);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof Notification === "undefined" ||
+      Notification.permission !== "granted"
+    ) {
+      return;
+    }
+
+    const currentTimezone = browserTimezone();
+
+    for (const occurrence of todayOccurrences) {
+      if (occurrence.timezone !== currentTimezone) continue;
+      if (!isReminderDue(occurrence, eventsQuery.data ?? [], clockNow)) continue;
+
+      const key = `health-med-reminder:${occurrence.scheduleId}:${occurrence.scheduledFor}`;
+      if (window.localStorage.getItem(key)) continue;
+
+      new Notification(
+        lang === "ar" ? "تذكير صحي" : "Health reminder",
+        {
+          body:
+            lang === "ar"
+              ? "لديك موعد دواء مسجل في مؤشر صحي."
+              : "You have a medication time recorded in Health Indicator.",
+          tag: key,
+        },
+      );
+      window.localStorage.setItem(key, "shown");
+    }
+  }, [clockNow, eventsQuery.data, lang, todayOccurrences]);
+
+  const requestMedicationNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
+
   const eventSummary = medicationEventSummary(eventsQuery.data ?? []);
   const isLoading =
     journalQuery.isLoading ||
     medicationsQuery.isLoading ||
     eventsQuery.isLoading ||
+    schedulesQuery.isLoading ||
     measurementsQuery.isLoading ||
     measurementTypesQuery.isLoading ||
     symptomSessionsQuery.isLoading;
@@ -407,6 +596,7 @@ function HealthJournalPage() {
     journalQuery.error ||
     medicationsQuery.error ||
     eventsQuery.error ||
+    schedulesQuery.error ||
     measurementsQuery.error ||
     measurementTypesQuery.error ||
     symptomSessionsQuery.error;
