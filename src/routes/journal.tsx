@@ -44,6 +44,12 @@ import {
   type MedicationDayCode,
   type MedicationOccurrence,
 } from "@/lib/medication-schedule";
+import {
+  backgroundPushSupported,
+  disableBackgroundMedicationReminders,
+  enableBackgroundMedicationReminders,
+  type PushReminderStatus,
+} from "@/lib/push-reminders";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/journal")({
@@ -99,9 +105,9 @@ function HealthJournalPage() {
   const [doseText, setDoseText] = useState("");
   const [scheduleText, setScheduleText] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
-  const [notificationPermission, setNotificationPermission] = useState<
-    NotificationPermission | "unsupported"
-  >("unsupported");
+  const [pushReminderStatus, setPushReminderStatus] = useState<
+    PushReminderStatus | "idle"
+  >("idle");
 
   const journalQuery = useQuery({
     queryKey: ["health-journal", user?.id],
@@ -534,18 +540,32 @@ function HealthJournalPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof Notification === "undefined") {
-      setNotificationPermission("unsupported");
+    if (!backgroundPushSupported()) {
+      setPushReminderStatus("unsupported");
       return;
     }
-    setNotificationPermission(Notification.permission);
+
+    if (Notification.permission === "denied") {
+      setPushReminderStatus("permission_denied");
+      return;
+    }
+
+    navigator.serviceWorker.ready
+      .then((registration) => registration.pushManager.getSubscription())
+      .then((subscription) => {
+        setPushReminderStatus(subscription ? "enabled" : "idle");
+      })
+      .catch(() => {
+        setPushReminderStatus("idle");
+      });
   }, []);
 
   useEffect(() => {
     if (
       typeof window === "undefined" ||
       typeof Notification === "undefined" ||
-      Notification.permission !== "granted"
+      Notification.permission !== "granted" ||
+      pushReminderStatus === "enabled"
     ) {
       return;
     }
@@ -571,15 +591,22 @@ function HealthJournalPage() {
       );
       window.localStorage.setItem(key, "shown");
     }
-  }, [clockNow, eventsQuery.data, lang, todayOccurrences]);
+  }, [
+    clockNow,
+    eventsQuery.data,
+    lang,
+    pushReminderStatus,
+    todayOccurrences,
+  ]);
 
   const requestMedicationNotifications = async () => {
-    if (typeof Notification === "undefined") {
-      setNotificationPermission("unsupported");
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
+    const status = await enableBackgroundMedicationReminders();
+    setPushReminderStatus(status);
+  };
+
+  const disableMedicationNotifications = async () => {
+    await disableBackgroundMedicationReminders();
+    setPushReminderStatus("idle");
   };
 
   const eventSummary = medicationEventSummary(eventsQuery.data ?? []);
@@ -738,8 +765,9 @@ function HealthJournalPage() {
               events={eventsQuery.data ?? []}
               now={clockNow}
               busy={recordScheduledDose.isPending}
-              notificationPermission={notificationPermission}
+              pushReminderStatus={pushReminderStatus}
               onRequestNotifications={requestMedicationNotifications}
+              onDisableNotifications={disableMedicationNotifications}
               onRecord={(occurrence, status) =>
                 recordScheduledDose.mutate({ occurrence, status })
               }
@@ -1115,8 +1143,9 @@ function TodayDosesPanel({
   events,
   now,
   busy,
-  notificationPermission,
+  pushReminderStatus,
   onRequestNotifications,
+  onDisableNotifications,
   onRecord,
 }: {
   lang: "ar" | "en";
@@ -1125,8 +1154,9 @@ function TodayDosesPanel({
   events: DoseEventRow[];
   now: Date;
   busy: boolean;
-  notificationPermission: NotificationPermission | "unsupported";
+  pushReminderStatus: PushReminderStatus | "idle";
   onRequestNotifications: () => void;
+  onDisableNotifications: () => void;
   onRecord: (
     occurrence: MedicationOccurrence,
     status: DoseEventRow["status"],
@@ -1159,30 +1189,54 @@ function TodayDosesPanel({
           </div>
         </div>
 
-        {reminderCount > 0 && notificationPermission !== "granted" ? (
-          <button
-            type="button"
-            onClick={onRequestNotifications}
-            disabled={notificationPermission === "denied"}
-            className="inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold text-primary ring-1 ring-border disabled:opacity-50"
-          >
-            <Bell className="size-4" />
-            {notificationPermission === "denied"
-              ? lang === "ar"
-                ? "التنبيهات محظورة من المتصفح"
-                : "Notifications blocked"
-              : lang === "ar"
-                ? "تفعيل تنبيهات المتصفح"
-                : "Enable browser reminders"}
-          </button>
+        {reminderCount > 0 ? (
+          pushReminderStatus === "enabled" ? (
+            <button
+              type="button"
+              onClick={onDisableNotifications}
+              className="inline-flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-xs font-bold text-success"
+            >
+              <Bell className="size-4" />
+              {lang === "ar"
+                ? "التذكيرات بالخلفية مفعلة"
+                : "Background reminders enabled"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onRequestNotifications}
+              disabled={
+                pushReminderStatus === "permission_denied" ||
+                pushReminderStatus === "unsupported"
+              }
+              className="inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs font-bold text-primary ring-1 ring-border disabled:opacity-50"
+            >
+              <Bell className="size-4" />
+              {pushReminderStatus === "permission_denied"
+                ? lang === "ar"
+                  ? "التنبيهات محظورة من المتصفح"
+                  : "Notifications blocked"
+                : pushReminderStatus === "unsupported"
+                  ? lang === "ar"
+                    ? "Push غير مدعوم على هذا الجهاز"
+                    : "Push is unsupported"
+                  : pushReminderStatus === "not_configured"
+                    ? lang === "ar"
+                      ? "إعداد Push غير مكتمل"
+                      : "Push setup incomplete"
+                    : lang === "ar"
+                      ? "تفعيل التذكيرات بالخلفية"
+                      : "Enable background reminders"}
+            </button>
+          )
         ) : null}
       </div>
 
-      {notificationPermission === "granted" && reminderCount > 0 ? (
+      {pushReminderStatus === "enabled" && reminderCount > 0 ? (
         <p className="mt-3 rounded-xl bg-primary-soft/60 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
           {lang === "ar"
-            ? "التنبيه عام ولا يعرض اسم الدواء حفاظًا على الخصوصية. يعمل أثناء بقاء التطبيق مفتوحًا في هذه المرحلة."
-            : "The notification is generic and does not show the medication name for privacy. At this stage it works while the app remains open."}
+            ? "التذكير يعمل في الخلفية بعد اكتمال إعداد خدمة Push، ويظل عامًا بدون اسم الدواء حفاظًا على الخصوصية."
+            : "After Push setup is completed, reminders can work in the background and remain generic without medication names."}
         </p>
       ) : null}
 

@@ -1,4 +1,4 @@
-const CACHE = "health-indicator-static-v2";
+const CACHE = "health-indicator-static-v3";
 const STATIC_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -52,3 +52,38 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+self.addEventListener("push", (event) => {
+  // Deliberately ignore push payload content. Health reminders displayed by the
+  // operating system must stay generic and must not expose medication names,
+  // doses, diagnoses, measurements, or other sensitive health information.
+  event.waitUntil(
+    self.registration.showNotification("مؤشر صحي", {
+      body: "لديك تذكير صحي مسجل. افتح التطبيق لمراجعته.",
+      icon: "/pwa-192.png",
+      badge: "/pwa-192.png",
+      tag: "health-indicator-reminder",
+      renotify: false,
+      data: { url: "/journal" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(
+      async (clients) => {
+        for (const client of clients) {
+          if ("focus" in client) {
+            if ("navigate" in client) await client.navigate("/journal");
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow("/journal");
+      },
+    ),
+  );
+});
+

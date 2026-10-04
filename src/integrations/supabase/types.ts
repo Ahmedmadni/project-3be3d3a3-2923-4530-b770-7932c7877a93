@@ -948,6 +948,99 @@ export type Database = {
           },
         ]
       }
+      medication_reminder_deliveries: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          id: string
+          provider_status: number | null
+          schedule_id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: "pending" | "sent" | "failed"
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          provider_status?: number | null
+          schedule_id: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: "pending" | "sent" | "failed"
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          provider_status?: number | null
+          schedule_id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: "pending" | "sent" | "failed"
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_reminder_deliveries_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "medication_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_reminder_deliveries_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "web_push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      web_push_subscriptions: {
+        Row: {
+          auth_secret: string
+          created_at: string
+          endpoint: string
+          expiration_time: number | null
+          id: string
+          is_active: boolean
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_secret: string
+          created_at?: string
+          endpoint: string
+          expiration_time?: number | null
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_secret?: string
+          created_at?: string
+          endpoint?: string
+          expiration_time?: number | null
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_journal_entries: {
         Row: {
           created_at: string
@@ -2448,6 +2541,16 @@ export type Database = {
       consume_rate_limit: {
         Args: { _bucket: string; _limit: number; _window_seconds: number }
         Returns: boolean
+      }
+      claim_web_push_subscription: {
+        Args: {
+          p_auth_secret: string
+          p_endpoint: string
+          p_expiration_time?: number | null
+          p_p256dh: string
+          p_user_agent?: string | null
+        }
+        Returns: string
       }
       content_visible: {
         Args: { _is_demo: boolean; _status: string }
