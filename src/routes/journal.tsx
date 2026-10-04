@@ -11,10 +11,12 @@ import {
   CalendarClock,
   Check,
   ClipboardList,
+  FileText,
   History,
   NotebookPen,
   Pill,
   Plus,
+  Search,
   SkipForward,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,9 +25,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { PageHeader, LoadingState, ErrorState } from "@/components/health/cards";
 import { useI18n } from "@/i18n";
 import {
+  filterHealthTimeline,
   medicationEventSummary,
   sortHealthTimeline,
+  type HealthTimelineFilter,
   type HealthTimelineItem,
+  type HealthTimelineKind,
+  type HealthTimelineRangeDays,
 } from "@/lib/health-timeline";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +76,13 @@ function HealthJournalPage() {
   const [journalNote, setJournalNote] = useState("");
   const [moodScore, setMoodScore] = useState("");
   const [energyScore, setEnergyScore] = useState("");
+  const [relatedMeasurementId, setRelatedMeasurementId] = useState("");
+  const [relatedSessionId, setRelatedSessionId] = useState("");
+  const [timelineKind, setTimelineKind] =
+    useState<HealthTimelineFilter["kind"]>("all");
+  const [timelineRange, setTimelineRange] =
+    useState<HealthTimelineRangeDays>(30);
+  const [timelineQuery, setTimelineQuery] = useState("");
   const [medicationName, setMedicationName] = useState("");
   const [doseText, setDoseText] = useState("");
   const [scheduleText, setScheduleText] = useState("");
@@ -180,6 +193,8 @@ function HealthJournalPage() {
         note,
         mood_score: moodScore ? Number(moodScore) : null,
         energy_score: energyScore ? Number(energyScore) : null,
+        related_measurement_reading_id: relatedMeasurementId || null,
+        related_symptom_session_id: relatedSessionId || null,
       });
       if (error) throw error;
     },
@@ -188,6 +203,8 @@ function HealthJournalPage() {
       setJournalNote("");
       setMoodScore("");
       setEnergyScore("");
+      setRelatedMeasurementId("");
+      setRelatedSessionId("");
       await invalidatePersonalHealth();
     },
   });
@@ -265,6 +282,37 @@ function HealthJournalPage() {
     [measurementTypesQuery.data],
   );
 
+
+  const measurementLinkOptions = useMemo(
+    () =>
+      (measurementsQuery.data ?? []).map((reading) => {
+        const type = measurementTypesById.get(reading.measurement_type_id);
+        const typeName =
+          (lang === "ar" ? type?.name_ar : type?.name_en) ||
+          type?.name_ar ||
+          (lang === "ar" ? "قياس صحي" : "Health measurement");
+
+        return {
+          id: reading.id,
+          label: `${typeName}: ${formatReading(reading)} — ${new Date(
+            reading.measured_at,
+          ).toLocaleString(lang === "ar" ? "ar-SA" : "en")}`,
+        };
+      }),
+    [lang, measurementTypesById, measurementsQuery.data],
+  );
+
+  const symptomSessionLinkOptions = useMemo(
+    () =>
+      (symptomSessionsQuery.data ?? []).map((session) => ({
+        id: session.id,
+        label: `${lang === "ar" ? "فحص أعراض" : "Symptom check"} — ${new Date(
+          session.completed_at ?? session.created_at,
+        ).toLocaleString(lang === "ar" ? "ar-SA" : "en")}`,
+      })),
+    [lang, symptomSessionsQuery.data],
+  );
+
   const timeline = useMemo(() => {
     const items: HealthTimelineItem[] = [];
 
@@ -336,6 +384,16 @@ function HealthJournalPage() {
     symptomSessionsQuery.data,
   ]);
 
+  const filteredTimeline = useMemo(
+    () =>
+      filterHealthTimeline(timeline, {
+        kind: timelineKind,
+        query: timelineQuery,
+        rangeDays: timelineRange,
+      }),
+    [timeline, timelineKind, timelineQuery, timelineRange],
+  );
+
   const eventSummary = medicationEventSummary(eventsQuery.data ?? []);
   const isLoading =
     journalQuery.isLoading ||
@@ -394,7 +452,15 @@ function HealthJournalPage() {
             ? "يوميات وأدوية وخط زمني شخصي. البيانات المسجلة لا تستخدم لوصف علاج أو تغيير جرعات."
             : "A personal journal, medication log, and health timeline. Entries do not prescribe or change treatment."
         }
-      />
+      >
+        <Link
+          to="/health-summary"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold text-primary ring-1 ring-border"
+        >
+          <FileText className="size-4" />
+          {lang === "ar" ? "ملخص صحي للطباعة" : "Printable health summary"}
+        </Link>
+      </PageHeader>
 
       <div className="mb-5 grid grid-cols-3 gap-2 rounded-2xl bg-card p-1.5 ring-1 ring-border">
         {([
@@ -424,7 +490,18 @@ function HealthJournalPage() {
       ) : hasError ? (
         <ErrorState />
       ) : tab === "timeline" ? (
-        <TimelinePanel items={timeline} lang={lang} />
+        <div className="space-y-4">
+          <TimelineFilters
+            lang={lang}
+            query={timelineQuery}
+            setQuery={setTimelineQuery}
+            kind={timelineKind}
+            setKind={setTimelineKind}
+            range={timelineRange}
+            setRange={setTimelineRange}
+          />
+          <TimelinePanel items={filteredTimeline} lang={lang} />
+        </div>
       ) : tab === "journal" ? (
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <JournalForm
@@ -439,6 +516,12 @@ function HealthJournalPage() {
             setMoodScore={setMoodScore}
             energyScore={energyScore}
             setEnergyScore={setEnergyScore}
+            measurementOptions={measurementLinkOptions}
+            relatedMeasurementId={relatedMeasurementId}
+            setRelatedMeasurementId={setRelatedMeasurementId}
+            sessionOptions={symptomSessionLinkOptions}
+            relatedSessionId={relatedSessionId}
+            setRelatedSessionId={setRelatedSessionId}
             saving={addJournal.isPending}
             onSave={() => addJournal.mutate()}
           />
@@ -488,6 +571,12 @@ function JournalForm({
   setMoodScore,
   energyScore,
   setEnergyScore,
+  measurementOptions,
+  relatedMeasurementId,
+  setRelatedMeasurementId,
+  sessionOptions,
+  relatedSessionId,
+  setRelatedSessionId,
   saving,
   onSave,
 }: {
@@ -502,6 +591,12 @@ function JournalForm({
   setMoodScore: (value: string) => void;
   energyScore: string;
   setEnergyScore: (value: string) => void;
+  measurementOptions: { id: string; label: string }[];
+  relatedMeasurementId: string;
+  setRelatedMeasurementId: (value: string) => void;
+  sessionOptions: { id: string; label: string }[];
+  relatedSessionId: string;
+  setRelatedSessionId: (value: string) => void;
   saving: boolean;
   onSave: () => void;
 }) {
@@ -573,6 +668,58 @@ function JournalForm({
         />
       </div>
 
+
+      <div className="mt-4 rounded-2xl bg-card/70 p-4 ring-1 ring-border">
+        <p className="text-xs font-extrabold">
+          {lang === "ar" ? "ربط اختياري بسجل سابق" : "Optional link to prior activity"}
+        </p>
+        <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+          {lang === "ar"
+            ? "اربط اليومية بقياس أو فحص أعراض لتظهر العلاقة بوضوح في السجل، بدون استنتاج طبي تلقائي."
+            : "Link the note to a measurement or symptom check for context, without automatic clinical inference."}
+        </p>
+
+        <label className="mt-3 block">
+          <span className="text-xs font-bold text-muted-foreground">
+            {lang === "ar" ? "قياس مرتبط" : "Related measurement"}
+          </span>
+          <select
+            value={relatedMeasurementId}
+            onChange={(event) => setRelatedMeasurementId(event.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+          >
+            <option value="">
+              {lang === "ar" ? "بدون ربط" : "No link"}
+            </option>
+            {measurementOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="mt-3 block">
+          <span className="text-xs font-bold text-muted-foreground">
+            {lang === "ar" ? "فحص أعراض مرتبط" : "Related symptom check"}
+          </span>
+          <select
+            value={relatedSessionId}
+            onChange={(event) => setRelatedSessionId(event.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+          >
+            <option value="">
+              {lang === "ar" ? "بدون ربط" : "No link"}
+            </option>
+            {sessionOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <button
         type="button"
         disabled={!note.trim() || saving}
@@ -641,6 +788,20 @@ function JournalList({
                 {item.energy_score ? (
                   <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">
                     {lang === "ar" ? "الطاقة" : "Energy"}: {item.energy_score}/5
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+            {item.related_measurement_reading_id || item.related_symptom_session_id ? (
+              <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+                {item.related_measurement_reading_id ? (
+                  <span className="rounded-full bg-card px-3 py-1 text-muted-foreground ring-1 ring-border">
+                    {lang === "ar" ? "مرتبطة بقياس" : "Linked measurement"}
+                  </span>
+                ) : null}
+                {item.related_symptom_session_id ? (
+                  <span className="rounded-full bg-card px-3 py-1 text-muted-foreground ring-1 ring-border">
+                    {lang === "ar" ? "مرتبطة بفحص أعراض" : "Linked symptom check"}
                   </span>
                 ) : null}
               </div>
@@ -863,6 +1024,91 @@ function MedicationList({
           );
         })
       )}
+    </section>
+  );
+}
+
+function TimelineFilters({
+  lang,
+  query,
+  setQuery,
+  kind,
+  setKind,
+  range,
+  setRange,
+}: {
+  lang: "ar" | "en";
+  query: string;
+  setQuery: (value: string) => void;
+  kind: HealthTimelineFilter["kind"];
+  setKind: (value: HealthTimelineFilter["kind"]) => void;
+  range: HealthTimelineRangeDays;
+  setRange: (value: HealthTimelineRangeDays) => void;
+}) {
+  const kinds: { value: HealthTimelineFilter["kind"]; label: string }[] = [
+    { value: "all", label: lang === "ar" ? "الكل" : "All" },
+    { value: "journal", label: lang === "ar" ? "اليوميات" : "Journal" },
+    { value: "medication", label: lang === "ar" ? "الأدوية" : "Medication" },
+    { value: "measurement", label: lang === "ar" ? "القياسات" : "Measurements" },
+    { value: "symptom_check", label: lang === "ar" ? "الفحوصات" : "Checks" },
+  ];
+
+  return (
+    <section className="glass rounded-3xl p-4">
+      <div className="relative">
+        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={
+            lang === "ar"
+              ? "ابحث في السجل الصحي..."
+              : "Search your health timeline..."
+          }
+          className="w-full rounded-xl border border-border bg-background py-2.5 pe-3 ps-10 text-sm"
+        />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {kinds.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setKind(option.value)}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-xs font-bold",
+              kind === option.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground ring-1 ring-border",
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+        {([
+          [7, lang === "ar" ? "7 أيام" : "7 days"],
+          [30, lang === "ar" ? "30 يوم" : "30 days"],
+          [90, lang === "ar" ? "90 يوم" : "90 days"],
+          ["all", lang === "ar" ? "كل المدة" : "All time"],
+        ] as const).map(([value, label]) => (
+          <button
+            key={String(value)}
+            type="button"
+            onClick={() => setRange(value)}
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-[11px] font-semibold",
+              range === value
+                ? "bg-primary-soft text-primary"
+                : "text-muted-foreground hover:bg-card",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }
