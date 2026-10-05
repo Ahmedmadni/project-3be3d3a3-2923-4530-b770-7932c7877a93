@@ -11,6 +11,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
+import { DailyHealthDashboardSection } from "@/components/health/DailyHealthDashboardSection";
 import { MeasurementDashboardSection } from "@/components/health/MeasurementDashboardSection";
 import { DailyHealthDashboardSection } from "@/components/health/DailyHealthDashboardSection";
 import { ProfessionalBadge } from "@/components/health/badges";
@@ -177,6 +178,8 @@ function Home() {
           </Link>
         </div>
       </section>
+
+      <DailyHealthDashboardSection />
 
       <DailyHealthDashboardSection />
 
