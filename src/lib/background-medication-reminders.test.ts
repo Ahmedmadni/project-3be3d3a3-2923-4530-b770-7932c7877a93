@@ -52,12 +52,23 @@ describe("background medication reminder infrastructure", () => {
     expect(edgeFunction).not.toContain("dose_text");
     expect(edgeFunction).not.toContain("schedule_text");
 
-    const pushBlock = serviceWorker.slice(
-      serviceWorker.indexOf('self.addEventListener("push"'),
+    const notificationStart = serviceWorker.indexOf(
+      'self.registration.showNotification("مؤشر صحي"',
     );
-    expect(pushBlock).toContain("لديك تذكير صحي مسجل في مؤشر صحي");
-    expect(pushBlock).not.toContain("medication");
-    expect(pushBlock).not.toContain("dose");
+    const notificationEnd = serviceWorker.indexOf(
+      "notificationclick",
+      notificationStart,
+    );
+    const notificationBlock = serviceWorker.slice(
+      notificationStart,
+      notificationEnd,
+    );
+
+    expect(notificationBlock).toContain(
+      "لديك تذكير صحي مسجل. افتح التطبيق لمراجعته.",
+    );
+    expect(notificationBlock).not.toContain("medicationName");
+    expect(notificationBlock).not.toContain("doseText");
   });
 
   it("deduplicates deliveries and suppresses already-recorded occurrences", () => {
