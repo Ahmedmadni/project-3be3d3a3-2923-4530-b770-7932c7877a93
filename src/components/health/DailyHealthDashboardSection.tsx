@@ -67,7 +67,7 @@ export function DailyHealthDashboardSection() {
         .from("medication_dose_events")
         .select("schedule_id,scheduled_for,status")
         .eq("user_id", user!.id)
-        .gte("event_at", startOfToday);
+        .gte("scheduled_for", startOfToday);
       if (error) throw error;
       return data;
     },
