@@ -246,6 +246,7 @@ export function DailyHealthDashboardSection() {
             : "Some daily data could not be loaded."}
         </div>
       ) : (
+        <>
         <div className="border-b border-border px-4 py-4 md:px-5">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
@@ -372,6 +373,7 @@ export function DailyHealthDashboardSection() {
             to="/measurements"
           />
         </div>
+        </>
       )}
     </section>
   );
