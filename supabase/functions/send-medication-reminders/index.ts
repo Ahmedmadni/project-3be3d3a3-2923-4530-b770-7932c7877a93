@@ -59,6 +59,20 @@ function minuteIso(date: Date): string {
   return value.toISOString();
 }
 
+function serviceKey(): string | null {
+  const modern = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (modern) {
+    try {
+      const parsed = JSON.parse(modern) as Record<string, string>;
+      if (parsed.default) return parsed.default;
+    } catch {
+      // Fall back to the legacy key below.
+    }
+  }
+
+  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? null;
+}
+
 function scheduleIsDue(schedule: MedicationSchedule, now: Date): boolean {
   if (!schedule.reminder_enabled) return false;
 
@@ -91,7 +105,7 @@ export default {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const serviceRoleKey = serviceKey();
     const vapidSubject = Deno.env.get("VAPID_SUBJECT");
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
@@ -120,7 +134,11 @@ export default {
     );
 
     const now = new Date();
-    const scheduledFor = minuteIso(now);
+    const candidateMinutes = Array.from({ length: 5 }, (_, index) => {
+      const candidate = new Date(now.getTime() - index * 60_000);
+      candidate.setUTCSeconds(0, 0);
+      return candidate;
+    });
 
     const { data: schedules, error: scheduleError } = await supabase
       .from("medication_schedules")
@@ -137,37 +155,54 @@ export default {
       );
     }
 
-    const dueSchedules = (schedules ?? [])
+    const dueOccurrences = (schedules ?? [])
       .map((row) => row as unknown as MedicationSchedule)
-      .filter((schedule) => scheduleIsDue(schedule, now));
+      .flatMap((schedule) => {
+        const candidate = candidateMinutes.find((minute) =>
+          scheduleIsDue(schedule, minute),
+        );
 
-    if (!dueSchedules.length) {
+        return candidate
+          ? [{ schedule, scheduledFor: minuteIso(candidate) }]
+          : [];
+      });
+
+    if (!dueOccurrences.length) {
       return Response.json({
         ok: true,
-        checked_at: scheduledFor,
-        due_schedules: 0,
+        checked_at: minuteIso(now),
+        due_occurrences: 0,
         sent: 0,
         skipped_recorded: 0,
         failed: 0,
       });
     }
 
-    const scheduleIds = dueSchedules.map((schedule) => schedule.id);
-    const userIds = [...new Set(dueSchedules.map((schedule) => schedule.user_id))];
+    const scheduleIds = [
+      ...new Set(dueOccurrences.map(({ schedule }) => schedule.id)),
+    ];
+    const scheduledForValues = [
+      ...new Set(dueOccurrences.map(({ scheduledFor }) => scheduledFor)),
+    ];
+    const userIds = [
+      ...new Set(dueOccurrences.map(({ schedule }) => schedule.user_id)),
+    ];
 
-    const [{ data: recordedEvents, error: eventError }, { data: subscriptions, error: subError }] =
-      await Promise.all([
-        supabase
-          .from("medication_dose_events")
-          .select("schedule_id,scheduled_for")
-          .in("schedule_id", scheduleIds)
-          .eq("scheduled_for", scheduledFor),
-        supabase
-          .from("web_push_subscriptions")
-          .select("id,user_id,endpoint,p256dh,auth_secret")
-          .in("user_id", userIds)
-          .eq("is_active", true),
-      ]);
+    const [
+      { data: recordedEvents, error: eventError },
+      { data: subscriptions, error: subError },
+    ] = await Promise.all([
+      supabase
+        .from("medication_dose_events")
+        .select("schedule_id,scheduled_for")
+        .in("schedule_id", scheduleIds)
+        .in("scheduled_for", scheduledForValues),
+      supabase
+        .from("web_push_subscriptions")
+        .select("id,user_id,endpoint,p256dh,auth_secret")
+        .in("user_id", userIds)
+        .eq("is_active", true),
+    ]);
 
     if (eventError || subError) {
       return Response.json(
@@ -179,10 +214,18 @@ export default {
       );
     }
 
-    const recordedScheduleIds = new Set(
+    const recordedOccurrenceKeys = new Set(
       (recordedEvents ?? [])
-        .map((event) => event.schedule_id)
-        .filter((id): id is string => Boolean(id)),
+        .filter(
+          (event) =>
+            Boolean(event.schedule_id) && Boolean(event.scheduled_for),
+        )
+        .map(
+          (event) =>
+            `${event.schedule_id}|${minuteIso(
+              new Date(event.scheduled_for!),
+            )}`,
+        ),
     );
 
     const subscriptionsByUser = new Map<string, PushSubscriptionRow[]>();
@@ -197,9 +240,11 @@ export default {
     let failed = 0;
     let skippedRecorded = 0;
     let noSubscription = 0;
+    let skippedDuplicate = 0;
 
-    for (const schedule of dueSchedules) {
-      if (recordedScheduleIds.has(schedule.id)) {
+    for (const { schedule, scheduledFor } of dueOccurrences) {
+      const occurrenceKey = `${schedule.id}|${scheduledFor}`;
+      if (recordedOccurrenceKeys.has(occurrenceKey)) {
         skippedRecorded += 1;
         continue;
       }
@@ -224,8 +269,8 @@ export default {
           .single();
 
         if (reserveError) {
-          if (reserveError.code === "23505") continue;
-          failed += 1;
+          if (reserveError.code === "23505") skippedDuplicate += 1;
+          else failed += 1;
           continue;
         }
 
@@ -238,7 +283,10 @@ export default {
                 auth: subscription.auth_secret,
               },
             },
-            JSON.stringify({ kind: "health_reminder" }),
+            JSON.stringify({
+              kind: "health_reminder",
+              url: "/journal",
+            }),
             {
               TTL: 600,
               urgency: "normal",
@@ -260,8 +308,8 @@ export default {
             typeof error === "object" &&
             error !== null &&
             "statusCode" in error &&
-            typeof error.statusCode === "number"
-              ? error.statusCode
+            typeof (error as { statusCode?: unknown }).statusCode === "number"
+              ? (error as { statusCode: number }).statusCode
               : null;
 
           await supabase
@@ -269,7 +317,10 @@ export default {
             .update({
               status: "failed",
               provider_status: statusCode,
-              error_code: statusCode ? `HTTP_${statusCode}` : "PUSH_FAILED",
+              error_code:
+                statusCode === 404 || statusCode === 410
+                  ? "SUBSCRIPTION_GONE"
+                  : "PUSH_FAILED",
             })
             .eq("id", delivery.id);
 
@@ -287,10 +338,11 @@ export default {
 
     return Response.json({
       ok: true,
-      checked_at: scheduledFor,
-      due_schedules: dueSchedules.length,
+      checked_at: minuteIso(now),
+      due_occurrences: dueOccurrences.length,
       sent,
       skipped_recorded: skippedRecorded,
+      skipped_duplicate: skippedDuplicate,
       no_subscription: noSubscription,
       failed,
     });

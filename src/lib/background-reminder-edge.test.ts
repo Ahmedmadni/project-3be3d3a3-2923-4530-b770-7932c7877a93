@@ -29,17 +29,21 @@ describe("background medication reminder sender", () => {
   });
 
   it("sends only a generic non-clinical payload", () => {
-    expect(edge).toContain(
-      'JSON.stringify({ kind: "health_reminder" })',
-    );
+    expect(edge).toContain('kind: "health_reminder"');
     expect(edge).not.toContain("medication.name");
     expect(edge).not.toContain("dose_text");
   });
 
   it("does not send if the scheduled occurrence already has a recorded action", () => {
     expect(edge).toContain('from("medication_dose_events")');
-    expect(edge).toContain("recordedScheduleIds.has(schedule.id)");
+    expect(edge).toContain("recordedOccurrenceKeys.has(occurrenceKey)");
     expect(edge).toContain("skippedRecorded += 1");
+  });
+
+  it("recovers short scheduler delays without sending the same occurrence twice", () => {
+    expect(edge).toContain("Array.from({ length: 5 }");
+    expect(edge).toContain("index * 60_000");
+    expect(edge).toContain('reserveError.code === "23505"');
   });
 
   it("deactivates expired push endpoints", () => {
