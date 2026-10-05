@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Pill,
   SkipForward,
+  TimerReset,
 } from "lucide-react";
 import { useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,6 +19,7 @@ import {
   buildTodayMedicationOccurrences,
   medicationOccurrenceState,
 } from "@/lib/medication-schedule";
+import { buildDailyMedicationFollowup } from "@/lib/daily-medication-followup";
 import { cn } from "@/lib/utils";
 
 export function DailyHealthDashboardSection() {
@@ -162,6 +164,28 @@ export function DailyHealthDashboardSection() {
     };
   }, [eventsQuery.data, now, todayOccurrences]);
 
+
+  const medicationFollowup = useMemo(
+    () =>
+      buildDailyMedicationFollowup(
+        todayOccurrences,
+        eventsQuery.data ?? [],
+        now,
+      ),
+    [eventsQuery.data, now, todayOccurrences],
+  );
+
+  const medicationById = useMemo(
+    () =>
+      new Map(
+        (medicationsQuery.data ?? []).map((item) => [item.id, item] as const),
+      ),
+    [medicationsQuery.data],
+  );
+
+  const nextMedication = medicationFollowup.nextOccurrence
+    ? medicationById.get(medicationFollowup.nextOccurrence.medicationId)
+    : null;
   if (loading || !user) return null;
 
   const loadingData =
@@ -222,6 +246,75 @@ export function DailyHealthDashboardSection() {
             : "Some daily data could not be loaded."}
         </div>
       ) : (
+        <div className="border-b border-border px-4 py-4 md:px-5">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+              <div className="flex items-center gap-2">
+                <Check className="size-4 text-success" />
+                <p className="text-xs font-extrabold">
+                  {lang === "ar" ? "المسجل من مواعيد اليوم" : "Recorded today"}
+                </p>
+              </div>
+              <p className="mt-2 text-2xl font-extrabold">
+                {medicationFollowup.recorded}/{medicationFollowup.total}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {lang === "ar"
+                  ? `${medicationFollowup.completionPercent}% من المواعيد المجدولة تم تسجيل حالتها`
+                  : `${medicationFollowup.completionPercent}% of scheduled times have a recorded action`}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+              <div className="flex items-center gap-2">
+                <TimerReset className="size-4 text-warning" />
+                <p className="text-xs font-extrabold">
+                  {lang === "ar" ? "مواعيد سابقة غير مسجلة" : "Past unrecorded times"}
+                </p>
+              </div>
+              <p className="mt-2 text-2xl font-extrabold">
+                {medicationFollowup.unrecordedPast}
+              </p>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                {lang === "ar"
+                  ? "هذا وصف للسجل فقط، وليس حكمًا بأن جرعة قد فاتت."
+                  : "This describes the record only; it does not infer a missed dose."}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+              <div className="flex items-center gap-2">
+                <Clock3 className="size-4 text-primary" />
+                <p className="text-xs font-extrabold">
+                  {lang === "ar" ? "الموعد التالي" : "Next recorded time"}
+                </p>
+              </div>
+              {medicationFollowup.nextOccurrence ? (
+                <>
+                  <p className="mt-2 text-sm font-extrabold">
+                    {nextMedication?.name ??
+                      (lang === "ar" ? "دواء مسجل" : "Recorded medication")}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(
+                      medicationFollowup.nextOccurrence.scheduledFor,
+                    ).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm font-bold text-muted-foreground">
+                  {lang === "ar"
+                    ? "لا يوجد موعد قادم اليوم."
+                    : "No upcoming time today."}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-3 p-4 md:grid-cols-2 md:p-5 lg:grid-cols-4">
           <DashboardCard
             icon={Pill}
