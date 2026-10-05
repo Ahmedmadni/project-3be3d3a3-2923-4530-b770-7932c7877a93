@@ -47,7 +47,7 @@ describe("background medication reminder infrastructure", () => {
   });
 
   it("sends only generic push payloads without medication or dose details", () => {
-    expect(edgeFunction).toContain('"kind": "health_reminder"');
+    expect(edgeFunction).toContain('kind: "health_reminder"');
     expect(edgeFunction).not.toContain("medication_name");
     expect(edgeFunction).not.toContain("dose_text");
     expect(edgeFunction).not.toContain("schedule_text");
