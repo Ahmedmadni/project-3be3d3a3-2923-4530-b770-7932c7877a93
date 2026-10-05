@@ -13,7 +13,8 @@
 --
 -- No medication name, dose, or health detail is sent through pg_net.
 
-CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog;
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 
 DO $$
@@ -65,7 +66,8 @@ BEGIN
           'Content-Type', 'application/json',
           'x-cron-secret', %L
         ),
-        body := jsonb_build_object('source', 'pg_cron')
+        body := jsonb_build_object('source', 'pg_cron'),
+        timeout_milliseconds := 5000
       );
       $cron$,
       rtrim(project_url_value, '/'),
