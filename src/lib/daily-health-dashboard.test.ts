@@ -22,7 +22,16 @@ describe("daily health dashboard", () => {
 
   it("labels unrecorded medication times without inferring missed doses", () => {
     expect(component).toContain("غير مسجل");
-    expect(component.toLowerCase()).not.toContain("missed");
+    expect(component).toContain("ليس حكمًا بأن جرعة قد فاتت");
+    expect(component.toLowerCase()).not.toContain("missed dose");
     expect(component).toContain("بدون تفسير أو استنتاج طبي");
+  });
+
+  it("shows only operational follow-up metrics from user-recorded schedules", () => {
+    expect(component).toContain("buildDailyMedicationFollowup");
+    expect(component).toContain("المسجل من مواعيد اليوم");
+    expect(component).toContain("مواعيد سابقة غير مسجلة");
+    expect(component).toContain("الموعد التالي");
+    expect(component).toContain("completionPercent");
   });
 });
