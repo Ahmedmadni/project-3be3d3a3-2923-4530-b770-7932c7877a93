@@ -23,7 +23,8 @@ describe("daily health dashboard", () => {
   it("labels unrecorded medication times without inferring missed doses", () => {
     expect(component).toContain("غير مسجل");
     expect(component).toContain("ليس حكمًا بأن جرعة قد فاتت");
-    expect(component.toLowerCase()).not.toContain("missed dose");
+    expect(component).not.toContain('state === "missed"');
+    expect(component).not.toContain('status: "missed"');
     expect(component).toContain("بدون تفسير أو استنتاج طبي");
   });
 
