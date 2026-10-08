@@ -34,6 +34,14 @@ export function backgroundPushSupported(): boolean {
   );
 }
 
+export async function currentBackgroundMedicationReminderEndpoint(): Promise<string | null> {
+  if (!backgroundPushSupported()) return null;
+
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+  return subscription?.endpoint ?? null;
+}
+
 export async function enableBackgroundMedicationReminders(): Promise<PushReminderStatus> {
   if (!backgroundPushSupported()) return "unsupported";
 
