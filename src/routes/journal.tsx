@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { PageHeader, LoadingState, ErrorState } from "@/components/health/cards";
+import { ReminderReliabilityCard } from "@/components/health/ReminderReliabilityCard";
 import { useI18n } from "@/i18n";
 import {
   filterHealthTimeline,
@@ -758,6 +759,7 @@ function HealthJournalPage() {
             onSave={() => addMedication.mutate()}
           />
           <div className="space-y-4">
+            <ReminderReliabilityCard />
             <TodayDosesPanel
               lang={lang}
               occurrences={todayOccurrences}
