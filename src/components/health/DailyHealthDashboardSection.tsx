@@ -19,6 +19,7 @@ import {
   buildTodayMedicationOccurrences,
   medicationOccurrenceState,
 } from "@/lib/medication-schedule";
+import { ReminderReliabilityCard } from "@/components/health/ReminderReliabilityCard";
 import { buildDailyMedicationFollowup } from "@/lib/daily-medication-followup";
 import { cn } from "@/lib/utils";
 
@@ -314,6 +315,10 @@ export function DailyHealthDashboardSection() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="border-b border-border px-4 py-4 md:px-5">
+          <ReminderReliabilityCard compact />
         </div>
 
         <div className="grid gap-3 p-4 md:grid-cols-2 md:p-5 lg:grid-cols-4">
