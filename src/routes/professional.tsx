@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   BookOpen,
+  FileSpreadsheet,
   HeartHandshake,
   Siren,
   Stethoscope,
@@ -56,6 +57,13 @@ const tools = [
     title: "professional.tool.library.title",
     desc: "professional.tool.library.desc",
     tone: "bg-accent/10 text-accent",
+  },
+  {
+    to: "/data-import",
+    icon: FileSpreadsheet,
+    title: "professional.tool.import.title",
+    desc: "professional.tool.import.desc",
+    tone: "bg-primary-soft text-primary",
   },
 ] as const;
 

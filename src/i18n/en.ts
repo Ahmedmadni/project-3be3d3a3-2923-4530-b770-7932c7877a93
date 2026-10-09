@@ -96,6 +96,8 @@ export const en: Dict = {
   "professional.tool.firstAid.desc": "Quick access to published practical content and references when available.",
   "professional.tool.library.title": "Quick health reference",
   "professional.tool.library.desc": "Search published conditions and their linked medical sources.",
+  "professional.tool.import.title": "Data import quality check",
+  "professional.tool.import.desc": "Inspect CSV and TSV files locally, map columns, and find duplicates or invalid values before anything is saved.",
   "professional.open": "Open",
   "library.subtitle": "Simple information to help you understand common conditions.",
   "library.empty": "There is no published content available in this language yet.",
