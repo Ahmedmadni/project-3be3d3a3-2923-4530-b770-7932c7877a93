@@ -5,6 +5,7 @@ import {
   inferImportMapping,
   parseCsv,
   setImportMappingRole,
+  summarizeMeasurementTypeMatches,
 } from "./health-data-import";
 
 describe("health data import QA", () => {
@@ -73,5 +74,26 @@ describe("health data import QA", () => {
 
     expect(next.value).toBeUndefined();
     expect(next.unit).toBe(2);
+  });
+
+  it("matches imported measurement type values against the app catalog", () => {
+    const summary = summarizeMeasurementTypeMatches(
+      [
+        ["pulse", "80"],
+        ["النبض", "82"],
+        ["mystery metric", "1"],
+      ],
+      { measurementType: 0, value: 1 },
+      [
+        {
+          code: "pulse",
+          name_ar: "النبض",
+          name_en: "Pulse",
+        },
+      ],
+    );
+
+    expect(summary.recognizedValues).toEqual(["pulse", "النبض"]);
+    expect(summary.unrecognizedValues).toEqual(["mystery metric"]);
   });
 });
