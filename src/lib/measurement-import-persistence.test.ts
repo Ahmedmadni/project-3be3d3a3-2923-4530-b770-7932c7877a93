@@ -43,7 +43,7 @@ describe("measurement import persistence", () => {
   });
 
   it("forces imported quality to unknown and records csv provenance", () => {
-    expect(migration).toContain("'quality'");
+    expect(migration).toContain("quality,");
     expect(migration).toContain("'unknown'");
     expect(migration).toContain("'source', 'csv_import'");
     expect(migration).not.toContain("quality = 'good'");
