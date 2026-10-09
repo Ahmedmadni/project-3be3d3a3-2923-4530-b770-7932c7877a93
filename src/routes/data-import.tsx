@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Database,
   Download,
+  LockKeyhole,
   FileSpreadsheet,
   RefreshCw,
   ShieldCheck,
@@ -17,8 +18,10 @@ import { PageHeader } from "@/components/health/cards";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import {
   buildImportQaSummary,
+  buildMeasurementImportPlan,
   importMappingRoleForIndex,
   inferImportMapping,
   parseCsv,
@@ -66,18 +69,23 @@ const roles = Object.keys(roleLabels) as ImportColumnRole[];
 
 function HealthDataImportQaPage() {
   const { lang, dir } = useI18n();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [parsed, setParsed] = useState<ParsedCsv | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
+  const [fileSha256, setFileSha256] = useState("");
   const [fileError, setFileError] = useState<string | null>(null);
+  const [importConfirmed, setImportConfirmed] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   const measurementTypesQuery = useQuery({
     queryKey: ["data-import-measurement-types"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("measurement_types")
-        .select("code,name_ar,name_en")
+        .select("id,code,name_ar,name_en,value_kind,canonical_unit,allowed_units")
         .order("code");
 
       if (error) throw error;
@@ -109,6 +117,21 @@ function HealthDataImportQaPage() {
     [mapping, measurementTypesQuery.data, parsed],
   );
 
+  const importPlan = useMemo(
+    () =>
+      parsed
+        ? buildMeasurementImportPlan(
+            parsed.rows,
+            mapping,
+            (measurementTypesQuery.data ?? []).map((type) => ({
+              ...type,
+              value_kind: type.value_kind as "scalar" | "compound",
+            })),
+          )
+        : { rows: [], skipped: [] },
+    [mapping, measurementTypesQuery.data, parsed],
+  );
+
   const issueRows = useMemo(
     () => new Set(qa?.issues.map((issue) => issue.rowNumber) ?? []),
     [qa],
@@ -119,7 +142,10 @@ function HealthDataImportQaPage() {
     setMapping({});
     setFileName("");
     setFileSize(0);
+    setFileSha256("");
     setFileError(null);
+    setImportConfirmed(false);
+    setImportResult(null);
   };
 
   const readFile = async (file: File | null) => {
@@ -136,12 +162,16 @@ function HealthDataImportQaPage() {
     }
 
     try {
-      const text = await file.text();
+      const [text, sha256] = await Promise.all([
+        file.text(),
+        sha256File(file),
+      ]);
       const nextParsed = parseCsv(text);
       setParsed(nextParsed);
       setMapping(inferImportMapping(nextParsed.headers));
       setFileName(file.name);
       setFileSize(file.size);
+      setFileSha256(sha256);
     } catch {
       setFileError(
         lang === "ar"
@@ -150,6 +180,52 @@ function HealthDataImportQaPage() {
       );
     }
   };
+
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("LOGIN_REQUIRED");
+      if (!parsed || !qa) throw new Error("IMPORT_NOT_READY");
+      if (!importPlan.rows.length) throw new Error("NO_VALID_ROWS");
+      if (!importConfirmed) throw new Error("CONFIRM_REQUIRED");
+
+      const { data, error } = await supabase.rpc(
+        "import_measurement_reading_batch",
+        {
+          p_original_filename: fileName,
+          p_file_size_bytes: fileSize,
+          p_file_sha256: fileSha256,
+          p_source_row_count: parsed.rows.length,
+          p_mapping: JSON.parse(JSON.stringify(mapping)),
+          p_qa_summary: JSON.parse(
+            JSON.stringify({
+              ...qa,
+              parserErrors: parsed.errors,
+              plannerSkippedRows: importPlan.skipped.length,
+            }),
+          ),
+          p_rows: JSON.parse(JSON.stringify(importPlan.rows)),
+        },
+      );
+
+      if (error) throw error;
+      return parseImportResult(data);
+    },
+    onSuccess: async (result) => {
+      setImportResult(result);
+      setImportConfirmed(false);
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["measurement-readings", user?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["journal-measurements", user?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["health-summary-measurements", user?.id],
+        }),
+      ]);
+    },
+  });
 
   const downloadQaReport = () => {
     if (!parsed || !qa) return;
@@ -209,8 +285,8 @@ function HealthDataImportQaPage() {
         className="mb-5"
         text={
           lang === "ar"
-            ? "هذه الأداة لفحص بنية البيانات وجودتها فقط. لا تعتبر الملف دليلًا سريريًا، ولا تستنتج تشخيصًا أو علاجًا، ولا تحفظ أي صف في قاعدة البيانات في هذه المرحلة."
-            : "This tool checks data structure and quality only. It does not treat the file as clinical evidence, infer diagnosis or treatment, or save any row to the database at this stage."
+            ? "هذه الأداة تفحص بنية البيانات وجودتها ولا تعتبر الملف دليلًا سريريًا ولا تستنتج تشخيصًا أو علاجًا. لا يتم الحفظ إلا بعد مراجعتك الصريحة، وللصفوف التي اجتازت قواعد الاستيراد فقط."
+            : "This tool checks data structure and quality and does not treat the file as clinical evidence or infer diagnosis or treatment. Saving happens only after your explicit review, and only for rows that pass import rules."
         }
       />
 
@@ -222,13 +298,13 @@ function HealthDataImportQaPage() {
           <div>
             <h2 className="font-extrabold">
               {lang === "ar"
-                ? "الملف يبقى في جهازك"
+                ? "الملف نفسه يبقى في جهازك"
                 : "The file stays on your device"}
             </h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
               {lang === "ar"
-                ? "تتم القراءة والتحليل داخل المتصفح. لا يتم رفع الملف أو تخزين صفوفه على الخادم في Phase 1."
-                : "Reading and analysis happen inside the browser. The file and its rows are not uploaded or stored on the server in Phase 1."}
+                ? "الملف الخام لا يُرفع. تتم القراءة والفحص محليًا، وبعد تأكيدك فقط تُرسل الصفوف المقبولة كبيانات منظمة للحفظ في حسابك."
+                : "The raw file is never uploaded. Reading and QA happen locally; only after confirmation are accepted rows sent as structured data to your account."}
             </p>
           </div>
         </div>
@@ -327,23 +403,17 @@ function HealthDataImportQaPage() {
             />
           ) : null}
 
-          <section className="glass rounded-3xl p-5">
-            <div className="flex items-start gap-3">
-              <Database className="mt-0.5 size-5 shrink-0 text-primary" />
-              <div>
-                <h2 className="font-extrabold">
-                  {lang === "ar"
-                    ? "لا يوجد استيراد تلقائي بعد"
-                    : "No automatic import yet"}
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {lang === "ar"
-                    ? "هذه المرحلة تنتهي عند الفحص والمعاينة. الخطوة التالية ستضيف Mapping معتمدًا وحفظًا صريحًا للصفوف الصالحة فقط مع سجل مصدر لكل Batch."
-                    : "This phase stops at QA and preview. The next phase will add approved mapping and explicit saving of valid rows only, with provenance for every batch."}
-                </p>
-              </div>
-            </div>
-          </section>
+          <ImportCommitSection
+            lang={lang}
+            userSignedIn={Boolean(user)}
+            plan={importPlan}
+            confirmed={importConfirmed}
+            setConfirmed={setImportConfirmed}
+            importing={importMutation.isPending}
+            error={importMutation.error}
+            result={importResult}
+            onImport={() => importMutation.mutate()}
+          />
         </div>
       )}
     </div>
@@ -681,6 +751,239 @@ function IssueList({
       ) : null}
     </section>
   );
+}
+
+type ImportResult = {
+  batchId: string;
+  importedCount: number;
+  skippedCount: number;
+};
+
+function ImportCommitSection({
+  lang,
+  userSignedIn,
+  plan,
+  confirmed,
+  setConfirmed,
+  importing,
+  error,
+  result,
+  onImport,
+}: {
+  lang: "ar" | "en";
+  userSignedIn: boolean;
+  plan: ReturnType<typeof buildMeasurementImportPlan>;
+  confirmed: boolean;
+  setConfirmed: (value: boolean) => void;
+  importing: boolean;
+  error: Error | null;
+  result: ImportResult | null;
+  onImport: () => void;
+}) {
+  return (
+    <section className="glass rounded-3xl p-5">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <Database className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-extrabold">
+            {lang === "ar" ? "حفظ الصفوف المقبولة" : "Save accepted rows"}
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {lang === "ar"
+              ? "لن تُحفظ الصفوف المكررة أو غير المعروفة أو ذات التاريخ/القيمة/الوحدة غير الصالحة. كل قراءة مستوردة تُحفظ بجودة غير مقيّمة وبمرجع للـBatch والصف الأصلي."
+              : "Duplicate, unknown, or invalid date/value/unit rows are not saved. Every imported reading is stored as quality-unassessed with batch and original-row provenance."}
+          </p>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
+            <div className="rounded-2xl bg-success-soft p-3 text-center text-success">
+              <strong className="text-xl">{plan.rows.length}</strong>
+              <p className="mt-1 text-[10px] font-bold">
+                {lang === "ar" ? "جاهزة للحفظ" : "Ready to save"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-warning-soft p-3 text-center text-warning">
+              <strong className="text-xl">{plan.skipped.length}</strong>
+              <p className="mt-1 text-[10px] font-bold">
+                {lang === "ar" ? "سيتم تخطيها" : "Will be skipped"}
+              </p>
+            </div>
+          </div>
+
+          {plan.skipped.length ? (
+            <details className="mt-4 rounded-2xl bg-card p-3 ring-1 ring-border">
+              <summary className="cursor-pointer text-xs font-extrabold">
+                {lang === "ar"
+                  ? "لماذا سيتم تخطي بعض الصفوف؟"
+                  : "Why will some rows be skipped?"}
+              </summary>
+              <div className="mt-3 space-y-2">
+                {plan.skipped.slice(0, 20).map((item) => (
+                  <div key={item.rowNumber} className="text-xs text-muted-foreground">
+                    <strong>
+                      {lang === "ar" ? "الصف" : "Row"} {item.rowNumber}
+                    </strong>
+                    {" — "}
+                    {item.reasons.map((reason) => importReasonLabel(reason, lang)).join("، ")}
+                  </div>
+                ))}
+              </div>
+            </details>
+          ) : null}
+
+          {!userSignedIn ? (
+            <div className="mt-4 rounded-2xl bg-primary-soft/60 p-4">
+              <p className="text-xs leading-5 text-muted-foreground">
+                {lang === "ar"
+                  ? "الفحص المحلي متاح بدون حساب، لكن حفظ القياسات يحتاج تسجيل الدخول."
+                  : "Local QA works without an account, but saving measurements requires sign-in."}
+              </p>
+              <Link
+                to="/auth"
+                search={{ redirect: "/data-import" }}
+                className="mt-3 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              >
+                {lang === "ar" ? "تسجيل الدخول للحفظ" : "Sign in to save"}
+              </Link>
+            </div>
+          ) : (
+            <>
+              <label className="mt-4 flex items-start gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(event) => setConfirmed(event.target.checked)}
+                  className="mt-0.5"
+                />
+                <span className="text-xs leading-5 text-muted-foreground">
+                  {lang === "ar"
+                    ? "راجعت تعيين الأعمدة والمعاينة، وأوافق على حفظ الصفوف المقبولة فقط في سجل قياساتي."
+                    : "I reviewed the column mapping and preview, and approve saving only the accepted rows to my measurement history."}
+                </span>
+              </label>
+
+              <button
+                type="button"
+                disabled={!confirmed || importing || plan.rows.length === 0}
+                onClick={onImport}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground disabled:opacity-45"
+              >
+                <LockKeyhole className="size-4" />
+                {importing
+                  ? lang === "ar"
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : lang === "ar"
+                    ? `حفظ ${plan.rows.length} قراءة`
+                    : `Save ${plan.rows.length} readings`}
+              </button>
+            </>
+          )}
+
+          {error ? (
+            <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-xs text-warning">
+              {formatImportError(error, lang)}
+            </p>
+          ) : null}
+
+          {result ? (
+            <div className="mt-4 rounded-2xl bg-success-soft p-4 text-success">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-5" />
+                <strong>
+                  {lang === "ar" ? "تم الاستيراد بنجاح" : "Import completed"}
+                </strong>
+              </div>
+              <p className="mt-1 text-xs">
+                {lang === "ar"
+                  ? `تم حفظ ${result.importedCount} قراءة وتخطي ${result.skippedCount} صف. Batch: ${result.batchId}`
+                  : `Saved ${result.importedCount} readings and skipped ${result.skippedCount} rows. Batch: ${result.batchId}`}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function parseImportResult(value: unknown): ImportResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("INVALID_IMPORT_RESPONSE");
+  }
+
+  const record = value as Record<string, unknown>;
+  const batchId = record.batch_id;
+  const importedCount = record.imported_count;
+  const skippedCount = record.skipped_count;
+
+  if (
+    typeof batchId !== "string" ||
+    typeof importedCount !== "number" ||
+    typeof skippedCount !== "number"
+  ) {
+    throw new Error("INVALID_IMPORT_RESPONSE");
+  }
+
+  return {
+    batchId,
+    importedCount,
+    skippedCount,
+  };
+}
+
+function formatImportError(error: Error, lang: "ar" | "en"): string {
+  const message = error.message || "";
+
+  if (
+    message.includes("Could not find the function") ||
+    message.includes("import_measurement_reading_batch")
+  ) {
+    return lang === "ar"
+      ? "بنية حفظ الاستيراد لم تُطبّق في قاعدة البيانات بعد."
+      : "The import persistence database foundation has not been deployed yet.";
+  }
+
+  return lang === "ar"
+    ? "تعذر حفظ الـBatch. لم يتم اعتماد استيراد جزئي؛ راجع الملف والتعيين ثم أعد المحاولة."
+    : "The batch could not be saved. No partial import was accepted; review the file and mapping, then try again.";
+}
+
+function importReasonLabel(reason: string, lang: "ar" | "en"): string {
+  const labels: Record<string, { ar: string; en: string }> = {
+    duplicate_row: { ar: "صف مكرر", en: "duplicate row" },
+    measurement_type_missing: { ar: "نوع القياس مفقود", en: "measurement type missing" },
+    measurement_type_unknown: { ar: "نوع القياس غير معروف", en: "unknown measurement type" },
+    measured_at_missing: { ar: "التاريخ مفقود", en: "date/time missing" },
+    measured_at_invalid_or_ambiguous: { ar: "تاريخ غير صالح أو ملتبس", en: "invalid or ambiguous date/time" },
+    unit_not_supported: { ar: "وحدة غير مدعومة", en: "unsupported unit" },
+    value_missing: { ar: "القيمة مفقودة", en: "value missing" },
+    value_invalid: { ar: "القيمة غير رقمية", en: "invalid numeric value" },
+    systolic_missing: { ar: "الانقباضي مفقود", en: "systolic missing" },
+    systolic_invalid: { ar: "الانقباضي غير رقمي", en: "invalid systolic" },
+    diastolic_missing: { ar: "الانبساطي مفقود", en: "diastolic missing" },
+    diastolic_invalid: { ar: "الانبساطي غير رقمي", en: "invalid diastolic" },
+    compound_type_not_supported_for_csv: {
+      ar: "نوع مركب غير مدعوم بهذا الاستيراد",
+      en: "compound type not supported by this importer",
+    },
+  };
+
+  return labels[reason]?.[lang] ?? reason;
+}
+
+async function sha256File(file: File): Promise<string> {
+  if (!globalThis.crypto?.subtle) return "";
+
+  const digest = await globalThis.crypto.subtle.digest(
+    "SHA-256",
+    await file.arrayBuffer(),
+  );
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function formatParserError(error: string, lang: "ar" | "en"): string {

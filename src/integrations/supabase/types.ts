@@ -1250,12 +1250,59 @@ export type Database = {
         }
         Relationships: []
       }
+      measurement_import_batches: {
+        Row: {
+          created_at: string
+          file_sha256: string | null
+          file_size_bytes: number
+          id: string
+          imported_count: number
+          mapping: Json
+          original_filename: string
+          qa_summary: Json
+          skipped_count: number
+          source_row_count: number
+          status: "imported"
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_sha256?: string | null
+          file_size_bytes: number
+          id?: string
+          imported_count?: number
+          mapping?: Json
+          original_filename: string
+          qa_summary?: Json
+          skipped_count?: number
+          source_row_count: number
+          status?: "imported"
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_sha256?: string | null
+          file_size_bytes?: number
+          id?: string
+          imported_count?: number
+          mapping?: Json
+          original_filename?: string
+          qa_summary?: Json
+          skipped_count?: number
+          source_row_count?: number
+          status?: "imported"
+          user_id?: string
+        }
+        Relationships: []
+      }
       measurement_readings: {
         Row: {
           components: Json | null
           context: Json
           created_at: string
           id: string
+          import_batch_id: string | null
+          import_row_number: number | null
           measured_at: string
           measurement_type_id: string
           notes: string | null
@@ -1270,6 +1317,8 @@ export type Database = {
           context?: Json
           created_at?: string
           id?: string
+          import_batch_id?: string | null
+          import_row_number?: number | null
           measured_at: string
           measurement_type_id: string
           notes?: string | null
@@ -1284,6 +1333,8 @@ export type Database = {
           context?: Json
           created_at?: string
           id?: string
+          import_batch_id?: string | null
+          import_row_number?: number | null
           measured_at?: string
           measurement_type_id?: string
           notes?: string | null
@@ -1294,6 +1345,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "measurement_readings_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_import_batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "measurement_readings_measurement_type_id_fkey"
             columns: ["measurement_type_id"]
@@ -2551,6 +2609,18 @@ export type Database = {
           p_user_agent?: string | null
         }
         Returns: string
+      }
+      import_measurement_reading_batch: {
+        Args: {
+          p_file_sha256: string
+          p_file_size_bytes: number
+          p_mapping: Json
+          p_original_filename: string
+          p_qa_summary: Json
+          p_rows: Json
+          p_source_row_count: number
+        }
+        Returns: Json
       }
       content_visible: {
         Args: { _is_demo: boolean; _status: string }

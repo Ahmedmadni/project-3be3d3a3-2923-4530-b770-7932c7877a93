@@ -11,25 +11,37 @@ const professional = readFileSync(
   "utf8",
 );
 
-describe("professional health data import QA surface", () => {
-  it("reads the selected file locally without uploading raw data", () => {
-    expect(route).toContain("await file.text()");
-    expect(route).toContain("الملف يبقى في جهازك");
+describe("professional health data import surface", () => {
+  it("keeps the raw file local and never uploads it", () => {
+    expect(route).toContain("file.text()");
+    expect(route).toContain("file.arrayBuffer()");
+    expect(route).toContain("الملف نفسه يبقى في جهازك");
     expect(route).not.toContain(".storage.");
     expect(route).not.toContain(".upload(");
-    expect(route).not.toContain(".insert(");
-    expect(route).not.toContain(".upsert(");
   });
 
-  it("stops at QA and preview rather than saving measurements", () => {
-    expect(route).toContain("لا يوجد استيراد تلقائي بعد");
-    expect(route).toContain("buildImportQaSummary");
-    expect(route).toContain("inferImportMapping");
-    expect(route).toContain("summarizeMeasurementTypeMatches");
-    expect(route).not.toContain('.from("measurement_readings")');
+  it("uses the atomic import RPC rather than direct measurement inserts", () => {
+    expect(route).toContain('"import_measurement_reading_batch"');
+    expect(route).toContain("buildMeasurementImportPlan");
+    expect(route).not.toContain('.from("measurement_readings").insert');
+    expect(route).not.toContain('.from("measurement_readings")\n        .insert');
   });
 
-  it("exports only the QA report and explicitly omits raw row values", () => {
+  it("requires explicit confirmation before save", () => {
+    expect(route).toContain("importConfirmed");
+    expect(route).toContain("راجعت تعيين الأعمدة والمعاينة");
+    expect(route).toContain("disabled={!confirmed");
+  });
+
+  it("hashes the local file and records batch provenance metadata", () => {
+    expect(route).toContain('digest(\n    "SHA-256"');
+    expect(route).toContain("p_file_sha256");
+    expect(route).toContain("p_source_row_count");
+    expect(route).toContain("p_mapping");
+    expect(route).toContain("p_qa_summary");
+  });
+
+  it("exports QA metadata without raw row values", () => {
     expect(route).toContain("privacy_note");
     expect(route).toContain(
       "Raw row values are not included in this QA report.",
@@ -42,7 +54,8 @@ describe("professional health data import QA surface", () => {
     expect(professional).toContain('"professional.tool.import.title"');
   });
 
-  it("retains the non-diagnostic professional safety framing", () => {
+  it("retains the non-diagnostic safety framing", () => {
+    expect(route).toContain("لا تعتبر الملف دليلًا سريريًا");
     expect(route).toContain("لا تستنتج تشخيصًا أو علاجًا");
     expect(route).toContain("<MedicalDisclaimer");
   });
