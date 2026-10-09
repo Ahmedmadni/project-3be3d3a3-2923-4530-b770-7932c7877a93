@@ -13,7 +13,8 @@ const professional = readFileSync(
 
 describe("professional health data import surface", () => {
   it("keeps the raw file local and never uploads it", () => {
-    expect(route).toContain("await file.text()");
+    expect(route).toContain("file.text()");
+    expect(route).toContain("file.arrayBuffer()");
     expect(route).toContain("الملف نفسه يبقى في جهازك");
     expect(route).not.toContain(".storage.");
     expect(route).not.toContain(".upload(");
