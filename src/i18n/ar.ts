@@ -94,6 +94,8 @@ export const ar = {
   "professional.tool.firstAid.desc": "وصول سريع للمحتوى العملي المنشور والمراجع عند توفره.",
   "professional.tool.library.title": "مرجع صحي سريع",
   "professional.tool.library.desc": "ابحث في الحالات المنشورة والمصادر الطبية المرتبطة بها.",
+  "professional.tool.import.title": "استيراد وفحص البيانات",
+  "professional.tool.import.desc": "افحص ملفات CSV وTSV محليًا، طابق الأعمدة واكتشف التكرار والقيم غير الصالحة قبل أي حفظ.",
   "professional.open": "فتح",
   "library.subtitle": "معلومات مبسطة لفهم الحالات الشائعة.",
   "library.empty": "لا يوجد محتوى منشور ومتاح بهذه اللغة بعد.",
