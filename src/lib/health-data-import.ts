@@ -351,6 +351,70 @@ function roleToMappingKey(
   }
 }
 
+export interface ImportMeasurementTypeLike {
+  code: string;
+  name_ar: string | null;
+  name_en: string | null;
+}
+
+export interface MeasurementTypeMatchSummary {
+  distinctValues: string[];
+  recognizedValues: string[];
+  unrecognizedValues: string[];
+}
+
+export function summarizeMeasurementTypeMatches(
+  rows: readonly string[][],
+  mapping: ImportMapping,
+  types: readonly ImportMeasurementTypeLike[],
+): MeasurementTypeMatchSummary {
+  if (mapping.measurementType == null) {
+    return {
+      distinctValues: [],
+      recognizedValues: [],
+      unrecognizedValues: [],
+    };
+  }
+
+  const distinctValues = Array.from(
+    new Set(
+      rows
+        .map((row) => row[mapping.measurementType!]?.trim() ?? "")
+        .filter(Boolean),
+    ),
+  );
+
+  const known = new Set<string>();
+
+  for (const type of types) {
+    for (const value of [type.code, type.name_ar ?? "", type.name_en ?? ""]) {
+      const normalized = normalizeMeasurementTypeToken(value);
+      if (normalized) known.add(normalized);
+    }
+  }
+
+  const recognizedValues: string[] = [];
+  const unrecognizedValues: string[] = [];
+
+  for (const value of distinctValues) {
+    if (known.has(normalizeMeasurementTypeToken(value))) {
+      recognizedValues.push(value);
+    } else {
+      unrecognizedValues.push(value);
+    }
+  }
+
+  return {
+    distinctValues,
+    recognizedValues,
+    unrecognizedValues,
+  };
+}
+
+export function normalizeMeasurementTypeToken(value: string): string {
+  return normalizeImportHeader(value);
+}
+
 function mappingRoleAlreadyAssigned(
   mapping: ImportMapping,
   role: Exclude<ImportColumnRole, "ignore">,
