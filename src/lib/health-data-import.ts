@@ -415,6 +415,244 @@ export function normalizeMeasurementTypeToken(value: string): string {
   return normalizeImportHeader(value);
 }
 
+export interface ImportMeasurementCatalogItem extends ImportMeasurementTypeLike {
+  id: string;
+  value_kind: "scalar" | "compound";
+  canonical_unit: string | null;
+  allowed_units: string[];
+}
+
+export interface MeasurementImportRowPayload {
+  row_number: number;
+  measurement_type_id: string;
+  measured_at: string;
+  scalar_value: number | null;
+  unit: string | null;
+  components: Record<string, number> | null;
+  notes: string | null;
+}
+
+export interface MeasurementImportSkippedRow {
+  rowNumber: number;
+  reasons: string[];
+}
+
+export interface MeasurementImportPlan {
+  rows: MeasurementImportRowPayload[];
+  skipped: MeasurementImportSkippedRow[];
+}
+
+export function buildMeasurementImportPlan(
+  rows: readonly string[][],
+  mapping: ImportMapping,
+  types: readonly ImportMeasurementCatalogItem[],
+): MeasurementImportPlan {
+  const output: MeasurementImportRowPayload[] = [];
+  const skipped: MeasurementImportSkippedRow[] = [];
+  const seenRows = new Set<string>();
+  const typeLookup = buildMeasurementTypeLookup(types);
+
+  rows.forEach((row, index) => {
+    const rowNumber = index + 2;
+    const reasons: string[] = [];
+    const rowSignature = row.map((cell) => cell.trim()).join("\u241F");
+
+    if (seenRows.has(rowSignature)) {
+      reasons.push("duplicate_row");
+    } else {
+      seenRows.add(rowSignature);
+    }
+
+    const typeToken =
+      mapping.measurementType == null
+        ? ""
+        : row[mapping.measurementType]?.trim() ?? "";
+
+    const type = typeLookup.get(normalizeMeasurementTypeToken(typeToken));
+    if (!typeToken) reasons.push("measurement_type_missing");
+    else if (!type) reasons.push("measurement_type_unknown");
+
+    const dateToken =
+      mapping.measuredAt == null
+        ? ""
+        : row[mapping.measuredAt]?.trim() ?? "";
+    const measuredAt = parseStrictImportDate(dateToken);
+
+    if (!dateToken) reasons.push("measured_at_missing");
+    else if (!measuredAt) reasons.push("measured_at_invalid_or_ambiguous");
+
+    let scalarValue: number | null = null;
+    let components: Record<string, number> | null = null;
+    let unit: string | null = null;
+
+    if (type) {
+      unit = resolveImportedUnit(
+        mapping.unit == null ? "" : row[mapping.unit]?.trim() ?? "",
+        type,
+      );
+
+      const unitToken =
+        mapping.unit == null ? "" : row[mapping.unit]?.trim() ?? "";
+      if (unitToken && unit == null) {
+        reasons.push("unit_not_supported");
+      }
+
+      if (type.value_kind === "scalar") {
+        const valueToken =
+          mapping.value == null ? "" : row[mapping.value]?.trim() ?? "";
+        const parsedValue = parseImportNumber(valueToken);
+
+        if (!valueToken) reasons.push("value_missing");
+        else if (parsedValue == null) reasons.push("value_invalid");
+        else scalarValue = parsedValue;
+      } else if (type.code === "blood_pressure") {
+        const systolicToken =
+          mapping.systolic == null ? "" : row[mapping.systolic]?.trim() ?? "";
+        const diastolicToken =
+          mapping.diastolic == null ? "" : row[mapping.diastolic]?.trim() ?? "";
+        const systolic = parseImportNumber(systolicToken);
+        const diastolic = parseImportNumber(diastolicToken);
+
+        if (!systolicToken) reasons.push("systolic_missing");
+        else if (systolic == null) reasons.push("systolic_invalid");
+
+        if (!diastolicToken) reasons.push("diastolic_missing");
+        else if (diastolic == null) reasons.push("diastolic_invalid");
+
+        if (systolic != null && diastolic != null) {
+          components = { systolic, diastolic };
+        }
+      } else {
+        reasons.push("compound_type_not_supported_for_csv");
+      }
+    }
+
+    if (reasons.length || !type || !measuredAt) {
+      skipped.push({ rowNumber, reasons });
+      return;
+    }
+
+    const notes =
+      mapping.notes == null ? "" : row[mapping.notes]?.trim() ?? "";
+
+    output.push({
+      row_number: rowNumber,
+      measurement_type_id: type.id,
+      measured_at: measuredAt,
+      scalar_value: scalarValue,
+      unit,
+      components,
+      notes: notes || null,
+    });
+  });
+
+  return { rows: output, skipped };
+}
+
+export function parseStrictImportDate(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (dateOnly) {
+    const year = Number(dateOnly[1]);
+    const month = Number(dateOnly[2]);
+    const day = Number(dateOnly[3]);
+    const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+    return date.toISOString();
+  }
+
+  const localDateTime =
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
+      trimmed,
+    );
+
+  if (localDateTime) {
+    const year = Number(localDateTime[1]);
+    const month = Number(localDateTime[2]);
+    const day = Number(localDateTime[3]);
+    const hour = Number(localDateTime[4]);
+    const minute = Number(localDateTime[5]);
+    const second = Number(localDateTime[6] ?? "0");
+
+    const date = new Date(year, month - 1, day, hour, minute, second, 0);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day ||
+      date.getHours() !== hour ||
+      date.getMinutes() !== minute ||
+      date.getSeconds() !== second
+    ) {
+      return null;
+    }
+    return date.toISOString();
+  }
+
+  if (
+    /^\d{4}-\d{2}-\d{2}T/.test(trimmed) &&
+    /(Z|[+-]\d{2}:?\d{2})$/i.test(trimmed)
+  ) {
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
+
+  return null;
+}
+
+export function parseImportNumber(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const normalized =
+    trimmed.includes(",") && !trimmed.includes(".")
+      ? trimmed.replace(",", ".")
+      : trimmed;
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function buildMeasurementTypeLookup(
+  types: readonly ImportMeasurementCatalogItem[],
+): Map<string, ImportMeasurementCatalogItem> {
+  const map = new Map<string, ImportMeasurementCatalogItem>();
+
+  for (const type of types) {
+    for (const value of [type.code, type.name_ar ?? "", type.name_en ?? ""]) {
+      const normalized = normalizeMeasurementTypeToken(value);
+      if (normalized && !map.has(normalized)) {
+        map.set(normalized, type);
+      }
+    }
+  }
+
+  return map;
+}
+
+function resolveImportedUnit(
+  providedUnit: string,
+  type: ImportMeasurementCatalogItem,
+): string | null {
+  if (!providedUnit) return type.canonical_unit;
+
+  if (!type.allowed_units.length) return providedUnit;
+
+  const normalizedProvided = providedUnit.trim().toLocaleLowerCase();
+  const matched = type.allowed_units.find(
+    (unit) => unit.trim().toLocaleLowerCase() === normalizedProvided,
+  );
+
+  return matched ?? null;
+}
+
 function mappingRoleAlreadyAssigned(
   mapping: ImportMapping,
   role: Exclude<ImportColumnRole, "ignore">,
@@ -517,5 +755,5 @@ function isFiniteNumber(value: string): boolean {
 function isValidDateInput(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed) return true;
-  return !Number.isNaN(Date.parse(trimmed));
+  return parseStrictImportDate(trimmed) != null;
 }
