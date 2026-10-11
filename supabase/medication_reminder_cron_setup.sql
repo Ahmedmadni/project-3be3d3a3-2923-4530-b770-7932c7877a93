@@ -1,33 +1,29 @@
--- Medication Reminder Cron Operator Script
--- Run only AFTER:
---   1) send-medication-reminders Edge Function is deployed;
---   2) Edge Function secrets include:
---        MEDICATION_REMINDER_CRON_SECRET
---        VAPID_PUBLIC_KEY
---        VAPID_PRIVATE_KEY
---        VAPID_SUBJECT
---   3) Supabase Vault contains:
---        project_url
---        medication_reminder_cron_secret
---      where medication_reminder_cron_secret matches the Edge Function secret.
+-- Canonical medication reminder cron operator script.
+-- Apply only after the push migration and Edge Function have been deployed.
+-- The job reads Vault secrets at RUN TIME. Never interpolate secrets into
+-- cron.job.command: that would expose long-lived credentials to job readers.
 --
--- No medication name, dose, or health detail is sent through pg_net.
+-- Required Vault keys:
+--   project_url (preferred; medication_reminder_project_url is a legacy alias)
+--   medication_reminder_cron_secret
+-- The cron secret must match MEDICATION_REMINDER_CRON_SECRET on the Edge Function.
+-- Re-running this script replaces the canonical and legacy reminder jobs.
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 
-DO $$
+DO $operator$
 DECLARE
   project_url_value text;
   cron_secret_value text;
-  existing_job_id bigint;
+  old_job record;
 BEGIN
   SELECT decrypted_secret
   INTO project_url_value
   FROM vault.decrypted_secrets
-  WHERE name = 'project_url'
-  ORDER BY created_at DESC
+  WHERE name IN ('project_url', 'medication_reminder_project_url')
+  ORDER BY (name = 'project_url') DESC, created_at DESC
   LIMIT 1;
 
   SELECT decrypted_secret
@@ -37,50 +33,69 @@ BEGIN
   ORDER BY created_at DESC
   LIMIT 1;
 
-  IF project_url_value IS NULL OR length(btrim(project_url_value)) = 0 THEN
-    RAISE EXCEPTION 'VAULT_PROJECT_URL_MISSING';
+  IF project_url_value IS NULL
+     OR project_url_value !~ '^https://[a-z0-9-]+[.]supabase[.]co/?$' THEN
+    RAISE EXCEPTION 'VAULT_PROJECT_URL_MISSING_OR_INVALID';
   END IF;
 
-  IF cron_secret_value IS NULL OR length(btrim(cron_secret_value)) = 0 THEN
-    RAISE EXCEPTION 'VAULT_MEDICATION_REMINDER_CRON_SECRET_MISSING';
+  IF cron_secret_value IS NULL OR length(cron_secret_value) < 32 THEN
+    RAISE EXCEPTION 'VAULT_REMINDER_CRON_SECRET_MISSING_OR_TOO_SHORT';
   END IF;
 
-  SELECT jobid
-  INTO existing_job_id
-  FROM cron.job
-  WHERE jobname = 'send-medication-reminders-every-minute'
-  LIMIT 1;
-
-  IF existing_job_id IS NOT NULL THEN
-    PERFORM cron.unschedule(existing_job_id);
-  END IF;
+  -- Do not leave two schedulers dispatching the same reminders.
+  FOR old_job IN
+    SELECT jobid FROM cron.job
+    WHERE jobname IN (
+      'send-medication-reminders-every-minute',
+      'medication-reminder-dispatch'
+    )
+  LOOP
+    PERFORM cron.unschedule(old_job.jobid);
+  END LOOP;
 
   PERFORM cron.schedule(
     'send-medication-reminders-every-minute',
     '* * * * *',
-    format(
-      $cron$
+    $job$
       SELECT net.http_post(
-        url := %L || '/functions/v1/send-medication-reminders',
+        url := rtrim(
+          (
+            SELECT decrypted_secret
+            FROM vault.decrypted_secrets
+            WHERE name IN ('project_url', 'medication_reminder_project_url')
+            ORDER BY (name = 'project_url') DESC, created_at DESC
+            LIMIT 1
+          ),
+          '/'
+        ) || '/functions/v1/send-medication-reminders',
         headers := jsonb_build_object(
           'Content-Type', 'application/json',
-          'x-cron-secret', %L
+          'x-cron-secret', (
+            SELECT decrypted_secret
+            FROM vault.decrypted_secrets
+            WHERE name = 'medication_reminder_cron_secret'
+            ORDER BY created_at DESC
+            LIMIT 1
+          )
         ),
         body := jsonb_build_object('source', 'pg_cron'),
-        timeout_milliseconds := 5000
+        timeout_milliseconds := 10000
       );
-      $cron$,
-      rtrim(project_url_value, '/'),
-      cron_secret_value
-    )
+    $job$
   );
 END
-$$;
+$operator$;
 
+-- Safe metadata only: do not select cron.job.command, URLs, or secrets.
 SELECT
   jobid,
   jobname,
   schedule,
-  active
+  active,
+  (command LIKE '%vault.decrypted_secrets%') AS reads_vault_at_runtime
 FROM cron.job
-WHERE jobname = 'send-medication-reminders-every-minute';
+WHERE jobname IN (
+  'send-medication-reminders-every-minute',
+  'medication-reminder-dispatch'
+)
+ORDER BY jobname;
