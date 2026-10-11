@@ -33,9 +33,10 @@ BEGIN
   ORDER BY created_at DESC
   LIMIT 1;
 
+  -- Fail closed if this operator is pointed at a different Supabase project.
   IF project_url_value IS NULL
-     OR project_url_value !~ '^https://[a-z0-9-]+[.]supabase[.]co/?$' THEN
-    RAISE EXCEPTION 'VAULT_PROJECT_URL_MISSING_OR_INVALID';
+     OR rtrim(project_url_value, '/') <> 'https://soyrodrsjzgdqsjaxjfk.supabase.co' THEN
+    RAISE EXCEPTION 'VAULT_PROJECT_URL_MISSING_OR_WRONG_PROJECT';
   END IF;
 
   IF cron_secret_value IS NULL OR length(cron_secret_value) < 32 THEN
