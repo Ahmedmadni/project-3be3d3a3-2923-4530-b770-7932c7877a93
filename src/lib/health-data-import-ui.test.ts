@@ -21,7 +21,7 @@ describe("professional health data import surface", () => {
   });
 
   it("uses the atomic import RPC rather than direct measurement inserts", () => {
-    expect(route).toContain('"import_measurement_reading_batch"');
+    expect(route).toContain('"import_measurement_reading_batch_v2"');
     expect(route).toContain("buildMeasurementImportPlan");
     expect(route).not.toContain('.from("measurement_readings").insert');
     expect(route).not.toContain('.from("measurement_readings")\n        .insert');
