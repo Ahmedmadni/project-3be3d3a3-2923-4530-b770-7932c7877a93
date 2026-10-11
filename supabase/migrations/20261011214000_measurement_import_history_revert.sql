@@ -87,6 +87,10 @@ BEGIN
   END IF;
 
   IF NULLIF(btrim(p_file_sha256), '') IS NOT NULL THEN
+    PERFORM pg_advisory_xact_lock(
+      hashtext(current_user_id::text || ':' || btrim(p_file_sha256))
+    );
+
     SELECT b.id
     INTO duplicate_batch_id
     FROM public.measurement_import_batches b
