@@ -9,14 +9,17 @@ import {
   Download,
   LockKeyhole,
   FileSpreadsheet,
+  History,
   RefreshCw,
   ShieldCheck,
   Table2,
+  Undo2,
   Upload,
 } from "lucide-react";
 import { PageHeader } from "@/components/health/cards";
 import { MedicalDisclaimer } from "@/components/health/MedicalDisclaimer";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -67,6 +70,8 @@ const roleLabels: Record<
 
 const roles = Object.keys(roleLabels) as ImportColumnRole[];
 
+type ImportBatchRow = Tables<"measurement_import_batches">;
+
 function HealthDataImportQaPage() {
   const { lang, dir } = useI18n();
   const { user } = useAuth();
@@ -87,6 +92,22 @@ function HealthDataImportQaPage() {
         .from("measurement_types")
         .select("id,code,name_ar,name_en,value_kind,canonical_unit,allowed_units")
         .order("code");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const importHistoryQuery = useQuery({
+    queryKey: ["measurement-import-history", user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("measurement_import_batches")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
       if (error) throw error;
       return data;
@@ -135,6 +156,18 @@ function HealthDataImportQaPage() {
   const issueRows = useMemo(
     () => new Set(qa?.issues.map((issue) => issue.rowNumber) ?? []),
     [qa],
+  );
+
+  const duplicateImportedBatch = useMemo(
+    () =>
+      fileSha256
+        ? (importHistoryQuery.data ?? []).find(
+            (batch) =>
+              batch.file_sha256 === fileSha256 &&
+              batch.status === "imported",
+          ) ?? null
+        : null,
+    [fileSha256, importHistoryQuery.data],
   );
 
   const reset = () => {
@@ -189,7 +222,7 @@ function HealthDataImportQaPage() {
       if (!importConfirmed) throw new Error("CONFIRM_REQUIRED");
 
       const { data, error } = await supabase.rpc(
-        "import_measurement_reading_batch",
+        "import_measurement_reading_batch_v2",
         {
           p_original_filename: fileName,
           p_file_size_bytes: fileSize,
@@ -223,9 +256,54 @@ function HealthDataImportQaPage() {
         queryClient.invalidateQueries({
           queryKey: ["health-summary-measurements", user?.id],
         }),
+        queryClient.invalidateQueries({
+          queryKey: ["measurement-import-history", user?.id],
+        }),
       ]);
     },
   });
+
+  const revertImportMutation = useMutation({
+    mutationFn: async (batchId: string) => {
+      if (!user) throw new Error("LOGIN_REQUIRED");
+
+      const { data, error } = await supabase.rpc(
+        "revert_measurement_import_batch",
+        { p_batch_id: batchId },
+      );
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["measurement-import-history", user?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["measurement-readings", user?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["journal-measurements", user?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["health-summary-measurements", user?.id],
+        }),
+      ]);
+    },
+  });
+
+  const requestRevert = (batch: ImportBatchRow) => {
+    const confirmed = window.confirm(
+      lang === "ar"
+        ? `سيتم حذف ${batch.imported_count} قراءة مرتبطة بهذه الـBatch من سجل القياسات، مع الاحتفاظ بسجل الاستيراد كـ«تم التراجع». هل تريد المتابعة؟`
+        : `This will remove ${batch.imported_count} readings linked to this batch while keeping the import record as reverted. Continue?`,
+    );
+
+    if (confirmed) {
+      revertImportMutation.mutate(batch.id);
+    }
+  };
 
   const downloadQaReport = () => {
     if (!parsed || !qa) return;
@@ -412,10 +490,27 @@ function HealthDataImportQaPage() {
             importing={importMutation.isPending}
             error={importMutation.error}
             result={importResult}
+            duplicateBatch={duplicateImportedBatch}
             onImport={() => importMutation.mutate()}
           />
         </div>
       )}
+
+      {user ? (
+        <ImportHistorySection
+          lang={lang}
+          batches={importHistoryQuery.data ?? []}
+          loading={importHistoryQuery.isLoading}
+          error={importHistoryQuery.error}
+          revertingBatchId={
+            revertImportMutation.isPending
+              ? revertImportMutation.variables ?? null
+              : null
+          }
+          revertError={revertImportMutation.error}
+          onRevert={requestRevert}
+        />
+      ) : null}
     </div>
   );
 }
