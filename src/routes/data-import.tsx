@@ -863,6 +863,7 @@ function ImportCommitSection({
   importing,
   error,
   result,
+  duplicateBatch,
   onImport,
 }: {
   lang: "ar" | "en";
@@ -873,6 +874,7 @@ function ImportCommitSection({
   importing: boolean;
   error: Error | null;
   result: ImportResult | null;
+  duplicateBatch: ImportBatchRow | null;
   onImport: () => void;
 }) {
   return (
@@ -927,6 +929,30 @@ function ImportCommitSection({
             </details>
           ) : null}
 
+          {duplicateBatch ? (
+            <div className="mt-4 rounded-2xl bg-warning-soft p-4 text-warning">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <div>
+                  <p className="text-xs font-extrabold">
+                    {lang === "ar"
+                      ? "هذا الملف مستورد بالفعل"
+                      : "This exact file was already imported"}
+                  </p>
+                  <p className="mt-1 text-xs leading-5">
+                    {lang === "ar"
+                      ? `تم استيراد نفس بصمة الملف في ${new Date(
+                          duplicateBatch.created_at,
+                        ).toLocaleString("ar-SA")} وحُفظت ${duplicateBatch.imported_count} قراءة. لمنع التكرار، تراجع عن الـBatch السابقة أولًا إذا كنت تريد إعادة استيراد الملف.`
+                      : `The same file fingerprint was imported on ${new Date(
+                          duplicateBatch.created_at,
+                        ).toLocaleString("en")} with ${duplicateBatch.imported_count} readings. To prevent duplicates, revert the prior batch before importing this file again.`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {!userSignedIn ? (
             <div className="mt-4 rounded-2xl bg-primary-soft/60 p-4">
               <p className="text-xs leading-5 text-muted-foreground">
@@ -960,7 +986,12 @@ function ImportCommitSection({
 
               <button
                 type="button"
-                disabled={!confirmed || importing || plan.rows.length === 0}
+                disabled={
+                  !confirmed ||
+                  importing ||
+                  plan.rows.length === 0 ||
+                  Boolean(duplicateBatch)
+                }
                 onClick={onImport}
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground disabled:opacity-45"
               >
@@ -1003,6 +1034,182 @@ function ImportCommitSection({
   );
 }
 
+function ImportHistorySection({
+  lang,
+  batches,
+  loading,
+  error,
+  revertingBatchId,
+  revertError,
+  onRevert,
+}: {
+  lang: "ar" | "en";
+  batches: ImportBatchRow[];
+  loading: boolean;
+  error: Error | null;
+  revertingBatchId: string | null;
+  revertError: Error | null;
+  onRevert: (batch: ImportBatchRow) => void;
+}) {
+  return (
+    <section className="mt-5 glass rounded-3xl p-5">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <History className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-extrabold">
+            {lang === "ar" ? "سجل عمليات الاستيراد" : "Import history"}
+          </h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {lang === "ar"
+              ? "يُحتفظ بسجل الـBatch حتى بعد التراجع. التراجع يحذف القراءات التابعة لهذه العملية فقط ولا يحذف سجل العملية."
+              : "Batch provenance is retained after a revert. Reverting removes only readings from that import and keeps the batch record."}
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          {lang === "ar" ? "جارٍ تحميل السجل..." : "Loading history..."}
+        </p>
+      ) : error ? (
+        <p className="mt-4 rounded-xl bg-warning-soft px-3 py-2 text-xs text-warning">
+          {lang === "ar"
+            ? "تعذر تحميل سجل الاستيراد. قد تحتاج Migration سجل الاستيراد الجديدة إلى التطبيق."
+            : "Import history could not be loaded. The new import-history migration may still need to be applied."}
+        </p>
+      ) : !batches.length ? (
+        <p className="mt-4 rounded-2xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
+          {lang === "ar"
+            ? "لا توجد عمليات استيراد محفوظة بعد."
+            : "No saved imports yet."}
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {batches.map((batch) => (
+            <article
+              key={batch.id}
+              className="rounded-2xl bg-card p-4 ring-1 ring-border"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-extrabold">
+                    {batch.original_filename}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {new Date(batch.created_at).toLocaleString(
+                      lang === "ar" ? "ar-SA" : "en",
+                    )}
+                    {" • "}
+                    {formatBytes(batch.file_size_bytes)}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[11px] font-bold",
+                    batch.status === "imported"
+                      ? "bg-success-soft text-success"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {batch.status === "imported"
+                    ? lang === "ar"
+                      ? "مستورد"
+                      : "Imported"
+                    : lang === "ar"
+                      ? "تم التراجع"
+                      : "Reverted"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <HistoryMetric
+                  value={batch.source_row_count}
+                  label={lang === "ar" ? "صف مصدر" : "Source rows"}
+                />
+                <HistoryMetric
+                  value={batch.imported_count}
+                  label={lang === "ar" ? "تم حفظها" : "Imported"}
+                />
+                <HistoryMetric
+                  value={
+                    batch.status === "reverted"
+                      ? batch.reverted_count
+                      : batch.skipped_count
+                  }
+                  label={
+                    batch.status === "reverted"
+                      ? lang === "ar"
+                        ? "حُذفت بالتراجع"
+                        : "Removed"
+                      : lang === "ar"
+                        ? "تم تخطيها"
+                        : "Skipped"
+                  }
+                />
+              </div>
+
+              {batch.status === "imported" ? (
+                <button
+                  type="button"
+                  disabled={revertingBatchId === batch.id}
+                  onClick={() => onRevert(batch)}
+                  className="mt-3 inline-flex items-center gap-2 rounded-xl bg-warning-soft px-3.5 py-2.5 text-xs font-bold text-warning disabled:opacity-50"
+                >
+                  <Undo2 className="size-4" />
+                  {revertingBatchId === batch.id
+                    ? lang === "ar"
+                      ? "جارٍ التراجع..."
+                      : "Reverting..."
+                    : lang === "ar"
+                      ? "التراجع عن هذه العملية"
+                      : "Revert this import"}
+                </button>
+              ) : (
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  {batch.reverted_at
+                    ? lang === "ar"
+                      ? `تم التراجع في ${new Date(
+                          batch.reverted_at,
+                        ).toLocaleString("ar-SA")}`
+                      : `Reverted on ${new Date(
+                          batch.reverted_at,
+                        ).toLocaleString("en")}`
+                    : null}
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+
+      {revertError ? (
+        <p className="mt-4 rounded-xl bg-warning-soft px-3 py-2 text-xs text-warning">
+          {lang === "ar"
+            ? "تعذر التراجع عن الـBatch. لم يتم اعتماد حذف جزئي."
+            : "The batch could not be reverted. No partial revert was accepted."}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function HistoryMetric({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) {
+  return (
+    <div className="rounded-xl bg-background p-2.5 ring-1 ring-border">
+      <strong className="text-sm font-extrabold">{value}</strong>
+      <p className="mt-1 text-[9px] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
 function parseImportResult(value: unknown): ImportResult {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("INVALID_IMPORT_RESPONSE");
@@ -1038,6 +1245,12 @@ function formatImportError(error: Error, lang: "ar" | "en"): string {
     return lang === "ar"
       ? "بنية حفظ الاستيراد لم تُطبّق في قاعدة البيانات بعد."
       : "The import persistence database foundation has not been deployed yet.";
+  }
+
+  if (message.includes("DUPLICATE_FILE_IMPORT")) {
+    return lang === "ar"
+      ? "تم استيراد نفس الملف بالفعل. تراجع عن الـBatch السابقة أولًا إذا كنت تريد إعادة استيراده."
+      : "This exact file was already imported. Revert the prior batch before importing it again.";
   }
 
   return lang === "ar"
