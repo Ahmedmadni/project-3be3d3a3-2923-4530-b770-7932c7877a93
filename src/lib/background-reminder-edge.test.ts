@@ -10,7 +10,7 @@ const edge = readFileSync(
 );
 
 const scheduler = readFileSync(
-  new URL("../../supabase/medication_reminder_scheduler.sql", import.meta.url),
+  new URL("../../supabase/medication_reminder_cron_setup.sql", import.meta.url),
   "utf8",
 );
 
@@ -51,10 +51,18 @@ describe("background medication reminder sender", () => {
     expect(edge).toContain(".update({ is_active: false })");
   });
 
-  it("schedules the sender through Vault-backed pg_cron and pg_net", () => {
+  it("schedules the sender through runtime Vault lookups, not stored credentials", () => {
     expect(scheduler).toContain("cron.schedule");
+    expect(scheduler).toContain("cron.unschedule");
     expect(scheduler).toContain("net.http_post");
+    expect(scheduler).toContain("vault.decrypted_secrets");
     expect(scheduler).toContain("medication_reminder_cron_secret");
     expect(scheduler).toContain("x-cron-secret");
+    expect(scheduler).toContain("$job$");
+    expect(scheduler).not.toContain("format(");
+    expect(scheduler).not.toContain("%L");
+    const storedCommand = scheduler.split("$job$")[1];
+    expect(storedCommand).toContain("vault.decrypted_secrets");
+    expect(storedCommand).not.toContain("cron_secret_value");
   });
 });
