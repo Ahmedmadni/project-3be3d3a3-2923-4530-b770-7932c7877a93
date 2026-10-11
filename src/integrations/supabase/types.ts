@@ -1260,9 +1260,11 @@ export type Database = {
           mapping: Json
           original_filename: string
           qa_summary: Json
+          reverted_at: string | null
+          reverted_count: number
           skipped_count: number
           source_row_count: number
-          status: "imported"
+          status: "imported" | "reverted"
           user_id: string
         }
         Insert: {
@@ -1274,9 +1276,11 @@ export type Database = {
           mapping?: Json
           original_filename: string
           qa_summary?: Json
+          reverted_at?: string | null
+          reverted_count?: number
           skipped_count?: number
           source_row_count: number
-          status?: "imported"
+          status?: "imported" | "reverted"
           user_id: string
         }
         Update: {
@@ -1288,9 +1292,11 @@ export type Database = {
           mapping?: Json
           original_filename?: string
           qa_summary?: Json
+          reverted_at?: string | null
+          reverted_count?: number
           skipped_count?: number
           source_row_count?: number
-          status?: "imported"
+          status?: "imported" | "reverted"
           user_id?: string
         }
         Relationships: []
@@ -2620,6 +2626,22 @@ export type Database = {
           p_rows: Json
           p_source_row_count: number
         }
+        Returns: Json
+      }
+      import_measurement_reading_batch_v2: {
+        Args: {
+          p_file_sha256: string
+          p_file_size_bytes: number
+          p_mapping: Json
+          p_original_filename: string
+          p_qa_summary: Json
+          p_rows: Json
+          p_source_row_count: number
+        }
+        Returns: Json
+      }
+      revert_measurement_import_batch: {
+        Args: { p_batch_id: string }
         Returns: Json
       }
       content_visible: {

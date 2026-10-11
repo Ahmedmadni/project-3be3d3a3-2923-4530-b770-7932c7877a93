@@ -21,7 +21,7 @@ describe("professional health data import surface", () => {
   });
 
   it("uses the atomic import RPC rather than direct measurement inserts", () => {
-    expect(route).toContain('"import_measurement_reading_batch"');
+    expect(route).toContain('"import_measurement_reading_batch_v2"');
     expect(route).toContain("buildMeasurementImportPlan");
     expect(route).not.toContain('.from("measurement_readings").insert');
     expect(route).not.toContain('.from("measurement_readings")\n        .insert');
@@ -30,7 +30,9 @@ describe("professional health data import surface", () => {
   it("requires explicit confirmation before save", () => {
     expect(route).toContain("importConfirmed");
     expect(route).toContain("راجعت تعيين الأعمدة والمعاينة");
-    expect(route).toContain("disabled={!confirmed");
+    expect(route).toContain("checked={confirmed}");
+    expect(route).toContain("setConfirmed(event.target.checked)");
+    expect(route).toContain("!confirmed ||");
   });
 
   it("hashes the local file and records batch provenance metadata", () => {
