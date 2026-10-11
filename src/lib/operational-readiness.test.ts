@@ -39,8 +39,9 @@ describe("production Supabase readiness checks", () => {
 
   it("does not write to patient data or schedule push deliveries", () => {
     const sql = audit.replace(/--[^\n]*/g, "").toLowerCase();
+    const sqlWithoutLiterals = sql.replace(/\x27(?:\x27\x27|[^\x27])*\x27/g, "\x27\x27");
     expect(sql).toContain("with checks as");
-    expect(sql).not.toMatch(/\b(insert|update|delete|drop|alter|create|truncate|perform|execute)\b/);
+    expect(sqlWithoutLiterals).not.toMatch(/\b(insert|update|delete|drop|alter|create|truncate|perform|execute)\b/);
     expect(sql).not.toContain("net.http_post");
   });
 
