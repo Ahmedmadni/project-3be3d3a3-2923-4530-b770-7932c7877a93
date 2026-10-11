@@ -114,6 +114,25 @@ function HealthDataImportQaPage() {
     },
   });
 
+  const duplicateImportQuery = useQuery({
+    queryKey: ["measurement-import-duplicate", user?.id, fileSha256],
+    enabled: Boolean(user && fileSha256),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("measurement_import_batches")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("file_sha256", fileSha256)
+        .eq("status", "imported")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const qa = useMemo(
     () =>
       parsed
@@ -158,17 +177,7 @@ function HealthDataImportQaPage() {
     [qa],
   );
 
-  const duplicateImportedBatch = useMemo(
-    () =>
-      fileSha256
-        ? (importHistoryQuery.data ?? []).find(
-            (batch) =>
-              batch.file_sha256 === fileSha256 &&
-              batch.status === "imported",
-          ) ?? null
-        : null,
-    [fileSha256, importHistoryQuery.data],
-  );
+  const duplicateImportedBatch = duplicateImportQuery.data ?? null;
 
   const reset = () => {
     setParsed(null);
@@ -259,6 +268,9 @@ function HealthDataImportQaPage() {
         queryClient.invalidateQueries({
           queryKey: ["measurement-import-history", user?.id],
         }),
+        queryClient.invalidateQueries({
+          queryKey: ["measurement-import-duplicate", user?.id],
+        }),
       ]);
     },
   });
@@ -279,6 +291,9 @@ function HealthDataImportQaPage() {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["measurement-import-history", user?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["measurement-import-duplicate", user?.id],
         }),
         queryClient.invalidateQueries({
           queryKey: ["measurement-readings", user?.id],
