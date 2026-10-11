@@ -30,7 +30,9 @@ describe("professional health data import surface", () => {
   it("requires explicit confirmation before save", () => {
     expect(route).toContain("importConfirmed");
     expect(route).toContain("راجعت تعيين الأعمدة والمعاينة");
-    expect(route).toContain("disabled={!confirmed");
+    expect(route).toContain("checked={confirmed}");
+    expect(route).toContain("setConfirmed(event.target.checked)");
+    expect(route).toContain("!confirmed ||");
   });
 
   it("hashes the local file and records batch provenance metadata", () => {
