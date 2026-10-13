@@ -133,10 +133,11 @@ WITH checks AS (
   UNION ALL
   SELECT '23_push_endpoint_ownership_guard',
          COALESCE((
-           SELECT pg_get_functiondef(p.oid) LIKE
-             '%WHERE public.web_push_subscriptions.user_id = EXCLUDED.user_id%'
-             AND pg_get_functiondef(p.oid) LIKE
-               '%PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT%'
+           SELECT p.prosrc ~*
+             'where[[:space:]]+public[.]web_push_subscriptions[.]user_id[[:space:]]*=[[:space:]]*excluded[.]user_id'
+             AND p.prosrc ~ 'PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT'
+             AND p.prosrc ~*
+               'on[[:space:]]+conflict[[:space:]]*[(]endpoint[)][[:space:]]+do[[:space:]]+update'
            FROM pg_catalog.pg_proc AS p
            WHERE p.oid = to_regprocedure(
              'public.claim_web_push_subscription(text,text,text,bigint,text)'
