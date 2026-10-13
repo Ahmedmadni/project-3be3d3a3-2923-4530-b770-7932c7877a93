@@ -30,6 +30,8 @@ describe("production Supabase readiness checks", () => {
       "revert_measurement_import_batch",
       "pg_cron",
       "pg_net",
+      "23_push_endpoint_ownership_guard",
+      "PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT",
       "relrowsecurity",
       "pg_policies",
     ]) {
