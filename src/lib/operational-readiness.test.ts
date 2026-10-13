@@ -39,6 +39,21 @@ describe("production Supabase readiness checks", () => {
     }
   });
 
+  it("matches push ownership guard even when SQL is wrapped across lines", () => {
+    expect(audit).toContain("p.prosrc ~*");
+    expect(audit).toContain(
+      "web_push_subscriptions[.]user_id[[:space:]]*=[[:space:]]*excluded[.]user_id",
+    );
+    expect(audit).not.toContain("pg_get_functiondef");
+    const formattedGuard =
+      "WHERE public.web_push_subscriptions.user_id =\\n EXCLUDED.user_id";
+    expect(
+      /where\\s+public\\.web_push_subscriptions\\.user_id\\s*=\\s*excluded\\.user_id/i.test(
+        formattedGuard,
+      ),
+    ).toBe(true);
+  });
+
   it("does not write to patient data or schedule push deliveries", () => {
     const sql = audit.replace(/--[^\n]*/g, "").toLowerCase();
     const sqlWithoutLiterals = sql.replace(/\x27(?:\x27\x27|[^\x27])*\x27/g, "\x27\x27");
