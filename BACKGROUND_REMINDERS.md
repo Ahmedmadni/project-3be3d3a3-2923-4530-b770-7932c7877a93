@@ -36,6 +36,52 @@ the project's normal change-control process before any production writes.
 The audit checks schema/RLS/RPC/extension **presence only**. It cannot prove
 Edge Function deployment, scheduler health, client configuration, or delivery.
 
+## 1a. Security hotfix: lock a push endpoint to its owner
+
+Migration `20261014001000_web_push_subscription_ownership_guard.sql`
+replaces the previously deployed claim RPC, without changing patient data
+or existing subscriptions. **Apply it in the Supabase SQL Editor before
+enabling push in production.** The earlier foundation allowed an authenticated
+caller with another user's endpoint to overwrite the endpoint's `user_id`.
+The hotfix permits same-account updates but rejects any cross-account
+ownership change with `PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT`.
+
+The operator has already verified the three prerequisite migrations' basic
+schema checks on the linked project, but that does not establish complete
+runtime behavior or reconcile migration history. Do **not** reapply the
+historical files or mark other unrecorded migrations as applied.
+
+After applying the hotfix, run this **read-only** verification:
+
+```sql
+WITH f AS (
+  SELECT to_regprocedure(
+    'public.claim_web_push_subscription(text,text,text,bigint,text)'
+  ) AS oid
+)
+SELECT
+  oid IS NOT NULL AS rpc_exists,
+  COALESCE(
+    pg_get_functiondef(oid) LIKE
+      '%WHERE public.web_push_subscriptions.user_id = EXCLUDED.user_id%'
+    AND pg_get_functiondef(oid) LIKE
+      '%PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT%',
+    false
+  ) AS owner_guard_installed,
+  COALESCE(has_function_privilege('authenticated', oid, 'EXECUTE'), false)
+    AS authenticated_allowed,
+  NOT COALESCE(has_function_privilege('anon', oid, 'EXECUTE'), false)
+    AS anonymous_denied
+FROM f;
+```
+
+Expect four `true` values. This is a *structural* audit, not an RLS
+behavior test. For account switching on a shared browser, explicitly
+unsubscribe the previous browser push subscription before registering
+the new account; this endpoint is intentionally not transferrable.
+Never include push endpoint URLs, public/private keys, or raw user
+identifiers in shared test output.
+
 ## 2. Configure environment and deploy Edge Function
 
 In the web app build environment:

@@ -1,5 +1,6 @@
 -- Production readiness: schema and privilege checks for reminder + CSV import.
 -- READ ONLY. Run in Supabase SQL Editor after comparing migration history.
+-- Also verifies that the push-claim ownership hotfix has been installed.
 -- Does not inspect user data, invoke reminders, send push, or change records.
 -- READY confirms only a schema invariant, never successful live deployment.
 -- Edge Function, VAPID, Vault contents, cron execution and device delivery
@@ -129,6 +130,18 @@ WITH checks AS (
   UNION ALL
   SELECT '22_pg_net_extension',
          EXISTS(SELECT 1 FROM pg_catalog.pg_extension WHERE extname = 'pg_net')
+  UNION ALL
+  SELECT '23_push_endpoint_ownership_guard',
+         COALESCE((
+           SELECT pg_get_functiondef(p.oid) LIKE
+             '%WHERE public.web_push_subscriptions.user_id = EXCLUDED.user_id%'
+             AND pg_get_functiondef(p.oid) LIKE
+               '%PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT%'
+           FROM pg_catalog.pg_proc AS p
+           WHERE p.oid = to_regprocedure(
+             'public.claim_web_push_subscription(text,text,text,bigint,text)'
+           )
+         ), false)
 )
 SELECT check_name,
        CASE WHEN ready THEN 'READY' ELSE 'MISSING_OR_UNSAFE' END AS status
