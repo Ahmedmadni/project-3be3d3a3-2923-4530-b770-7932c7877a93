@@ -32,13 +32,12 @@ describe("background push reminder migration", () => {
     expect(migration).not.toContain("END\n$;");
   });
 
-  it("claims a browser endpoint for only the currently authenticated account", () => {
+  it("initializes authenticated push registration (later ownership guard supersedes it)", () => {
     expect(migration).toContain(
       "CREATE OR REPLACE FUNCTION public.claim_web_push_subscription",
     );
     expect(migration).toContain("current_user_id uuid := auth.uid()");
     expect(migration).toContain("ON CONFLICT (endpoint)");
-    expect(migration).toContain("user_id = EXCLUDED.user_id");
   });
 
   it("does not store medication or health content in push subscriptions", () => {
