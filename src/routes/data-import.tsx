@@ -90,13 +90,20 @@ function HealthDataImportQaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("measurement_types")
-        .select("id,code,name_ar,name_en,value_kind,canonical_unit,allowed_units")
+        .select("id,code,name_ar,name_en,value_kind,canonical_unit,allowed_units,review_status,is_active,is_demo")
         .order("code");
 
       if (error) throw error;
       return data;
     },
   });
+
+  const previewOnlyTypeCount = (measurementTypesQuery.data ?? []).filter(
+    (type) =>
+      type.review_status !== "published" ||
+      type.is_active !== true ||
+      type.is_demo === true,
+  ).length;
 
   const importHistoryQuery = useQuery({
     queryKey: ["measurement-import-history", user?.id],
@@ -402,6 +409,30 @@ function HealthDataImportQaPage() {
           </div>
         </div>
       </section>
+
+      {!measurementTypesQuery.isLoading &&
+      !measurementTypesQuery.isError &&
+      measurementTypesQuery.data?.length === 0 ? (
+        <section
+          role="status"
+          className="mb-5 rounded-3xl bg-warning-soft p-4 text-sm leading-6 text-warning"
+        >
+          {lang === "ar"
+            ? "لا تتوفر لهذا الحساب أنواع قياسات منشورة ومفعلة للاستيراد حاليًا. قد تكون الأنواع ما زالت مسودات تحت المراجعة الطبية؛ لذلك يمكن فحص الملف محليًا، لكن لن تُحفظ قياساته حتى تصبح الأنواع متاحة وفق صلاحيات الحساب."
+            : "No published, active measurement types are available to this account. Some types may still be clinical drafts. You can preview and check a file locally, but its readings cannot be saved until the types are available to your account."}
+        </section>
+      ) : null}
+
+      {previewOnlyTypeCount > 0 ? (
+        <section
+          role="status"
+          className="mb-5 rounded-3xl bg-warning-soft p-4 text-sm leading-6 text-warning"
+        >
+          {lang === "ar"
+            ? "معاينة مهنية فقط: يتضمن كتالوج حسابك أنواع قياسات لم تُنشر أو تُفعّل طبيًا. اختبر الاستيراد ببيانات وهمية وحساب اختبار مخوّل فقط. لا تُعد هذه الأنواع معتمدة أو صالحة للاستدلال السريري."
+            : "Professional preview only: your catalog includes measurement types that are not clinically published or activated. Test imports using synthetic data and an authorized test account only. These types are not approved for clinical inference."}
+        </section>
+      ) : null}
 
       {!parsed ? (
         <section className="glass rounded-3xl p-6 text-center md:p-10">
