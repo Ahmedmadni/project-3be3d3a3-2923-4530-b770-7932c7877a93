@@ -46,9 +46,9 @@ describe("production Supabase readiness checks", () => {
     );
     expect(audit).not.toContain("pg_get_functiondef");
     const formattedGuard =
-      "WHERE public.web_push_subscriptions.user_id =\\n EXCLUDED.user_id";
+      "WHERE public.web_push_subscriptions.user_id =\n EXCLUDED.user_id";
     expect(
-      /where\\s+public\\.web_push_subscriptions\\.user_id\\s*=\\s*excluded\\.user_id/i.test(
+      /where\s+public\.web_push_subscriptions\.user_id\s*=\s*excluded\.user_id/i.test(
         formattedGuard,
       ),
     ).toBe(true);
