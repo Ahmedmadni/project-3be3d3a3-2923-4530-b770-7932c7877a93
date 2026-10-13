@@ -56,6 +56,21 @@ describe("professional health data import surface", () => {
     expect(professional).toContain('"professional.tool.import.title"');
   });
 
+  it("explains when all measurement types are unpublished or unavailable", () => {
+    expect(route).toContain("review_status,is_active,is_demo");
+    expect(route).toContain("measurementTypesQuery.data?.length === 0");
+    expect(route).toContain("لا تتوفر لهذا الحساب أنواع قياسات منشورة ومفعلة");
+    expect(route).toContain("يمكن فحص الملف محليًا");
+  });
+
+  it("flags draft measurement types as professional preview only", () => {
+    expect(route).toContain("previewOnlyTypeCount > 0");
+    expect(route).toContain("type.review_status !== \"published\"");
+    expect(route).toContain("type.is_active !== true");
+    expect(route).toContain("معاينة مهنية فقط");
+    expect(route).toContain("بيانات وهمية وحساب اختبار مخوّل");
+  });
+
   it("retains the non-diagnostic safety framing", () => {
     expect(route).toContain("لا تعتبر الملف دليلًا سريريًا");
     expect(route).toContain("لا تستنتج تشخيصًا أو علاجًا");
