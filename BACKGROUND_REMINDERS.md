@@ -61,13 +61,13 @@ WITH f AS (
 )
 SELECT
   oid IS NOT NULL AS rpc_exists,
-  COALESCE(
-    pg_get_functiondef(oid) LIKE
-      '%WHERE public.web_push_subscriptions.user_id = EXCLUDED.user_id%'
-    AND pg_get_functiondef(oid) LIKE
-      '%PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT%',
-    false
-  ) AS owner_guard_installed,
+  COALESCE((
+    SELECT p.prosrc ~*
+      'where[[:space:]]+public[.]web_push_subscriptions[.]user_id[[:space:]]*=[[:space:]]*excluded[.]user_id'
+      AND p.prosrc ~ 'PUSH_SUBSCRIPTION_OWNERSHIP_CONFLICT'
+    FROM pg_catalog.pg_proc p
+    WHERE p.oid = f.oid
+  ), false) AS owner_guard_installed,
   COALESCE(has_function_privilege('authenticated', oid, 'EXECUTE'), false)
     AS authenticated_allowed,
   NOT COALESCE(has_function_privilege('anon', oid, 'EXECUTE'), false)
@@ -75,7 +75,10 @@ SELECT
 FROM f;
 ```
 
-Expect four `true` values. This is a *structural* audit, not an RLS
+Expect four `true` values. The guard check reads the function's original source
+and allows whitespace around the equality operator; exact-string matching on
+`pg_get_functiondef` can incorrectly report MISSING after SQL formatting.
+This is a *structural* audit, not an RLS
 behavior test. For account switching on a shared browser, explicitly
 unsubscribe the previous browser push subscription before registering
 the new account; this endpoint is intentionally not transferrable.
