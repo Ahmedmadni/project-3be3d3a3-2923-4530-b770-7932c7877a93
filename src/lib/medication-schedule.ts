@@ -21,7 +21,7 @@ export interface MedicationScheduleLike {
 export interface MedicationDoseEventLike {
   schedule_id: string | null;
   scheduled_for: string | null;
-  status: "taken" | "skipped" | (string & {});
+  status: "taken" | "skipped";
 }
 
 export interface MedicationOccurrence {
