@@ -9,7 +9,7 @@ export type MeasurementReviewStatus =
   | "retired";
 
 export type MeasurementValueKind = "scalar" | "compound";
-export type MeasurementQuality = "unknown" | "good" | "questionable";
+export type MeasurementQuality = "unknown" | "good" | "questionable" | (string & {});
 
 export interface MeasurementComponentDefinition {
   code: string;
