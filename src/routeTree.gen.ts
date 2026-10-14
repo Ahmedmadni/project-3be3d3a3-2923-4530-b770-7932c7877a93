@@ -13,10 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DataImportRouteImport } from './routes/data-import'
 import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as FirstAidRouteImport } from './routes/first-aid'
+import { Route as HealthSummaryRouteImport } from './routes/health-summary'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as JournalRouteImport } from './routes/journal'
 import { Route as LibraryRouteImport } from './routes/library'
+import { Route as MeasurementsRouteImport } from './routes/measurements'
 import { Route as ProfessionalRouteImport } from './routes/professional'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResultsRouteImport } from './routes/results'
@@ -26,6 +30,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminConditionsRouteImport } from './routes/admin.conditions'
 import { Route as AdminExternalSourcesRouteImport } from './routes/admin.external-sources'
 import { Route as AdminFirstAidRouteImport } from './routes/admin.first-aid'
+import { Route as AdminMeasurementsRouteImport } from './routes/admin.measurements'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminRedFlagsRouteImport } from './routes/admin.red-flags'
 import { Route as AdminReleasesRouteImport } from './routes/admin.releases'
@@ -35,6 +40,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as ConditionsConditionIdRouteImport } from './routes/conditions.$conditionId'
 import { Route as FirstAidIndexRouteImport } from './routes/first-aid.index'
 import { Route as FirstAidSlugRouteImport } from './routes/first-aid.$slug'
+import { Route as MeasurementsMeasurementTypeIdRouteImport } from './routes/measurements.$measurementTypeId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -56,6 +62,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DataImportRoute = DataImportRouteImport.update({
+  id: '/data-import',
+  path: '/data-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmergencyRoute = EmergencyRouteImport.update({
   id: '/emergency',
   path: '/emergency',
@@ -66,14 +77,29 @@ const FirstAidRoute = FirstAidRouteImport.update({
   path: '/first-aid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HealthSummaryRoute = HealthSummaryRouteImport.update({
+  id: '/health-summary',
+  path: '/health-summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JournalRoute = JournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryRoute = LibraryRouteImport.update({
   id: '/library',
   path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeasurementsRoute = MeasurementsRouteImport.update({
+  id: '/measurements',
+  path: '/measurements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfessionalRoute = ProfessionalRouteImport.update({
@@ -121,6 +147,11 @@ const AdminFirstAidRoute = AdminFirstAidRouteImport.update({
   path: '/first-aid',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMeasurementsRoute = AdminMeasurementsRouteImport.update({
+  id: '/measurements',
+  path: '/measurements',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   id: '/questions',
   path: '/questions',
@@ -166,16 +197,26 @@ const FirstAidSlugRoute = FirstAidSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => FirstAidRoute,
 } as any)
+const MeasurementsMeasurementTypeIdRoute =
+  MeasurementsMeasurementTypeIdRouteImport.update({
+    id: '/$measurementTypeId',
+    path: '/$measurementTypeId',
+    getParentRoute: () => MeasurementsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/data-import': typeof DataImportRoute
   '/emergency': typeof EmergencyRoute
   '/first-aid': typeof FirstAidRouteWithChildren
+  '/health-summary': typeof HealthSummaryRoute
   '/history': typeof HistoryRoute
+  '/journal': typeof JournalRoute
   '/library': typeof LibraryRoute
+  '/measurements': typeof MeasurementsRouteWithChildren
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
@@ -184,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/admin/conditions': typeof AdminConditionsRoute
   '/admin/external-sources': typeof AdminExternalSourcesRoute
   '/admin/first-aid': typeof AdminFirstAidRoute
+  '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/red-flags': typeof AdminRedFlagsRoute
   '/admin/releases': typeof AdminReleasesRoute
@@ -192,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/measurements/$measurementTypeId': typeof MeasurementsMeasurementTypeIdRoute
   '/admin/': typeof AdminIndexRoute
   '/first-aid/': typeof FirstAidIndexRoute
 }
@@ -199,9 +242,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/data-import': typeof DataImportRoute
   '/emergency': typeof EmergencyRoute
+  '/health-summary': typeof HealthSummaryRoute
   '/history': typeof HistoryRoute
+  '/journal': typeof JournalRoute
   '/library': typeof LibraryRoute
+  '/measurements': typeof MeasurementsRouteWithChildren
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
@@ -210,6 +257,7 @@ export interface FileRoutesByTo {
   '/admin/conditions': typeof AdminConditionsRoute
   '/admin/external-sources': typeof AdminExternalSourcesRoute
   '/admin/first-aid': typeof AdminFirstAidRoute
+  '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/red-flags': typeof AdminRedFlagsRoute
   '/admin/releases': typeof AdminReleasesRoute
@@ -218,6 +266,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/measurements/$measurementTypeId': typeof MeasurementsMeasurementTypeIdRoute
   '/admin': typeof AdminIndexRoute
   '/first-aid': typeof FirstAidIndexRoute
 }
@@ -227,10 +276,14 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/data-import': typeof DataImportRoute
   '/emergency': typeof EmergencyRoute
   '/first-aid': typeof FirstAidRouteWithChildren
+  '/health-summary': typeof HealthSummaryRoute
   '/history': typeof HistoryRoute
+  '/journal': typeof JournalRoute
   '/library': typeof LibraryRoute
+  '/measurements': typeof MeasurementsRouteWithChildren
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
@@ -239,6 +292,7 @@ export interface FileRoutesById {
   '/admin/conditions': typeof AdminConditionsRoute
   '/admin/external-sources': typeof AdminExternalSourcesRoute
   '/admin/first-aid': typeof AdminFirstAidRoute
+  '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/red-flags': typeof AdminRedFlagsRoute
   '/admin/releases': typeof AdminReleasesRoute
@@ -247,6 +301,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/conditions/$conditionId': typeof ConditionsConditionIdRoute
   '/first-aid/$slug': typeof FirstAidSlugRoute
+  '/measurements/$measurementTypeId': typeof MeasurementsMeasurementTypeIdRoute
   '/admin/': typeof AdminIndexRoute
   '/first-aid/': typeof FirstAidIndexRoute
 }
@@ -257,10 +312,14 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/data-import'
     | '/emergency'
     | '/first-aid'
+    | '/health-summary'
     | '/history'
+    | '/journal'
     | '/library'
+    | '/measurements'
     | '/professional'
     | '/reset-password'
     | '/results'
@@ -269,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/conditions'
     | '/admin/external-sources'
     | '/admin/first-aid'
+    | '/admin/measurements'
     | '/admin/questions'
     | '/admin/red-flags'
     | '/admin/releases'
@@ -277,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/conditions/$conditionId'
     | '/first-aid/$slug'
+    | '/measurements/$measurementTypeId'
     | '/admin/'
     | '/first-aid/'
   fileRoutesByTo: FileRoutesByTo
@@ -284,9 +345,13 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/auth'
+    | '/data-import'
     | '/emergency'
+    | '/health-summary'
     | '/history'
+    | '/journal'
     | '/library'
+    | '/measurements'
     | '/professional'
     | '/reset-password'
     | '/results'
@@ -295,6 +360,7 @@ export interface FileRouteTypes {
     | '/admin/conditions'
     | '/admin/external-sources'
     | '/admin/first-aid'
+    | '/admin/measurements'
     | '/admin/questions'
     | '/admin/red-flags'
     | '/admin/releases'
@@ -303,6 +369,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/conditions/$conditionId'
     | '/first-aid/$slug'
+    | '/measurements/$measurementTypeId'
     | '/admin'
     | '/first-aid'
   id:
@@ -311,10 +378,14 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/data-import'
     | '/emergency'
     | '/first-aid'
+    | '/health-summary'
     | '/history'
+    | '/journal'
     | '/library'
+    | '/measurements'
     | '/professional'
     | '/reset-password'
     | '/results'
@@ -323,6 +394,7 @@ export interface FileRouteTypes {
     | '/admin/conditions'
     | '/admin/external-sources'
     | '/admin/first-aid'
+    | '/admin/measurements'
     | '/admin/questions'
     | '/admin/red-flags'
     | '/admin/releases'
@@ -331,6 +403,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/conditions/$conditionId'
     | '/first-aid/$slug'
+    | '/measurements/$measurementTypeId'
     | '/admin/'
     | '/first-aid/'
   fileRoutesById: FileRoutesById
@@ -340,10 +413,14 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DataImportRoute: typeof DataImportRoute
   EmergencyRoute: typeof EmergencyRoute
   FirstAidRoute: typeof FirstAidRouteWithChildren
+  HealthSummaryRoute: typeof HealthSummaryRoute
   HistoryRoute: typeof HistoryRoute
+  JournalRoute: typeof JournalRoute
   LibraryRoute: typeof LibraryRoute
+  MeasurementsRoute: typeof MeasurementsRouteWithChildren
   ProfessionalRoute: typeof ProfessionalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResultsRoute: typeof ResultsRoute
@@ -382,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/data-import': {
+      id: '/data-import'
+      path: '/data-import'
+      fullPath: '/data-import'
+      preLoaderRoute: typeof DataImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/emergency': {
       id: '/emergency'
       path: '/emergency'
@@ -396,6 +480,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FirstAidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/health-summary': {
+      id: '/health-summary'
+      path: '/health-summary'
+      fullPath: '/health-summary'
+      preLoaderRoute: typeof HealthSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/history': {
       id: '/history'
       path: '/history'
@@ -403,11 +494,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/journal': {
+      id: '/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof JournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/library': {
       id: '/library'
       path: '/library'
       fullPath: '/library'
       preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/measurements': {
+      id: '/measurements'
+      path: '/measurements'
+      fullPath: '/measurements'
+      preLoaderRoute: typeof MeasurementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/professional': {
@@ -473,6 +578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFirstAidRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/measurements': {
+      id: '/admin/measurements'
+      path: '/measurements'
+      fullPath: '/admin/measurements'
+      preLoaderRoute: typeof AdminMeasurementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/questions': {
       id: '/admin/questions'
       path: '/questions'
@@ -536,6 +648,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FirstAidSlugRouteImport
       parentRoute: typeof FirstAidRoute
     }
+    '/measurements/$measurementTypeId': {
+      id: '/measurements/$measurementTypeId'
+      path: '/$measurementTypeId'
+      fullPath: '/measurements/$measurementTypeId'
+      preLoaderRoute: typeof MeasurementsMeasurementTypeIdRouteImport
+      parentRoute: typeof MeasurementsRoute
+    }
   }
 }
 
@@ -543,6 +662,7 @@ interface AdminRouteChildren {
   AdminConditionsRoute: typeof AdminConditionsRoute
   AdminExternalSourcesRoute: typeof AdminExternalSourcesRoute
   AdminFirstAidRoute: typeof AdminFirstAidRoute
+  AdminMeasurementsRoute: typeof AdminMeasurementsRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminRedFlagsRoute: typeof AdminRedFlagsRoute
   AdminReleasesRoute: typeof AdminReleasesRoute
@@ -556,6 +676,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminConditionsRoute: AdminConditionsRoute,
   AdminExternalSourcesRoute: AdminExternalSourcesRoute,
   AdminFirstAidRoute: AdminFirstAidRoute,
+  AdminMeasurementsRoute: AdminMeasurementsRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminRedFlagsRoute: AdminRedFlagsRoute,
   AdminReleasesRoute: AdminReleasesRoute,
@@ -581,15 +702,31 @@ const FirstAidRouteWithChildren = FirstAidRoute._addFileChildren(
   FirstAidRouteChildren,
 )
 
+interface MeasurementsRouteChildren {
+  MeasurementsMeasurementTypeIdRoute: typeof MeasurementsMeasurementTypeIdRoute
+}
+
+const MeasurementsRouteChildren: MeasurementsRouteChildren = {
+  MeasurementsMeasurementTypeIdRoute: MeasurementsMeasurementTypeIdRoute,
+}
+
+const MeasurementsRouteWithChildren = MeasurementsRoute._addFileChildren(
+  MeasurementsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  DataImportRoute: DataImportRoute,
   EmergencyRoute: EmergencyRoute,
   FirstAidRoute: FirstAidRouteWithChildren,
+  HealthSummaryRoute: HealthSummaryRoute,
   HistoryRoute: HistoryRoute,
+  JournalRoute: JournalRoute,
   LibraryRoute: LibraryRoute,
+  MeasurementsRoute: MeasurementsRouteWithChildren,
   ProfessionalRoute: ProfessionalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResultsRoute: ResultsRoute,
