@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -513,12 +513,7 @@ export type Database = {
           review_status: Database["public"]["Enums"]["review_status"]
           reviewed_at: string | null
           reviewed_by: string | null
-          section_type:
-            | "what_is_happening"
-            | "when_to_call"
-            | "do_now"
-            | "dont_do"
-            | "while_waiting"
+          section_type: string
           sort_order: number
           submitted_at: string | null
           title_ar: string
@@ -541,12 +536,7 @@ export type Database = {
           review_status?: Database["public"]["Enums"]["review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
-          section_type:
-            | "what_is_happening"
-            | "when_to_call"
-            | "do_now"
-            | "dont_do"
-            | "while_waiting"
+          section_type: string
           sort_order?: number
           submitted_at?: string | null
           title_ar: string
@@ -569,12 +559,7 @@ export type Database = {
           review_status?: Database["public"]["Enums"]["review_status"]
           reviewed_at?: string | null
           reviewed_by?: string | null
-          section_type?:
-            | "what_is_happening"
-            | "when_to_call"
-            | "do_now"
-            | "dont_do"
-            | "while_waiting"
+          section_type?: string
           sort_order?: number
           submitted_at?: string | null
           title_ar?: string
@@ -713,6 +698,69 @@ export type Database = {
         }
         Relationships: []
       }
+      health_journal_entries: {
+        Row: {
+          created_at: string
+          energy_score: number | null
+          entry_type: string
+          id: string
+          mood_score: number | null
+          note: string
+          occurred_at: string
+          related_measurement_reading_id: string | null
+          related_symptom_session_id: string | null
+          tags: string[]
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          energy_score?: number | null
+          entry_type?: string
+          id?: string
+          mood_score?: number | null
+          note: string
+          occurred_at?: string
+          related_measurement_reading_id?: string | null
+          related_symptom_session_id?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          energy_score?: number | null
+          entry_type?: string
+          id?: string
+          mood_score?: number | null
+          note?: string
+          occurred_at?: string
+          related_measurement_reading_id?: string | null
+          related_symptom_session_id?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_journal_entries_related_measurement_reading_id_fkey"
+            columns: ["related_measurement_reading_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_readings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_journal_entries_related_symptom_session_id_fkey"
+            columns: ["related_symptom_session_id"]
+            isOneToOne: false
+            referencedRelation: "symptom_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_releases: {
         Row: {
           created_at: string
@@ -746,11 +794,62 @@ export type Database = {
         }
         Relationships: []
       }
+      measurement_import_batches: {
+        Row: {
+          created_at: string
+          file_sha256: string | null
+          file_size_bytes: number
+          id: string
+          imported_count: number
+          mapping: Json
+          original_filename: string
+          qa_summary: Json
+          reverted_at: string | null
+          reverted_count: number
+          skipped_count: number
+          source_row_count: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_sha256?: string | null
+          file_size_bytes: number
+          id?: string
+          imported_count?: number
+          mapping?: Json
+          original_filename: string
+          qa_summary?: Json
+          reverted_at?: string | null
+          reverted_count?: number
+          skipped_count?: number
+          source_row_count: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_sha256?: string | null
+          file_size_bytes?: number
+          id?: string
+          imported_count?: number
+          mapping?: Json
+          original_filename?: string
+          qa_summary?: Json
+          reverted_at?: string | null
+          reverted_count?: number
+          skipped_count?: number
+          source_row_count?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       measurement_knowledge_articles: {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          audience: "general" | "professional"
+          audience: string
           change_reason: string | null
           code: string
           created_at: string
@@ -777,7 +876,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          audience: "general" | "professional"
+          audience: string
           change_reason?: string | null
           code: string
           created_at?: string
@@ -804,7 +903,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          audience?: "general" | "professional"
+          audience?: string
           change_reason?: string | null
           code?: string
           created_at?: string
@@ -845,15 +944,7 @@ export type Database = {
           body_en: string | null
           created_at: string
           id: string
-          section_type:
-            | "overview"
-            | "how_to_measure"
-            | "common_errors"
-            | "what_it_means"
-            | "when_to_repeat"
-            | "warning_signs"
-            | "special_context"
-            | "limitations"
+          section_type: string
           sort_order: number
           title_ar: string
           title_en: string | null
@@ -865,15 +956,7 @@ export type Database = {
           body_en?: string | null
           created_at?: string
           id?: string
-          section_type:
-            | "overview"
-            | "how_to_measure"
-            | "common_errors"
-            | "what_it_means"
-            | "when_to_repeat"
-            | "warning_signs"
-            | "special_context"
-            | "limitations"
+          section_type: string
           sort_order?: number
           title_ar: string
           title_en?: string | null
@@ -885,15 +968,7 @@ export type Database = {
           body_en?: string | null
           created_at?: string
           id?: string
-          section_type?:
-            | "overview"
-            | "how_to_measure"
-            | "common_errors"
-            | "what_it_means"
-            | "when_to_repeat"
-            | "warning_signs"
-            | "special_context"
-            | "limitations"
+          section_type?: string
           sort_order?: number
           title_ar?: string
           title_en?: string | null
@@ -915,21 +990,21 @@ export type Database = {
           created_at: string
           notes: string | null
           source_id: string
-          source_role: "primary" | "supporting" | "safety" | "capture"
+          source_role: string
         }
         Insert: {
           article_id: string
           created_at?: string
           notes?: string | null
           source_id: string
-          source_role: "primary" | "supporting" | "safety" | "capture"
+          source_role: string
         }
         Update: {
           article_id?: string
           created_at?: string
           notes?: string | null
           source_id?: string
-          source_role?: "primary" | "supporting" | "safety" | "capture"
+          source_role?: string
         }
         Relationships: [
           {
@@ -948,359 +1023,6 @@ export type Database = {
           },
         ]
       }
-      medication_reminder_deliveries: {
-        Row: {
-          created_at: string
-          error_code: string | null
-          id: string
-          provider_status: number | null
-          schedule_id: string
-          scheduled_for: string
-          sent_at: string | null
-          status: "pending" | "sent" | "failed"
-          subscription_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          error_code?: string | null
-          id?: string
-          provider_status?: number | null
-          schedule_id: string
-          scheduled_for: string
-          sent_at?: string | null
-          status?: "pending" | "sent" | "failed"
-          subscription_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          error_code?: string | null
-          id?: string
-          provider_status?: number | null
-          schedule_id?: string
-          scheduled_for?: string
-          sent_at?: string | null
-          status?: "pending" | "sent" | "failed"
-          subscription_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "medication_reminder_deliveries_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "medication_schedules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "medication_reminder_deliveries_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "web_push_subscriptions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      web_push_subscriptions: {
-        Row: {
-          auth_secret: string
-          created_at: string
-          endpoint: string
-          expiration_time: number | null
-          id: string
-          is_active: boolean
-          p256dh: string
-          updated_at: string
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          auth_secret: string
-          created_at?: string
-          endpoint: string
-          expiration_time?: number | null
-          id?: string
-          is_active?: boolean
-          p256dh: string
-          updated_at?: string
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          auth_secret?: string
-          created_at?: string
-          endpoint?: string
-          expiration_time?: number | null
-          id?: string
-          is_active?: boolean
-          p256dh?: string
-          updated_at?: string
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      health_journal_entries: {
-        Row: {
-          created_at: string
-          energy_score: number | null
-          entry_type: "general" | "symptom_note" | "mood" | "care_note"
-          id: string
-          mood_score: number | null
-          note: string
-          occurred_at: string
-          related_measurement_reading_id: string | null
-          related_symptom_session_id: string | null
-          tags: string[]
-          title: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          energy_score?: number | null
-          entry_type?: "general" | "symptom_note" | "mood" | "care_note"
-          id?: string
-          mood_score?: number | null
-          note: string
-          occurred_at?: string
-          related_measurement_reading_id?: string | null
-          related_symptom_session_id?: string | null
-          tags?: string[]
-          title?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          energy_score?: number | null
-          entry_type?: "general" | "symptom_note" | "mood" | "care_note"
-          id?: string
-          mood_score?: number | null
-          note?: string
-          occurred_at?: string
-          related_measurement_reading_id?: string | null
-          related_symptom_session_id?: string | null
-          tags?: string[]
-          title?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "health_journal_entries_related_measurement_reading_id_fkey"
-            columns: ["related_measurement_reading_id"]
-            isOneToOne: false
-            referencedRelation: "measurement_readings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "health_journal_entries_related_symptom_session_id_fkey"
-            columns: ["related_symptom_session_id"]
-            isOneToOne: false
-            referencedRelation: "symptom_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      medication_dose_events: {
-        Row: {
-          created_at: string
-          event_at: string
-          id: string
-          medication_id: string
-          note: string | null
-          schedule_id: string | null
-          scheduled_for: string | null
-          status: "taken" | "skipped"
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          event_at?: string
-          id?: string
-          medication_id: string
-          note?: string | null
-          schedule_id?: string | null
-          scheduled_for?: string | null
-          status: "taken" | "skipped"
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          event_at?: string
-          id?: string
-          medication_id?: string
-          note?: string | null
-          schedule_id?: string | null
-          scheduled_for?: string | null
-          status?: "taken" | "skipped"
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "medication_dose_events_medication_id_fkey"
-            columns: ["medication_id"]
-            isOneToOne: false
-            referencedRelation: "user_medications"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "medication_dose_events_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "medication_schedules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      medication_schedules: {
-        Row: {
-          created_at: string
-          days_of_week: string[]
-          end_date: string | null
-          id: string
-          label: string | null
-          medication_id: string
-          reminder_enabled: boolean
-          start_date: string | null
-          time_local: string
-          timezone: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          days_of_week?: string[]
-          end_date?: string | null
-          id?: string
-          label?: string | null
-          medication_id: string
-          reminder_enabled?: boolean
-          start_date?: string | null
-          time_local: string
-          timezone?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          days_of_week?: string[]
-          end_date?: string | null
-          id?: string
-          label?: string | null
-          medication_id?: string
-          reminder_enabled?: boolean
-          start_date?: string | null
-          time_local?: string
-          timezone?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "medication_schedules_medication_id_fkey"
-            columns: ["medication_id"]
-            isOneToOne: false
-            referencedRelation: "user_medications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_medications: {
-        Row: {
-          created_at: string
-          dose_text: string | null
-          end_date: string | null
-          id: string
-          instructions_text: string | null
-          is_active: boolean
-          name: string
-          schedule_text: string | null
-          start_date: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          dose_text?: string | null
-          end_date?: string | null
-          id?: string
-          instructions_text?: string | null
-          is_active?: boolean
-          name: string
-          schedule_text?: string | null
-          start_date?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          dose_text?: string | null
-          end_date?: string | null
-          id?: string
-          instructions_text?: string | null
-          is_active?: boolean
-          name?: string
-          schedule_text?: string | null
-          start_date?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      measurement_import_batches: {
-        Row: {
-          created_at: string
-          file_sha256: string | null
-          file_size_bytes: number
-          id: string
-          imported_count: number
-          mapping: Json
-          original_filename: string
-          qa_summary: Json
-          reverted_at: string | null
-          reverted_count: number
-          skipped_count: number
-          source_row_count: number
-          status: "imported" | "reverted"
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          file_sha256?: string | null
-          file_size_bytes: number
-          id?: string
-          imported_count?: number
-          mapping?: Json
-          original_filename: string
-          qa_summary?: Json
-          reverted_at?: string | null
-          reverted_count?: number
-          skipped_count?: number
-          source_row_count: number
-          status?: "imported" | "reverted"
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          file_sha256?: string | null
-          file_size_bytes?: number
-          id?: string
-          imported_count?: number
-          mapping?: Json
-          original_filename?: string
-          qa_summary?: Json
-          reverted_at?: string | null
-          reverted_count?: number
-          skipped_count?: number
-          source_row_count?: number
-          status?: "imported" | "reverted"
-          user_id?: string
-        }
-        Relationships: []
-      }
       measurement_readings: {
         Row: {
           components: Json | null
@@ -1312,7 +1034,7 @@ export type Database = {
           measured_at: string
           measurement_type_id: string
           notes: string | null
-          quality: "unknown" | "good" | "questionable"
+          quality: string
           scalar_value: number | null
           unit: string | null
           updated_at: string
@@ -1328,7 +1050,7 @@ export type Database = {
           measured_at: string
           measurement_type_id: string
           notes?: string | null
-          quality?: "unknown" | "good" | "questionable"
+          quality?: string
           scalar_value?: number | null
           unit?: string | null
           updated_at?: string
@@ -1344,7 +1066,7 @@ export type Database = {
           measured_at?: string
           measurement_type_id?: string
           notes?: string | null
-          quality?: "unknown" | "good" | "questionable"
+          quality?: string
           scalar_value?: number | null
           unit?: string | null
           updated_at?: string
@@ -1576,11 +1298,7 @@ export type Database = {
           measurement_type_id: string
           notes: string | null
           source_id: string
-          use_scope:
-            | "capture_guidance"
-            | "reference_range"
-            | "safety_threshold"
-            | "terminology"
+          use_scope: string
         }
         Insert: {
           created_at?: string
@@ -1589,11 +1307,7 @@ export type Database = {
           measurement_type_id: string
           notes?: string | null
           source_id: string
-          use_scope:
-            | "capture_guidance"
-            | "reference_range"
-            | "safety_threshold"
-            | "terminology"
+          use_scope: string
         }
         Update: {
           created_at?: string
@@ -1602,11 +1316,7 @@ export type Database = {
           measurement_type_id?: string
           notes?: string | null
           source_id?: string
-          use_scope?:
-            | "capture_guidance"
-            | "reference_range"
-            | "safety_threshold"
-            | "terminology"
+          use_scope?: string
         }
         Relationships: [
           {
@@ -1652,7 +1362,7 @@ export type Database = {
           reviewed_by: string | null
           submitted_at: string | null
           updated_at: string
-          value_kind: "scalar" | "compound"
+          value_kind: string
           version: number
         }
         Insert: {
@@ -1681,7 +1391,7 @@ export type Database = {
           reviewed_by?: string | null
           submitted_at?: string | null
           updated_at?: string
-          value_kind: "scalar" | "compound"
+          value_kind: string
           version?: number
         }
         Update: {
@@ -1710,7 +1420,7 @@ export type Database = {
           reviewed_by?: string | null
           submitted_at?: string | null
           updated_at?: string
-          value_kind?: "scalar" | "compound"
+          value_kind?: string
           version?: number
         }
         Relationships: []
@@ -1771,6 +1481,164 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      medication_dose_events: {
+        Row: {
+          created_at: string
+          event_at: string
+          id: string
+          medication_id: string
+          note: string | null
+          schedule_id: string | null
+          scheduled_for: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_at?: string
+          id?: string
+          medication_id: string
+          note?: string | null
+          schedule_id?: string | null
+          scheduled_for?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_at?: string
+          id?: string
+          medication_id?: string
+          note?: string | null
+          schedule_id?: string | null
+          scheduled_for?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_dose_events_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "user_medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_dose_events_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "medication_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_reminder_deliveries: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          id: string
+          provider_status: number | null
+          schedule_id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          provider_status?: number | null
+          schedule_id: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          provider_status?: number | null
+          schedule_id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_reminder_deliveries_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "medication_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_reminder_deliveries_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "web_push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_schedules: {
+        Row: {
+          created_at: string
+          days_of_week: string[]
+          end_date: string | null
+          id: string
+          label: string | null
+          medication_id: string
+          reminder_enabled: boolean
+          start_date: string | null
+          time_local: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_of_week?: string[]
+          end_date?: string | null
+          id?: string
+          label?: string | null
+          medication_id: string
+          reminder_enabled?: boolean
+          start_date?: string | null
+          time_local: string
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days_of_week?: string[]
+          end_date?: string | null
+          id?: string
+          label?: string | null
+          medication_id?: string
+          reminder_enabled?: boolean
+          start_date?: string | null
+          time_local?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_schedules_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "user_medications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -2571,6 +2439,48 @@ export type Database = {
           },
         ]
       }
+      user_medications: {
+        Row: {
+          created_at: string
+          dose_text: string | null
+          end_date: string | null
+          id: string
+          instructions_text: string | null
+          is_active: boolean
+          name: string
+          schedule_text: string | null
+          start_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dose_text?: string | null
+          end_date?: string | null
+          id?: string
+          instructions_text?: string | null
+          is_active?: boolean
+          name: string
+          schedule_text?: string | null
+          start_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dose_text?: string | null
+          end_date?: string | null
+          id?: string
+          instructions_text?: string | null
+          is_active?: boolean
+          name?: string
+          schedule_text?: string | null
+          start_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -2589,6 +2499,45 @@ export type Database = {
         }
         Relationships: []
       }
+      web_push_subscriptions: {
+        Row: {
+          auth_secret: string
+          created_at: string
+          endpoint: string
+          expiration_time: number | null
+          id: string
+          is_active: boolean
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_secret: string
+          created_at?: string
+          endpoint: string
+          expiration_time?: number | null
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_secret?: string
+          created_at?: string
+          endpoint?: string
+          expiration_time?: number | null
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2602,19 +2551,38 @@ export type Database = {
         Args: { _from: string; _to: string; _uid: string }
         Returns: boolean
       }
-      consume_rate_limit: {
-        Args: { _bucket: string; _limit: number; _window_seconds: number }
-        Returns: boolean
-      }
       claim_web_push_subscription: {
         Args: {
           p_auth_secret: string
           p_endpoint: string
-          p_expiration_time?: number | null
+          p_expiration_time?: number
           p_p256dh: string
-          p_user_agent?: string | null
+          p_user_agent?: string
         }
         Returns: string
+      }
+      consume_rate_limit: {
+        Args: { _bucket: string; _limit: number; _window_seconds: number }
+        Returns: boolean
+      }
+      content_visible: {
+        Args: { _is_demo: boolean; _status: string }
+        Returns: boolean
+      }
+      create_knowledge_release: {
+        Args: { _notes: string; _version: string }
+        Returns: string
+      }
+      has_any_role: {
+        Args: { _roles: string[]; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       import_measurement_reading_batch: {
         Args: {
@@ -2640,34 +2608,15 @@ export type Database = {
         }
         Returns: Json
       }
-      revert_measurement_import_batch: {
-        Args: { p_batch_id: string }
-        Returns: Json
-      }
-      content_visible: {
-        Args: { _is_demo: boolean; _status: string }
-        Returns: boolean
-      }
-      create_knowledge_release: {
-        Args: { _notes: string; _version: string }
-        Returns: string
-      }
-      has_any_role: {
-        Args: { _roles: string[]; _user_id: string }
-        Returns: boolean
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       owns_session: { Args: { _session_id: string }; Returns: boolean }
       publish_content_version: {
         Args: { _version_id: string }
         Returns: number
+      }
+      revert_measurement_import_batch: {
+        Args: { p_batch_id: string }
+        Returns: Json
       }
     }
     Enums: {
