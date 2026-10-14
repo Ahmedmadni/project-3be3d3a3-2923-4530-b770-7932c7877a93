@@ -155,7 +155,7 @@ describe("first-aid foundation repair", () => {
     const block = generatedTypes.slice(start, end);
     // Row / Insert / Update types must preserve the CHECK-constrained text
     // column without changing the generated database representation.
-    expect(block.match(/section_type\\??: string/g)).toHaveLength(3);
+    expect(block.match(/section_type\??: string/g)).toHaveLength(3);
 
     for (const column of [
       "version:",
@@ -168,4 +168,5 @@ describe("first-aid foundation repair", () => {
 
     expect(block).not.toContain('"overview"');
     expect(block).not.toContain('"how_to_measure"');
-  });});
+   });
+});
