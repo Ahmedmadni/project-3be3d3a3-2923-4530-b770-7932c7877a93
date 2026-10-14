@@ -14,6 +14,14 @@ const generatedTypes = readFileSync(
   "utf8",
 );
 
+const initialSchema = readFileSync(
+  new URL(
+    "../../supabase/migrations/20260926100405_e3e32be3-887d-42cd-9987-b16eca36f0ed.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 const topicCodes = [
   "bleeding",
   "burns",
@@ -118,23 +126,36 @@ describe("first-aid foundation repair", () => {
     expect(migration).toContain("ON CONFLICT DO NOTHING");
   });
 
-  it("aligns generated first-aid section types with the real schema", () => {
+  it("aligns generated first-aid section types with PostgreSQL's text CHECK", () => {
+    // Supabase codegen exposes CHECK-constrained PostgreSQL text columns as
+    // string, not as a union of SQL check values. Validate the restriction
+    // against its actual database source rather than inventing a TS enum.
+    const sectionCheck = initialSchema.match(
+      /section_type\s+text\s+not\s+null\s+check\s*\(section_type\s+in\s*\(([^)]+)\)\)/i,
+    );
+    expect(sectionCheck).not.toBeNull();
+
+    const allowedValues = Array.from(
+      sectionCheck?.[1]?.matchAll(/'([^']+)'/g) ?? [],
+      (match) => match[1],
+    );
+    expect(allowedValues).toEqual([
+      "what_is_happening",
+      "when_to_call",
+      "do_now",
+      "dont_do",
+      "while_waiting",
+    ]);
+
     const start = generatedTypes.indexOf("      first_aid_sections: {");
     const end = generatedTypes.indexOf("      first_aid_sources: {", start);
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
 
     const block = generatedTypes.slice(start, end);
-
-    for (const sectionType of [
-      "what_is_happening",
-      "when_to_call",
-      "do_now",
-      "dont_do",
-      "while_waiting",
-    ]) {
-      expect(block).toContain(`"${sectionType}"`);
-    }
+    // Row / Insert / Update types must preserve the CHECK-constrained text
+    // column without changing the generated database representation.
+    expect(block.match(/section_type\??: string/g)).toHaveLength(3);
 
     for (const column of [
       "version:",
@@ -147,5 +168,5 @@ describe("first-aid foundation repair", () => {
 
     expect(block).not.toContain('"overview"');
     expect(block).not.toContain('"how_to_measure"');
-  });
+   });
 });
