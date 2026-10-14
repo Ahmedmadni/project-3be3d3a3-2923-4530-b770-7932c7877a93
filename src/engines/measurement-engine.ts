@@ -166,7 +166,7 @@ function clauseMatches(clause: MeasurementClause, reading: MeasurementReading): 
   const expected = clause.value;
 
   if (clause.operator === "in") {
-    return Array.isArray(expected) && expected.includes(actual);
+    return Array.isArray(expected) && expected.includes(actual ?? null);
   }
 
   if (clause.operator === "eq") return actual === expected;

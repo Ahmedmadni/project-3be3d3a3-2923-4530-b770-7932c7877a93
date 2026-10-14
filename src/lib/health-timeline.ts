@@ -76,7 +76,7 @@ export function countHealthTimelineKinds(
 }
 
 export function medicationEventSummary(
-  events: readonly { status: "taken" | "skipped" }[],
+  events: readonly { status: string }[],
 ) {
   const taken = events.filter((item) => item.status === "taken").length;
   const skipped = events.filter((item) => item.status === "skipped").length;

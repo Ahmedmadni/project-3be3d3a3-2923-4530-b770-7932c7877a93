@@ -437,7 +437,7 @@ function HealthJournalPage() {
     const items: HealthTimelineItem[] = [];
 
     for (const item of journalQuery.data ?? []) {
-      const typeLabel = entryTypeLabel[item.entry_type][lang];
+      const typeLabel = entryTypeLabel[item.entry_type as keyof typeof entryTypeLabel][lang];
       items.push({
         id: `journal-${item.id}`,
         kind: "journal",
@@ -1014,7 +1014,7 @@ function JournalList({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-bold text-primary">
-                  {entryTypeLabel[item.entry_type][lang]}
+                  {entryTypeLabel[item.entry_type as keyof typeof entryTypeLabel][lang]}
                 </p>
                 <h3 className="mt-1 font-extrabold">
                   {item.title ||

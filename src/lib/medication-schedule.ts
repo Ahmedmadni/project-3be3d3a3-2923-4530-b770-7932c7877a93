@@ -21,7 +21,7 @@ export interface MedicationScheduleLike {
 export interface MedicationDoseEventLike {
   schedule_id: string | null;
   scheduled_for: string | null;
-  status: "taken" | "skipped";
+  status: string;
 }
 
 export interface MedicationOccurrence {
@@ -113,7 +113,7 @@ export function medicationOccurrenceState(
       new Date(event.scheduled_for).getTime() === scheduledTime,
   );
 
-  if (recorded) return recorded.status;
+  if (recorded && (recorded.status === "taken" || recorded.status === "skipped")) return recorded.status;
 
   return new Date(occurrence.scheduledFor).getTime() > now.getTime()
     ? "upcoming"

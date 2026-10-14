@@ -60,7 +60,7 @@ export async function enableBackgroundMedicationReminders(): Promise<PushReminde
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     });
   }
 
@@ -75,8 +75,8 @@ export async function enableBackgroundMedicationReminders(): Promise<PushReminde
     p_endpoint: subscription.endpoint,
     p_p256dh: p256dh,
     p_auth_secret: authSecret,
-    p_expiration_time: subscription.expirationTime,
-    p_user_agent: navigator.userAgent || null,
+    p_expiration_time: subscription.expirationTime ?? undefined,
+    p_user_agent: navigator.userAgent || undefined,
   });
 
   if (error) throw error;
