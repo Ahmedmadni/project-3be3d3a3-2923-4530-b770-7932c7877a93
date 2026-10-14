@@ -9,7 +9,7 @@ export interface ReminderSubscriptionLike {
 }
 
 export interface ReminderDeliveryLike {
-  status: "pending" | "sent" | "failed";
+  status: "pending" | "sent" | "failed" | (string & {});
   scheduled_for: string;
   sent_at: string | null;
   error_code: string | null;
