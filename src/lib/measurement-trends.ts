@@ -114,7 +114,8 @@ export function summarizeQuality(
 ): QualitySummary {
   return readings.reduce<QualitySummary>(
     (summary, reading) => {
-      summary[reading.quality] += 1;
+      const key = (reading.quality in summary ? reading.quality : "unknown") as keyof QualitySummary;
+      summary[key] += 1;
       return summary;
     },
     { good: 0, questionable: 0, unknown: 0 },

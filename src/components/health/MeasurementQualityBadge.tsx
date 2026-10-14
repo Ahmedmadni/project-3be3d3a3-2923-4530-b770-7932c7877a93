@@ -23,10 +23,10 @@ export function MeasurementQualityBadge({
   quality,
   className,
 }: {
-  quality: keyof typeof styles;
+  quality: string;
   className?: string;
 }) {
-  const item = styles[quality];
+  const item = styles[(quality in styles ? quality : "unknown") as keyof typeof styles];
   const Icon = item.Icon;
 
   return (
