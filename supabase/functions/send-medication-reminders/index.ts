@@ -93,8 +93,53 @@ function scheduleIsDue(schedule: MedicationSchedule, now: Date): boolean {
   return schedule.time_local.slice(0, 5) === local.timeKey;
 }
 
+function b64url(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+// VAPID pair derived deterministically from a server-only random seed, so the
+// private key is never typed, printed, or seen by anyone. Explicit
+// VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY secrets take precedence when both exist.
+let cachedVapid: { publicKey: string; privateKey: string } | null = null;
+async function vapidKeys(): Promise<{ publicKey: string; privateKey: string } | null> {
+  const pub = Deno.env.get("VAPID_PUBLIC_KEY");
+  const priv = Deno.env.get("VAPID_PRIVATE_KEY");
+  if (pub && priv) return { publicKey: pub, privateKey: priv };
+  if (cachedVapid) return cachedVapid;
+  const seed = Deno.env.get("VAPID_KEY_SEED");
+  if (!seed || seed.length < 32) return null;
+  const { createHash, createECDH } = await import("node:crypto");
+  const privateBytes = createHash("sha256").update(`vapid-v1:${seed}`).digest();
+  const ecdh = createECDH("prime256v1");
+  ecdh.setPrivateKey(privateBytes);
+  cachedVapid = {
+    publicKey: b64url(new Uint8Array(ecdh.getPublicKey())),
+    privateKey: b64url(new Uint8Array(privateBytes)),
+  };
+  return cachedVapid;
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
+
 export default {
   async fetch(request: Request): Promise<Response> {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+    // Public VAPID key only (safe to expose); never the private key.
+    if (request.method === "GET") {
+      const keys = await vapidKeys();
+      if (!keys) {
+        return Response.json({ error: "VAPID_NOT_CONFIGURED" }, { status: 503, headers: corsHeaders });
+      }
+      return Response.json({ publicKey: keys.publicKey }, { headers: corsHeaders });
+    }
     if (request.method !== "POST") {
       return Response.json({ error: "METHOD_NOT_ALLOWED" }, { status: 405 });
     }
@@ -104,19 +149,13 @@ export default {
       return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
     }
 
+    const dryRun = new URL(request.url).searchParams.get("dry_run") === "1";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = serviceKey();
     const vapidSubject = Deno.env.get("VAPID_SUBJECT");
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+    const vapid = await vapidKeys();
 
-    if (
-      !supabaseUrl ||
-      !serviceRoleKey ||
-      !vapidSubject ||
-      !vapidPublicKey ||
-      !vapidPrivateKey
-    ) {
+    if (!supabaseUrl || !serviceRoleKey || !vapidSubject || !vapid) {
       return Response.json(
         { error: "REMINDER_ENV_NOT_CONFIGURED" },
         { status: 503 },
@@ -127,11 +166,21 @@ export default {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    webpush.setVapidDetails(
-      vapidSubject,
-      vapidPublicKey,
-      vapidPrivateKey,
-    );
+    webpush.setVapidDetails(vapidSubject, vapid.publicKey, vapid.privateKey);
+
+    if (dryRun) {
+      const { count, error } = await supabase
+        .from("web_push_subscriptions")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true);
+      return Response.json({
+        ok: !error,
+        dry_run: true,
+        env_ready: true,
+        vapid_valid: true,
+        active_subscriptions: count ?? 0,
+      });
+    }
 
     const now = new Date();
     const candidateMinutes = Array.from({ length: 5 }, (_, index) => {
