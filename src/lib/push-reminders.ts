@@ -42,10 +42,29 @@ export async function currentBackgroundMedicationReminderEndpoint(): Promise<str
   return subscription?.endpoint ?? null;
 }
 
+// The server's public key is the source of truth, so it always matches the
+// private key held by the reminder sender. VITE_VAPID_PUBLIC_KEY is only a
+// fallback override when the server lookup is unavailable.
+async function resolveVapidPublicKey(): Promise<string | null> {
+  const base = import.meta.env["VITE_SUPABASE_URL"];
+  if (base) {
+    try {
+      const res = await fetch(`${base}/functions/v1/send-medication-reminders`);
+      if (res.ok) {
+        const body = (await res.json()) as { publicKey?: string };
+        if (body.publicKey) return body.publicKey;
+      }
+    } catch {
+      // fall through to the build-time key
+    }
+  }
+  return import.meta.env["VITE_VAPID_PUBLIC_KEY"]?.trim() || null;
+}
+
 export async function enableBackgroundMedicationReminders(): Promise<PushReminderStatus> {
   if (!backgroundPushSupported()) return "unsupported";
 
-  const vapidPublicKey = import.meta.env["VITE_VAPID_PUBLIC_KEY"]?.trim();
+  const vapidPublicKey = await resolveVapidPublicKey();
   if (!vapidPublicKey) return "not_configured";
 
   let permission = Notification.permission;
