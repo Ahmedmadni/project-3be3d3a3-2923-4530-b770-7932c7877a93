@@ -4,6 +4,7 @@ import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 // Cloud Jobs → this route (managed bearer auth) → Edge Function (x-cron-secret).
 // No Vault needed: both secrets live in Lovable Cloud server env.
 export const Route = createFileRoute("/api/public/jobs/send-medication-reminders")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {
