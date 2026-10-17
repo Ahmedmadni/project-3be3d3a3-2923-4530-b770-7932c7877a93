@@ -1,4 +1,4 @@
-const CACHE = "health-indicator-static-v3";
+const CACHE = "health-indicator-static-v4";
 const STATIC_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -27,6 +27,14 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/") || url.pathname.includes("supabase")) return;
+
+  // Vite modules must always come from the current development server. Serving
+  // cached modules mixes React dispatchers across dependency rebuilds and HMR.
+  if (
+    ["/src/", "/node_modules/", "/@vite/", "/@id/", "/@fs/"].some(
+      (prefix) => url.pathname.startsWith(prefix),
+    ) || url.pathname === "/@react-refresh"
+  ) return;
 
   // Never cache navigation HTML. Pages may contain personalized health UI.
   if (request.mode === "navigate") {

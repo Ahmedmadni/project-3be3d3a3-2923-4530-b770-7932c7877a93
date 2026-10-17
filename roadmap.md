@@ -182,4 +182,4 @@
   - [ ] First reviewed medical knowledge release
 - [ ] Medical review of all clinical content — blocked on authorized medical reviewer
 - [x] Visual media: generated and integrated page photography plus transparent medical stickers
-- [ ] Final Cloud medication reminder scheduled-run verification — blocked on publishing the current app route: actual published job requests return 404; local route rejects unauthorized requests with 401, and sender authenticated dry-run returns 200. No duplicate job or VAPID changes.
+- [x] Final Cloud medication reminder scheduled-run verification — actual published scheduled POST returned 200 at 2026-10-17T08:02:00.377Z after publication; exactly one active every-minute job. Published route rejects unauthorized POST with 401; authenticated sender dry-run returned 200 with ok/env_ready/vapid_valid true and zero active subscriptions. Scheduled response counters were not available in logs. No duplicate job, secret/key changes, or test notifications. Physical-device delivery remains unverified.
