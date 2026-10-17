@@ -182,3 +182,4 @@
   - [ ] First reviewed medical knowledge release
 - [ ] Medical review of all clinical content — blocked on authorized medical reviewer
 - [x] Visual media: generated and integrated page photography plus transparent medical stickers
+- [ ] Final Cloud medication reminder scheduled-run verification — blocked on publishing the current app route: actual published job requests return 404; local route rejects unauthorized requests with 401, and sender authenticated dry-run returns 200. No duplicate job or VAPID changes.
