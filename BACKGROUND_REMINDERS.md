@@ -1,5 +1,8 @@
 # Background medication reminders — production operator guide
 
+> **LOVABLE CLOUD DEPLOYMENT NOTICE (2026-10):** This document retains the **legacy Supabase CLI/Vault/SQL-cron** operator procedure for historical reference only. The current project runs on **Lovable Cloud Secrets, Edge Functions and Cloud Jobs**. **Do not execute the SQL scheduler or configure Vault to operate the current deployment.** Use [LOVABLE_CLOUD_REMINDERS.md](LOVABLE_CLOUD_REMINDERS.md) instead, including its required job-execution and phone-delivery checks.
+
+
 This feature sends **generic** Web Push reminders for times the user entered.
 Push notifications must not contain medication names, doses, symptoms,
 diagnoses, measurements, or other sensitive health content. Unrecorded is
