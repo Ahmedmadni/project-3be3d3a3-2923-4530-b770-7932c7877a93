@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Activity,
+  Baby,
   ArrowLeft,
   BookHeart,
   BookOpen,
@@ -21,6 +22,8 @@ import symptomSticker from "@/assets/sticker-symptom-check.png";
 import firstAidSticker from "@/assets/sticker-first-aid.png";
 import librarySticker from "@/assets/sticker-health-library.png";
 import safeCareSticker from "@/assets/sticker-safe-care.png";
+import pregnancyImage from "@/assets/pregnancy-care.jpg";
+import { pregnancyCopy } from "@/data/pregnancy-copy";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -32,6 +35,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "مساعد صحي عربي لفحص الأعراض والطوارئ والإسعافات الأولية والمعلومات الصحية." },
       { property: "og:title", content: "مؤشر صحي — افهم أعراضك" },
       { property: "og:description", content: "فحص أعراض استرشادي، مسار طوارئ، إسعافات أولية ومعلومات صحية مبسطة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,
@@ -72,6 +77,8 @@ const primaryEntries = [
 
 function Home() {
   const { t, dir } = useI18n();
+  const { lang } = useI18n();
+  const pregnancy = pregnancyCopy[lang];
 
   return (
     <div className="space-y-6">
@@ -179,6 +186,12 @@ function Home() {
       </section>
 
       <DailyHealthDashboardSection />
+
+      <Link to="/pregnancy" className="glass flex items-center gap-5 overflow-hidden rounded-3xl p-5 transition hover:border-primary/30">
+        <img src={pregnancyImage} alt="" width={1504} height={1008} loading="lazy" className="h-28 w-24 shrink-0 rounded-lg object-cover object-left sm:w-40" />
+        <div className="min-w-0"><h2 className="flex items-center gap-2 text-lg font-extrabold"><Baby className="size-5 shrink-0 text-primary" />{pregnancy.title}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{pregnancy.subtitle}</p><p className="mt-3 text-sm font-bold text-primary">{pregnancy.begin}</p></div>
+        <ChevronLeft className={cn("ms-auto hidden size-5 shrink-0 text-primary sm:block", dir === "ltr" && "rotate-180")} />
+      </Link>
 
       <MeasurementDashboardSection />
 

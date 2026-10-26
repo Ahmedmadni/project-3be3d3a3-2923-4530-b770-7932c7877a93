@@ -1,5 +1,8 @@
 # Roadmap — مؤشر صحي
 
+- [x] Pregnancy care: dating from last menstrual period or clinician due date, private daily follow-up, appointments, sourced guidance, and safety checks; six dating tests and guest/RTL/mobile flow verified.
+  - [ ] Signed-in pregnancy daily-save/read-back verification — requesting user has no matching app auth account; needs sign-in in preview. No test notifications sent.
+
 - [x] Phase 1: design system, shell, all pages, RTL
 - [x] Phase 2: Cloud schema + RLS + roles, auth (guest allowed), DB-driven engines, history/account, engine tests
 - [x] Phase 3 foundation

@@ -15,4 +15,5 @@
 - Triage goes through RedFlagEngine (src/lib/red-flag-engine.ts); emergency always bypasses results.
 - Health UI components in src/components/health/; colors only via tokens in src/styles.css.
 - Curated page imagery lives in src/assets; use PageVisualHeader for consistent responsive page introductions.
+- Pregnancy dating is deterministic date-only logic; clinician dating takes precedence, personal records use owner-scoped Cloud tables, and guest tracking stays temporary without local health storage.
 - The service worker must bypass Vite source, dependency, and HMR module URLs; cached development modules can mix React instances after rebuilds and crash hooks.

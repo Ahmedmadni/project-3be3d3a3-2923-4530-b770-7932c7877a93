@@ -1640,6 +1640,66 @@ export type Database = {
           },
         ]
       }
+      pregnancy_daily_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          mood: string
+          notes: string
+          symptoms: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_date: string
+          id?: string
+          mood?: string
+          notes?: string
+          symptoms?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          mood?: string
+          notes?: string
+          symptoms?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pregnancy_tracking: {
+        Row: {
+          clinician_due_date: string | null
+          created_at: string
+          id: string
+          last_period: string
+          next_appointment: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clinician_due_date?: string | null
+          created_at?: string
+          id?: string
+          last_period: string
+          next_appointment?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clinician_due_date?: string | null
+          created_at?: string
+          id?: string
+          last_period?: string
+          next_appointment?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           country_code: string

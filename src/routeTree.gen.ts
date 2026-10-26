@@ -21,6 +21,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as MeasurementsRouteImport } from './routes/measurements'
+import { Route as PregnancyRouteImport } from './routes/pregnancy'
 import { Route as ProfessionalRouteImport } from './routes/professional'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResultsRouteImport } from './routes/results'
@@ -101,6 +102,11 @@ const LibraryRoute = LibraryRouteImport.update({
 const MeasurementsRoute = MeasurementsRouteImport.update({
   id: '/measurements',
   path: '/measurements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PregnancyRoute = PregnancyRouteImport.update({
+  id: '/pregnancy',
+  path: '/pregnancy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfessionalRoute = ProfessionalRouteImport.update({
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/journal': typeof JournalRoute
   '/library': typeof LibraryRoute
   '/measurements': typeof MeasurementsRouteWithChildren
+  '/pregnancy': typeof PregnancyRoute
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/journal': typeof JournalRoute
   '/library': typeof LibraryRoute
   '/measurements': typeof MeasurementsRouteWithChildren
+  '/pregnancy': typeof PregnancyRoute
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/journal': typeof JournalRoute
   '/library': typeof LibraryRoute
   '/measurements': typeof MeasurementsRouteWithChildren
+  '/pregnancy': typeof PregnancyRoute
   '/professional': typeof ProfessionalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/library'
     | '/measurements'
+    | '/pregnancy'
     | '/professional'
     | '/reset-password'
     | '/results'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/library'
     | '/measurements'
+    | '/pregnancy'
     | '/professional'
     | '/reset-password'
     | '/results'
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/library'
     | '/measurements'
+    | '/pregnancy'
     | '/professional'
     | '/reset-password'
     | '/results'
@@ -434,6 +446,7 @@ export interface RootRouteChildren {
   JournalRoute: typeof JournalRoute
   LibraryRoute: typeof LibraryRoute
   MeasurementsRoute: typeof MeasurementsRouteWithChildren
+  PregnancyRoute: typeof PregnancyRoute
   ProfessionalRoute: typeof ProfessionalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResultsRoute: typeof ResultsRoute
@@ -527,6 +540,13 @@ declare module '@tanstack/react-router' {
       path: '/measurements'
       fullPath: '/measurements'
       preLoaderRoute: typeof MeasurementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pregnancy': {
+      id: '/pregnancy'
+      path: '/pregnancy'
+      fullPath: '/pregnancy'
+      preLoaderRoute: typeof PregnancyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/professional': {
@@ -748,6 +768,7 @@ const rootRouteChildren: RootRouteChildren = {
   JournalRoute: JournalRoute,
   LibraryRoute: LibraryRoute,
   MeasurementsRoute: MeasurementsRouteWithChildren,
+  PregnancyRoute: PregnancyRoute,
   ProfessionalRoute: ProfessionalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResultsRoute: ResultsRoute,
