@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PregnancyTracker } from "@/components/health/PregnancyTracker";
 
 export const Route = createFileRoute("/pregnancy")({
+  staticData: { sitemap: true },
   head: () => ({ meta: [
     { title: "متابعة الحمل من البداية — مؤشر صحي" },
     { name: "description", content: "متابعة أسابيع الحمل وموعد الولادة المتوقع، سجل يومي خاص وإرشادات عامة للعناية بالحمل وعلامات تستدعي الرعاية." },

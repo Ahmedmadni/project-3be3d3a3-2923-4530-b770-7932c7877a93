@@ -22,13 +22,13 @@ export function AppHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 xl:flex" aria-label={t("nav.main")}>
+        <nav className="hidden min-w-0 items-center gap-1 overflow-x-auto md:flex" aria-label={t("nav.main")}>
           {navItems.map((n) => (
             <Link
               key={n.to}
               to={n.to}
               activeOptions={{ exact: n.to === "/" }}
-              className="rounded-xl px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-primary-soft hover:text-primary"
+              className="shrink-0 whitespace-nowrap rounded-xl px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-primary-soft hover:text-primary"
               activeProps={{ className: "bg-primary-soft !text-primary" }}
             >
               {t(n.labelKey)}
