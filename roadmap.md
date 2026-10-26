@@ -1,5 +1,7 @@
 # Roadmap — مؤشر صحي
 
+- [ ] Pregnancy care: dating from last menstrual period or clinician due date, private daily follow-up, appointments, sourced guidance, and safety checks.
+
 - [x] Phase 1: design system, shell, all pages, RTL
 - [x] Phase 2: Cloud schema + RLS + roles, auth (guest allowed), DB-driven engines, history/account, engine tests
 - [x] Phase 3 foundation
