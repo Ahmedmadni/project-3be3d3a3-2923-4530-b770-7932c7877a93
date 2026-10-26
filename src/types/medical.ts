@@ -16,6 +16,8 @@ export type FirstAidTopic = Tables<"first_aid_topics">;
 export type FirstAidSection = Tables<"first_aid_sections">;
 export type Profile = Tables<"profiles">;
 export type SymptomSessionRow = Tables<"symptom_sessions">;
+export type PregnancyTracking = Tables<"pregnancy_tracking">;
+export type PregnancyDailyEntry = Tables<"pregnancy_daily_entries">;
 
 export type Severity = Enums<"severity_level">;
 export type CareLevel = Enums<"care_level">;

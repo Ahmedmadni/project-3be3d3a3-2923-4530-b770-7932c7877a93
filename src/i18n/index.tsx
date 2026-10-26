@@ -1,15 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ar, type TKey } from "./ar";
+import { ar, type TKey as BaseTKey } from "./ar";
 import { en } from "./en";
+import { pregnancyNav } from "@/data/pregnancy-copy";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Lang = "ar" | "en";
-const dicts = { ar, en };
+type TKey = BaseTKey | keyof typeof pregnancyNav.ar;
+const dicts = { ar: { ...ar, ...pregnancyNav.ar }, en: { ...en, ...pregnancyNav.en } };
 const STORAGE_KEY = "mh.lang"; // non-sensitive guest preference
 
 export const dirFor = (l: Lang) => (l === "ar" ? "rtl" : "ltr") as "rtl" | "ltr";
 export function translate(lang: Lang, key: TKey, vars?: Record<string, string | number>): string {
-  let s: string = dicts[lang][key] ?? ar[key] ?? key;
+  let s: string = dicts[lang][key] ?? dicts.ar[key] ?? key;
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   return s;
 }
