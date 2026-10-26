@@ -35,6 +35,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "مساعد صحي عربي لفحص الأعراض والطوارئ والإسعافات الأولية والمعلومات الصحية." },
       { property: "og:title", content: "مؤشر صحي — افهم أعراضك" },
       { property: "og:description", content: "فحص أعراض استرشادي، مسار طوارئ، إسعافات أولية ومعلومات صحية مبسطة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,

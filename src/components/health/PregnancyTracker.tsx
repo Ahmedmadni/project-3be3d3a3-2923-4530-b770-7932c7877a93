@@ -97,7 +97,7 @@ export function PregnancyTracker() {
   const busy = loading || Boolean(user && tracking.isPending) || !today;
 
   return <div className="space-y-6">
-    <PageVisualHeader title={c.title} subtitle={c.subtitle} image={pregnancyImage} imageAlt={c.title} />
+    <PageVisualHeader title={c.title} subtitle={c.subtitle} image={pregnancyImage} imageAlt={c.title} className="[&_img]:object-left-top" />
     <div className="flex items-start gap-3 text-sm text-muted-foreground">
       <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
       <p className="leading-7">{user ? c.private : c.guest} {!user && <Link to="/auth" className="ms-2 font-bold text-primary underline">{c.signIn}</Link>}</p>
@@ -130,7 +130,7 @@ export function PregnancyTracker() {
           <p className="mt-6 text-xs leading-6 text-muted-foreground">{profile?.clinician_due_date ? c.clinicalEstimate : c.estimate}</p>
           {p.remaining <= 0 && <p role="status" className="mt-3 border-s-2 border-warning bg-warning-soft p-3 text-sm leading-7">{c.overdue}</p>}
         </section>
-        <Tabs defaultValue="care">
+        <Tabs defaultValue="care" dir={lang === "ar" ? "rtl" : "ltr"}>
           <TabsList className="mb-5"><TabsTrigger value="care">{c.journey}</TabsTrigger><TabsTrigger value="daily">{c.daily}</TabsTrigger></TabsList>
           <TabsContent value="care" className="space-y-6">
             <div className="border-s-4 border-primary ps-4"><h2 className="font-bold">{c.firstDays}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{c.firstDaysBody}</p></div>
