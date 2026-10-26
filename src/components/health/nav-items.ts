@@ -1,4 +1,4 @@
-import { Home, Stethoscope, Cross, BookOpen, UserRound, Activity, BookHeart } from "lucide-react";
+import { Home, Stethoscope, Cross, BookOpen, UserRound, Activity, BookHeart, Baby } from "lucide-react";
 import type { TKey } from "@/i18n";
 
 export const navItems = [
@@ -8,6 +8,7 @@ export const navItems = [
   { to: "/library", labelKey: "nav.library" as TKey, icon: BookOpen },
   { to: "/measurements", labelKey: "nav.measurements" as TKey, icon: Activity },
   { to: "/journal", labelKey: "nav.journal" as TKey, icon: BookHeart },
+  { to: "/pregnancy", labelKey: "nav.pregnancy" as TKey, icon: Baby },
   { to: "/account", labelKey: "nav.account" as TKey, icon: UserRound },
 ] as const;
 
@@ -16,5 +17,5 @@ export const navItems = [
  * The health library remains a primary home-page entry and desktop nav item.
  */
 export const mobileNavItems = navItems.filter(
-  (item) => item.to !== "/library" && item.to !== "/journal",
+  (item) => item.to !== "/library" && item.to !== "/journal" && item.to !== "/pregnancy",
 );
