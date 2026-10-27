@@ -5,9 +5,9 @@ export const Route = createFileRoute("/pregnancy")({
   staticData: { sitemap: true },
   head: () => ({ meta: [
     { title: "متابعة الحمل من البداية — مؤشر صحي" },
-    { name: "description", content: "متابعة أسابيع الحمل وموعد الولادة المتوقع، سجل يومي خاص وإرشادات عامة للعناية بالحمل وعلامات تستدعي الرعاية." },
+    { name: "description", content: "متابعة الحمل وإرشادات الطعام والنشاط حسب الأشهر ومراحل الحمل: ما يُتجنّب، وما يجوز بشروط، وما يُنصح به، مع متابعة يومية خاصة." },
     { property: "og:title", content: "رحلة الحمل — مؤشر صحي" },
-    { property: "og:description", content: "عناية ومتابعة الحمل من أول يوم لآخر دورة، مع حساب تقديري وإرشادات آمنة." },
+    { property: "og:description", content: "دليل المأكولات والنشاط والعناية خلال الأشهر 1–3 و4–6 و7–9، مع حساب أسابيع الحمل والمتابعة اليومية." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
