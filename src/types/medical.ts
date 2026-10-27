@@ -18,6 +18,20 @@ export type Profile = Tables<"profiles">;
 export type SymptomSessionRow = Tables<"symptom_sessions">;
 export type PregnancyTracking = Tables<"pregnancy_tracking">;
 export type PregnancyDailyEntry = Tables<"pregnancy_daily_entries">;
+export type PregnancyGuidanceCategory = "food" | "activity" | "care";
+export type PregnancyGuidanceStatus = "avoid" | "conditional" | "recommended";
+export interface PregnancyGuidanceItem {
+  id: string;
+  category: PregnancyGuidanceCategory;
+  status: PregnancyGuidanceStatus;
+  scope: "throughout" | "stage";
+  stages: number[];
+  fromWeek?: number;
+  numericLimit?: { value: number; unit: "mg/day" };
+  title: { ar: string; en: string };
+  body: { ar: string; en: string };
+  sources: string[];
+}
 
 export type Severity = Enums<"severity_level">;
 export type CareLevel = Enums<"care_level">;
