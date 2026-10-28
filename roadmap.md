@@ -1,6 +1,6 @@
 # Roadmap — مؤشر صحي
 
-- [ ] Pregnancy stage guide: sourced food/activity/care guidance, avoid/conditional/recommended categories, trimester browsing and ongoing rules retained across stages; verify interaction and safety rules.
+- [x] Pregnancy stage guide: sourced food/activity/care guidance, avoid/conditional/recommended categories, trimester browsing and ongoing rules retained across stages; 11 tests passed and browser stage/category/current-stage flows verified in Arabic/English with no mobile overflow or page errors. Local clinical review remains pending as disclosed in the guide.
 
 - [x] Pregnancy care: dating from last menstrual period or clinician due date, private daily follow-up, appointments, sourced guidance, and safety checks; six dating tests and guest/RTL/mobile flow verified.
   - [ ] Signed-in pregnancy daily-save/read-back verification — requesting user has no matching app auth account; needs sign-in in preview. No test notifications sent.
