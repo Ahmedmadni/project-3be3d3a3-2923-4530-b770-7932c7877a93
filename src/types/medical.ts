@@ -33,6 +33,35 @@ export interface PregnancyGuidanceItem {
   sources: string[];
 }
 
+export interface PregnancyWeek {
+  week: number; // 1–40
+  baby: { ar: string; en: string };
+  mother: { ar: string; en: string };
+  sources: string[];
+}
+
+export type PregnancyWarningSeverity = "emergency" | "same_day";
+export interface PregnancyWarningSign {
+  id: string;
+  severity: PregnancyWarningSeverity; // emergency = call emergency services now; same_day = contact maternity care today
+  scope: "throughout" | "stage";
+  stages: number[];
+  title: { ar: string; en: string };
+  body: { ar: string; en: string };
+  sources: string[];
+}
+
+export type PregnancyVisitKind = "visit" | "test";
+export interface PregnancyVisit {
+  id: string;
+  kind: PregnancyVisitKind;
+  weeks: [number, number]; // approximate gestational window in weeks
+  title: { ar: string; en: string };
+  body: { ar: string; en: string };
+  trimesters?: number[]; // limit display to these trimesters when present
+  sources: string[];
+}
+
 export type Severity = Enums<"severity_level">;
 export type CareLevel = Enums<"care_level">;
 export type Compatibility = Enums<"matching_level">;
