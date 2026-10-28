@@ -37,10 +37,8 @@ describe("warningsForStage", () => {
   ];
 
   it("keeps throughout signs in every stage and drops other stages' items", () => {
-    const stage0 = warningsForStage(items, 0);
-    expect(stage0.map((s) => s.id)).toEqual(["throughout-emergency", "late-same-day"].map((_, i) => (i === 0 ? "throughout-emergency" : "early-only")) ? ["throughout-emergency", "early-only"] : []);
-    const stage2 = warningsForStage(items, 2);
-    expect(stage2.map((s) => s.id)).toEqual(["throughout-emergency", "late-same-day"]);
+    expect(warningsForStage(items, 0).map((s) => s.id)).toEqual(["throughout-emergency", "early-only"]);
+    expect(warningsForStage(items, 2).map((s) => s.id)).toEqual(["throughout-emergency", "late-same-day"]);
   });
 
   it("lists emergency severity before same-day contact", () => {
