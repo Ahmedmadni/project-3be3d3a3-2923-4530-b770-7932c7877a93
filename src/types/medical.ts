@@ -18,7 +18,7 @@ export type Profile = Tables<"profiles">;
 export type SymptomSessionRow = Tables<"symptom_sessions">;
 export type PregnancyTracking = Tables<"pregnancy_tracking">;
 export type PregnancyDailyEntry = Tables<"pregnancy_daily_entries">;
-export type PregnancyGuidanceCategory = "food" | "activity" | "care";
+export type PregnancyGuidanceCategory = "food" | "activity" | "care" | "medicine";
 export type PregnancyGuidanceStatus = "avoid" | "conditional" | "recommended";
 export interface PregnancyGuidanceItem {
   id: string;
@@ -40,10 +40,10 @@ export interface PregnancyWeek {
   sources: string[];
 }
 
-export type PregnancyWarningSeverity = "emergency" | "same_day";
+export type PregnancyWarningSeverity = "emergency" | "immediate" | "same_day";
 export interface PregnancyWarningSign {
   id: string;
-  severity: PregnancyWarningSeverity; // emergency = call emergency services now; same_day = contact maternity care today
+  severity: PregnancyWarningSeverity; // emergency services now / maternity now / same-day clinical contact
   scope: "throughout" | "stage";
   stages: number[];
   title: { ar: string; en: string };

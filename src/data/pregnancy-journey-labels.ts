@@ -11,7 +11,8 @@ export const pregnancyJourneyLabels = {
       review: "معلومات تثقيفية مستندة إلى المراجع أدناه؛ لم تخضع بعد لمراجعة طبية محلية داخل التطبيق.",
     },
     warnings: {
-      title: "علامات تستدعي رعاية عاجلة", subtitle: "تعرّفي على العلامات التي تستوجب الاتصال بالطوارئ فورًا، وما يُكفي فيه التواصل مع رعاية الحمل في اليوم نفسه.",
+      title: "علامات تستدعي رعاية عاجلة", subtitle: "ميّزي بين الطوارئ والاتصال الفوري برعاية الحمل والتواصل في اليوم نفسه؛ لا تنتظري مع علامات الخطر.",
+      immediate: "اتصلي برعاية الحمل الآن — لا تنتظري",
       stage: "مرحلة الحمل", stages: ["الأشهر 1–3", "الأشهر 4–6", "الأشهر 7–9"],
       current: "مرحلتكِ الحالية", returnCurrent: "العودة لمرحلتي",
       emergency: "اتصلي بالطوارئ فورًا", emergencyHeading: "اتصال فوري بالطوارئ",
@@ -44,7 +45,8 @@ export const pregnancyJourneyLabels = {
       review: "Educational information based on the sources below; local clinical review within this app is still pending.",
     },
     warnings: {
-      title: "Signs needing urgent care", subtitle: "Recognise the signs that require calling emergency services immediately, and those where contacting maternity care the same day is enough.",
+      title: "Signs needing urgent care", subtitle: "Distinguish emergency services, immediate maternity contact and same-day assessment. Do not wait with warning signs.",
+      immediate: "Call maternity care now — do not wait",
       stage: "Pregnancy stage", stages: ["Months 1–3", "Months 4–6", "Months 7–9"],
       current: "Your current stage", returnCurrent: "Return to my stage",
       emergency: "Call emergency services now", emergencyHeading: "Immediate emergency call",

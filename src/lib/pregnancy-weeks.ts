@@ -12,7 +12,7 @@ export function weekContent(items: PregnancyWeek[], week: number): PregnancyWeek
 /** Warning signs for a trimester: throughout items plus the stage's own items; urgent items first. */
 export function warningsForStage(items: PregnancyWarningSign[], stage: number): PregnancyWarningSign[] {
   const visible = items.filter((item) => item.scope === "throughout" || item.stages.includes(stage));
-  const rank = (s: PregnancyWarningSign) => (s.severity === "emergency" ? 0 : 1);
+  const rank = (s: PregnancyWarningSign) => ({ emergency: 0, immediate: 1, same_day: 2 })[s.severity];
   return [...visible].sort((a, b) => rank(a) - rank(b));
 }
 
