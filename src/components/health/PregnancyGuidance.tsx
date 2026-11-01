@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { Check, CircleAlert, Leaf, ShieldCheck, Utensils, Footprints, HeartPulse, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Pill } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { pregnancyGuidanceLabels } from "@/data/pregnancy-guidance-labels";
 import { guidanceForStage } from "@/lib/pregnancy-guidance";
 import type { PregnancyGuidanceCategory, PregnancyGuidanceItem, PregnancyGuidanceStatus } from "@/types/medical";
 
 type Props = { currentStage?: number; items: PregnancyGuidanceItem[]; sourceUrls: Record<string, { title: string; url: string }> };
-const categories = ["all", "food", "activity", "care"] as const;
+const categories = ["all", "food", "medicine", "activity", "care"] as const;
 const statusIcons = { avoid: CircleAlert, conditional: ShieldCheck, recommended: Check };
 const statusStyles = { avoid: "border-warning/40 bg-warning-soft/30", conditional: "border-accent/30 bg-accent/5", recommended: "border-primary/30 bg-primary-soft/30" };
 const statusHeading = { avoid: "text-foreground", conditional: "text-accent", recommended: "text-primary" };
-const categoryIcons = { all: Leaf, food: Utensils, activity: Footprints, care: HeartPulse };
+const categoryIcons = { all: Leaf, food: Utensils, medicine: Pill, activity: Footprints, care: HeartPulse };
 const statuses: PregnancyGuidanceStatus[] = ["avoid", "conditional", "recommended"];
 
 export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
@@ -32,15 +34,24 @@ export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
     <p className="text-xs leading-6 text-muted-foreground">{c.monthNote} {currentStage === undefined ? c.noDating : ""}</p>
     <div className="flex flex-wrap gap-2" role="group" aria-label={c.title}>{categories.map((value) => { const Icon = categoryIcons[value]; return <Button key={value} variant={category === value ? "secondary" : "ghost"} aria-pressed={category === value} className="h-auto min-h-9 whitespace-normal py-2" onClick={() => setCategory(value)}><Icon />{c[value]}</Button>; })}</div>
     <p className="border-s-2 border-accent ps-3 text-xs leading-6 text-muted-foreground">{c.personalized}</p>
-    <div className="grid gap-6 lg:grid-cols-3">
-      {statuses.map((status) => { const Icon = statusIcons[status]; const list = visible.filter((item) => item.status === status); return <section key={status} className="min-w-0" aria-label={c[status]}>
-        <h3 className={`mb-3 flex items-center gap-2 text-base font-bold ${statusHeading[status]}`}><Icon className="size-5" />{c[status]} <span className="text-xs font-normal text-muted-foreground">({list.length})</span></h3>
-        <div className="space-y-3">{!list.length ? <p className="text-sm text-muted-foreground">{c.empty}</p> : list.map((item) => <article key={item.id} className={`rounded-lg border p-4 ${statusStyles[status]}`}>
-          <p className="mb-2 text-[10px] font-semibold text-muted-foreground">{c[item.category]} · {item.scope === "throughout" ? c.throughout : c.stageOnly}{item.fromWeek !== undefined ? ` · ${c.fromWeek} ${item.fromWeek}` : ""}</p>
-          <h4 className="text-sm font-bold leading-6">{item.title[lang]}</h4><p className="mt-2 text-sm leading-7 text-muted-foreground">{item.body[lang]}</p>
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-medium text-primary underline" aria-label={`${c.source}: ${source.title}`}><ExternalLink className="size-3" />{source.title}</a> : null; })}</div>
-        </article>)}</div>
-      </section>; })}
+    {(category === "all" || category === "medicine") && <p className="border-s-2 border-warning bg-warning-soft/30 p-3 text-sm leading-7">{c.medicineNote}</p>}
+    <div className="space-y-8">
+      {categories.filter((value) => value !== "all" && (category === "all" || category === value)).map((value) => {
+        const list = visible.filter((item) => item.category === value).sort((a, b) => statuses.indexOf(a.status) - statuses.indexOf(b.status));
+        const CategoryIcon = categoryIcons[value];
+        return <section key={value} className="min-w-0 space-y-3" aria-label={c[value]}>
+          <h3 className="flex items-center gap-2 font-bold"><CategoryIcon className="size-5 text-primary" />{c[value]} <span className="text-xs text-muted-foreground">({list.length})</span></h3>
+          {!list.length ? <p className="text-sm text-muted-foreground">{c.empty}</p> : <Table className="min-w-[620px] table-fixed text-start" aria-label={c[value]}>
+            <TableHeader className="bg-muted/60"><TableRow><TableHead scope="col" className="w-[23%] text-start">{c.subject}</TableHead><TableHead scope="col" className="w-[19%] text-start">{c.status}</TableHead><TableHead scope="col" className="w-[42%] text-start">{c.advice}</TableHead><TableHead scope="col" className="w-[16%] text-start">{c.period}</TableHead></TableRow></TableHeader>
+            <TableBody>{list.map((item) => { const Icon = statusIcons[item.status]; return <TableRow key={item.id}>
+              <TableCell className="align-top py-4 font-bold leading-7">{item.title[lang]}</TableCell>
+              <TableCell className="align-top py-4"><span className={`inline-flex items-start gap-1.5 border-s-2 px-2 py-1 text-xs font-bold leading-5 ${statusStyles[item.status]} ${statusHeading[item.status]}`}><Icon className="mt-0.5 size-4 shrink-0" />{c[item.status]}</span></TableCell>
+              <TableCell className="align-top py-4"><p className="text-sm leading-7 text-muted-foreground">{item.body[lang]}</p><div className="mt-2 flex flex-wrap gap-3">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline" aria-label={`${c.source}: ${source.title}`}><ExternalLink className="size-3" />{source.title}</a> : null; })}</div></TableCell>
+              <TableCell className="align-top py-4 text-xs leading-6 text-muted-foreground">{item.scope === "throughout" ? c.throughout : c.stageOnly}{item.fromWeek !== undefined && <p>{c.fromWeek} {item.fromWeek}</p>}</TableCell>
+            </TableRow>; })}</TableBody>
+          </Table>}
+        </section>;
+      })}
     </div>
     <p className="text-xs leading-6 text-muted-foreground">{c.review}</p>
   </section>;

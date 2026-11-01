@@ -9,7 +9,7 @@ describe("currentGestationalWeek", () => {
     expect(currentGestationalWeek(0)).toBe(1);
   });
 
-  it("adds one day to the completed count for the current week label", () => {
+  it("adds one week to the completed count for the ordinal week label", () => {
     expect(currentGestationalWeek(12)).toBe(13);
   });
 
@@ -51,17 +51,18 @@ describe("visitsForStage", () => {
   const visit = (id: string, weeks: [number, number], trimesters?: number[]): PregnancyVisit =>
     ({ id, kind: "visit", weeks, title: { ar: "", en: "" }, body: { ar: "", en: "" }, trimesters, sources: [] });
   const items = [
-    visit("late", [36, 40]),
+    visit("late", [36, 40], [2]),
     visit("mid", [18, 22], [1]),
-    visit("early", [8, 14]),
+    visit("early", [8, 14], [0, 1]),
   ];
 
   it("orders visits by starting week", () => {
     expect(visitsForStage(items, 2).map((v) => v.id)).toEqual(["late"]);
   });
 
-  it("shows items without a trimester list everywhere and respects the list when present", () => {
+  it("respects stage lists and keeps unscoped visits everywhere", () => {
     expect(visitsForStage(items, 1).map((v) => v.id)).toEqual(["early", "mid"]);
     expect(visitsForStage(items, 0).map((v) => v.id)).toEqual(["early"]);
+    expect(visitsForStage([visit("unscoped", [1, 40])], 2).map((v) => v.id)).toEqual(["unscoped"]);
   });
 });

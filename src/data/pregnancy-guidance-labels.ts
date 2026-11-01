@@ -1,6 +1,8 @@
 export const pregnancyGuidanceLabels = {
   ar: {
-    title: "دليلكِ للطعام والنشاط والعناية", subtitle: "اختاري المرحلة للاطلاع على ما يجب تجنّبه وما يجوز بشروط وما يُنصح به.",
+    title: "جداول الطعام والأدوية والعناية", subtitle: "إرشادات الطعام والأدوية والنشاط بحسب مرحلة الحمل.",
+    medicine: "الأدوية والمكملات", subject: "الصنف أو الفعل", advice: "الإرشاد والشروط", period: "الفترة", status: "التوصية",
+    medicineNote: "تصنيف الأدوية لا يعني أنها آمنة لكِ شخصيًا؛ لا تبدئي دواءً أو تغيّري جرعته أو توقفي علاجًا موصوفًا دون الطبيب أو الصيدلي.",
     stage: "مرحلة الحمل", stages: ["الأشهر 1–3", "الأشهر 4–6", "الأشهر 7–9"],
     ranges: ["حتى 13 أسبوعًا و6 أيام", "14–27 أسبوعًا و6 أيام", "من 28 أسبوعًا وحتى الولادة"],
     monthNote: "الأشهر تقريبية؛ الأسابيع هي المرجع الطبي الأدق. إرشادات جميع مراحل الحمل لا تتوقف عند الانتقال للمرحلة التالية.",
@@ -11,7 +13,9 @@ export const pregnancyGuidanceLabels = {
     review: "معلومات تثقيفية مستندة إلى المراجع أدناه؛ لم تخضع بعد لمراجعة طبية محلية داخل التطبيق.", empty: "لا توجد إرشادات ضمن هذا الاختيار.",
   },
   en: {
-    title: "Food, activity and care guide", subtitle: "Choose a stage to see what to avoid, what is allowed with conditions, and what is recommended.",
+    title: "Food, medicine and care tables", subtitle: "Food, medicine and activity guidance by pregnancy stage.",
+    medicine: "Medicines and supplements", subject: "Food or action", advice: "Guidance and conditions", period: "Timing", status: "Recommendation",
+    medicineNote: "Medicine categories are not personal safety clearance; do not start, change doses or stop prescribed treatment without a clinician or pharmacist.",
     stage: "Pregnancy stage", stages: ["Months 1–3", "Months 4–6", "Months 7–9"],
     ranges: ["Through 13 weeks and 6 days", "14–27 weeks and 6 days", "From 28 weeks until birth"],
     monthNote: "Months are approximate; weeks are the more precise medical reference. Advice for all stages continues when you move to the next stage.",

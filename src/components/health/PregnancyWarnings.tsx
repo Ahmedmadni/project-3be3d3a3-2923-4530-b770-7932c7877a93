@@ -17,6 +17,7 @@ export function PregnancyWarnings({ items, sourceUrls, currentStage }: Props) {
   const visible = warningsForStage(items, stage);
   const groups = [
     { key: "emergency", heading: c.emergencyHeading, label: c.emergency, icon: PhoneCall, className: "border-destructive bg-destructive-soft/50", text: "text-destructive" },
+    { key: "immediate", heading: c.immediate, label: c.immediate, icon: ShieldAlert, className: "border-warning/40 bg-warning-soft/50", text: "text-foreground" },
     { key: "same_day", heading: c.sameDay, label: c.sameDay, icon: ShieldAlert, className: "border-warning/40 bg-warning-soft/50", text: "text-warning" },
   ] as const;
   return <section className="space-y-5" aria-label={c.title}>
