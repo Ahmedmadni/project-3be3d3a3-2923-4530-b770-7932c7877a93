@@ -74,7 +74,7 @@ export function PwaStatus() {
           if (choice.outcome !== "accepted") setOpen(true);
         } catch { setError(true); setInstallEvent(null); setOpen(true); }
       }}
-      className="fixed bottom-24 start-4 z-40 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-glow md:bottom-5"
+      className="mx-4 mb-28 inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold md:mb-6"
     >
       <Download className="size-4" />
       {c.install}
