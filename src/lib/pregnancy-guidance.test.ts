@@ -3,6 +3,15 @@ import { pregnancyGuidance } from "@/data/pregnancy-guidance";
 import { guidanceForStage } from "./pregnancy-guidance";
 
 describe("pregnancy care guidance", () => {
+  it("keeps medicine precautions and prescribed aspirin exception in every stage", () => {
+    for (const stage of [0, 1, 2]) {
+      const list = guidanceForStage(pregnancyGuidance, stage, "medicine");
+      expect(list.find((item) => item.id === "nsaids")?.status).toBe("avoid");
+      expect(list.find((item) => item.id === "nsaids")?.fromWeek).toBe(20);
+      expect(list.find((item) => item.id === "prescribed-aspirin")?.status).toBe("conditional");
+      expect(list.find((item) => item.id === "medicines-herbs")?.scope).toBe("throughout");
+    }
+  });
   it("retains throughout-pregnancy food and action precautions in all three stages", () => {
     for (const stage of [0, 1, 2]) {
       const ids = guidanceForStage(pregnancyGuidance, stage).map((i) => i.id);

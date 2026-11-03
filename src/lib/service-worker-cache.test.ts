@@ -15,7 +15,7 @@ function worker() {
       clients: { claim: () => Promise.resolve() },
     },
     caches: {
-      keys: async () => ["health-indicator-static-v3", "health-indicator-static-v4"],
+      keys: async () => ["health-indicator-static-v3", "health-indicator-static-v4", "unrelated-messaging-cache"],
       delete: async (key: string) => { deleted.push(key); return true; },
     },
   });
@@ -43,6 +43,6 @@ describe("service worker development module isolation", () => {
     let completion: Promise<unknown> | undefined;
     handlers.get("activate")?.({ waitUntil: (promise: Promise<unknown>) => { completion = promise; } });
     await completion;
-    expect(deleted).toEqual(["health-indicator-static-v3"]);
+    expect(deleted).toEqual(["health-indicator-static-v3", "health-indicator-static-v4"]);
   });
 });

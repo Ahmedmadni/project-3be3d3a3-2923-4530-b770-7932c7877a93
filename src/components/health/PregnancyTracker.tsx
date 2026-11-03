@@ -14,8 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { localDate, pregnancyProgress, validPregnancyDates } from "@/lib/pregnancy";
 import type { PregnancyTracking } from "@/types/medical";
 import pregnancyImage from "@/assets/pregnancy-care.jpg";
-import { PregnancyGuidance } from "./PregnancyGuidance";
-import { pregnancyGuidance, pregnancyGuidanceSources } from "@/data/pregnancy-guidance";
+import { PregnancyEducation } from "./PregnancyEducation";
 
 const moods = ["good", "okay", "tired"] as const;
 const symptoms = ["nausea", "fatigue", "backache", "heartburn"] as const;
@@ -136,7 +135,7 @@ export function PregnancyTracker() {
           <TabsList className="mb-5"><TabsTrigger value="care">{c.journey}</TabsTrigger><TabsTrigger value="daily">{c.daily}</TabsTrigger></TabsList>
           <TabsContent value="care" className="space-y-6">
             <div className="border-s-4 border-primary ps-4"><h2 className="font-bold">{c.firstDays}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{c.firstDaysBody}</p></div>
-            <PregnancyGuidance currentStage={p.trimester} items={pregnancyGuidance} sourceUrls={pregnancyGuidanceSources} />
+            <PregnancyEducation currentStage={p.trimester} completedWeeks={p.weeks} />
           </TabsContent>
           <TabsContent value="daily" className="space-y-6">
             {!user ? <p>{c.guestDaily} <Link to="/auth" className="font-bold text-primary underline">{c.signIn}</Link></p> : <>
@@ -155,7 +154,7 @@ export function PregnancyTracker() {
         </Tabs>
       </>}
     </>}
-    {!p && <PregnancyGuidance items={pregnancyGuidance} sourceUrls={pregnancyGuidanceSources} />}
+    {!p && <PregnancyEducation />}
     <p className="border-t border-border pt-4 text-xs leading-6 text-muted-foreground">{c.safety}</p>
     <details className="text-xs text-muted-foreground"><summary className="cursor-pointer font-bold">{c.sources}</summary><ul className="mt-3 space-y-2" dir="ltr">{pregnancySources.map((s) => <li key={s.url}><a className="text-primary underline" href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul></details>
   </div>;

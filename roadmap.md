@@ -1,6 +1,8 @@
 # Roadmap — مؤشر صحي
 
-- [ ] Complete pregnancy week development, urgent warning signs and sourced visits; convert food/activity/medicine guidance to tables and verify stage filters and mobile display.
+- [x] Enable phone home-screen installation: standalone manifest and icons, Arabic/English install action with Safari/Chrome instructions; existing push worker and subscription scope preserved, app-shell caching removed. Browser dialog/assets verified; real-device installation remains unverified and requires publishing this update.
+
+- [x] Complete pregnancy developmental windows covering weeks 1–40, distinct emergency/immediate/same-day warning signs, sourced NHS example visits, and food/activity/medicine tables. Stage filters, browsing, guest dating and mobile layout verified; medical review still pending as disclosed. Personal daily-save verification remains the separate blocked task below.
 
 - [x] Pregnancy stage guide: sourced food/activity/care guidance, avoid/conditional/recommended categories, trimester browsing and ongoing rules retained across stages; 11 tests passed and browser stage/category/current-stage flows verified in Arabic/English with no mobile overflow or page errors. Local clinical review remains pending as disclosed in the guide.
 
