@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { pregnancyGuidance } from "@/data/pregnancy-guidance";
-import { guidanceForStage } from "./pregnancy-guidance";
+import { guidanceForStage, searchPregnancyGuidance } from "./pregnancy-guidance";
 
 describe("pregnancy care guidance", () => {
+  it("matches Arabic variations without restoring rows outside the selected stage", () => {
+    expect(searchPregnancyGuidance(pregnancyGuidance, "اسبرين").map((item) => item.id)).toContain("prescribed-aspirin");
+    expect(searchPregnancyGuidance(guidanceForStage(pregnancyGuidance, 2), "حمض الفوليك").map((item) => item.id)).not.toContain("folic-acid");
+    expect(searchPregnancyGuidance(pregnancyGuidance, "nonexistent medicine")).toEqual([]);
+  });
   it("keeps medicine precautions and prescribed aspirin exception in every stage", () => {
     for (const stage of [0, 1, 2]) {
       const list = guidanceForStage(pregnancyGuidance, stage, "medicine");

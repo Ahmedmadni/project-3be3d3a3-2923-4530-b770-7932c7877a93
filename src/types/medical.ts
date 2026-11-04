@@ -52,6 +52,13 @@ export interface PregnancyWarningSign {
 }
 
 export type PregnancyVisitKind = "visit" | "test";
+export interface PregnancySpecialistTopic {
+  id: string;
+  title: { ar: string; en: string };
+  followUp: { ar: string; en: string };
+  urgent: { ar: string; en: string };
+  sources: string[];
+}
 export interface PregnancyVisit {
   id: string;
   kind: PregnancyVisitKind;

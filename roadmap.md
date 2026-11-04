@@ -1,5 +1,7 @@
 # Roadmap — مؤشر صحي
 
+- [ ] Expand pregnancy education with specialist follow-up tables, clearer medicine classifications, searchable guidance and sourced clinical windows; verify stage safety and Arabic/mobile browsing. No diagnosis, prescription or private-record changes.
+
 - [x] Enable phone home-screen installation: standalone manifest and icons, Arabic/English install action with Safari/Chrome instructions; existing push worker and subscription scope preserved, app-shell caching removed. Browser dialog/assets verified; real-device installation remains unverified and requires publishing this update.
 
 - [x] Complete pregnancy developmental windows covering weeks 1–40, distinct emergency/immediate/same-day warning signs, sourced NHS example visits, and food/activity/medicine tables. Stage filters, browsing, guest dating and mobile layout verified; medical review still pending as disclosed. Personal daily-save verification remains the separate blocked task below.

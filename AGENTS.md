@@ -18,4 +18,5 @@
 - Pregnancy dating is deterministic date-only logic; clinician dating takes precedence, personal records use owner-scoped Cloud tables, and guest tracking stays temporary without local health storage.
 - Pregnancy education uses sourced structured guidance with ongoing versus stage-specific scope; trimester filters never remove throughout-pregnancy precautions, and months are approximate labels rather than dating rules.
 - Pregnancy education uses a shared tabbed module with sourced developmental windows and distinct emergency/immediate/same-day warnings, so educational browsing never delays urgent care.
+- Specialist pregnancy education remains source-linked discussion tables, not personal risk scoring or treatment; medicine classifications require professional review and search preserves stage filtering.
 - Phone installation is manifest-only; the existing /sw.js registration remains a messaging-only worker to preserve push subscriptions, with no fetch interception and only app-owned stale-cache cleanup to prevent mixed React modules.
