@@ -3,9 +3,10 @@ import { Check, CircleAlert, Leaf, ShieldCheck, Utensils, Footprints, HeartPulse
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Pill } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n";
 import { pregnancyGuidanceLabels } from "@/data/pregnancy-guidance-labels";
-import { guidanceForStage } from "@/lib/pregnancy-guidance";
+import { guidanceForStage, searchPregnancyGuidance } from "@/lib/pregnancy-guidance";
 import type { PregnancyGuidanceCategory, PregnancyGuidanceItem, PregnancyGuidanceStatus } from "@/types/medical";
 
 type Props = { currentStage?: number; items: PregnancyGuidanceItem[]; sourceUrls: Record<string, { title: string; url: string }> };
@@ -21,8 +22,9 @@ export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
   const c = pregnancyGuidanceLabels[lang];
   const [stage, setStage] = useState(currentStage ?? 0);
   const [category, setCategory] = useState<PregnancyGuidanceCategory | "all">("all");
+  const [query, setQuery] = useState("");
   useEffect(() => { if (currentStage !== undefined) setStage(currentStage); }, [currentStage]);
-  const visible = guidanceForStage(items, stage, category);
+  const visible = searchPregnancyGuidance(guidanceForStage(items, stage, category), query);
   return <section className="space-y-5 border-t border-border pt-6" aria-label={c.title}>
     <div><h2 className="text-xl font-extrabold">{c.title}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{c.subtitle}</p></div>
     <div className="grid grid-cols-3 gap-2" role="group" aria-label={c.stage}>
@@ -32,6 +34,7 @@ export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
     </div>
     <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">{c.stages[stage]} · {c.ranges[stage]}</p>{currentStage !== undefined && currentStage !== stage && <Button variant="link" className="px-0" onClick={() => setStage(currentStage)}>{c.returnCurrent}</Button>}</div>
     <p className="text-xs leading-6 text-muted-foreground">{c.monthNote} {currentStage === undefined ? c.noDating : ""}</p>
+    <div className="flex items-center gap-2"><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={c.search} aria-label={c.searchLabel} className="min-w-0" />{query && <Button variant="ghost" onClick={() => setQuery("")}>{c.clear}</Button>}</div>
     <div className="flex flex-wrap gap-2" role="group" aria-label={c.title}>{categories.map((value) => { const Icon = categoryIcons[value]; return <Button key={value} variant={category === value ? "secondary" : "ghost"} aria-pressed={category === value} className="h-auto min-h-9 whitespace-normal py-2" onClick={() => setCategory(value)}><Icon />{c[value]}</Button>; })}</div>
     <p className="border-s-2 border-accent ps-3 text-xs leading-6 text-muted-foreground">{c.personalized}</p>
     {(category === "all" || category === "medicine") && <p className="border-s-2 border-warning bg-warning-soft/30 p-3 text-sm leading-7">{c.medicineNote}</p>}
@@ -45,7 +48,7 @@ export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
             <TableHeader className="bg-muted/60"><TableRow><TableHead scope="col" className="w-[23%] text-start">{c.subject}</TableHead><TableHead scope="col" className="w-[19%] text-start">{c.status}</TableHead><TableHead scope="col" className="w-[42%] text-start">{c.advice}</TableHead><TableHead scope="col" className="w-[16%] text-start">{c.period}</TableHead></TableRow></TableHeader>
             <TableBody>{list.map((item) => { const Icon = statusIcons[item.status]; return <TableRow key={item.id}>
               <TableCell className="align-top py-4 font-bold leading-7">{item.title[lang]}</TableCell>
-              <TableCell className="align-top py-4"><span className={`inline-flex items-start gap-1.5 border-s-2 px-2 py-1 text-xs font-bold leading-5 ${statusStyles[item.status]} ${statusHeading[item.status]}`}><Icon className="mt-0.5 size-4 shrink-0" />{c[item.status]}</span></TableCell>
+              <TableCell className="align-top py-4"><span className={`inline-flex items-start gap-1.5 border-s-2 px-2 py-1 text-xs font-bold leading-5 ${statusStyles[item.status]} ${statusHeading[item.status]}`}><Icon className="mt-0.5 size-4 shrink-0" />{item.category === "medicine" && item.status === "conditional" ? c.medicineConditional : c[item.status]}</span></TableCell>
               <TableCell className="align-top py-4"><p className="text-sm leading-7 text-muted-foreground">{item.body[lang]}</p><div className="mt-2 flex flex-wrap gap-3">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline" aria-label={`${c.source}: ${source.title}`}><ExternalLink className="size-3" />{source.title}</a> : null; })}</div></TableCell>
               <TableCell className="align-top py-4 text-xs leading-6 text-muted-foreground">{item.scope === "throughout" ? c.throughout : c.stageOnly}{item.fromWeek !== undefined && <p>{c.fromWeek} {item.fromWeek}</p>}</TableCell>
             </TableRow>; })}</TableBody>
