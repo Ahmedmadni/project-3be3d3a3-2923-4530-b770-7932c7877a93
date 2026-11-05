@@ -1,6 +1,6 @@
 # Roadmap — مؤشر صحي
 
-- [ ] Expand pregnancy education with specialist follow-up tables, clearer medicine classifications, searchable guidance and sourced clinical windows; verify stage safety and Arabic/mobile browsing. No diagnosis, prescription or private-record changes.
+- [x] Expand pregnancy education with six source-linked specialist follow-up topics, clearer medicine review classifications, searchable guidance, additional nausea/reflux/constipation/food/vaccine precautions and sourced clinical windows. All 30 pregnancy tests pass; Arabic search, specialist tables, ongoing stage advice, English and mobile layout verified without page errors. No diagnosis, prescription or private-record changes. Local medical review remains blocked on an authorized reviewer.
 
 - [x] Enable phone home-screen installation: standalone manifest and icons, Arabic/English install action with Safari/Chrome instructions; existing push worker and subscription scope preserved, app-shell caching removed. Browser dialog/assets verified; real-device installation remains unverified and requires publishing this update.
 
