@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Baby, CalendarDays, Check, Heart, Pencil, ShieldCheck, Siren, Trash2 } from "lucide-react";
+import { Baby, CalendarDays, Check, Pencil, RefreshCw, ShieldCheck, Siren, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageVisualHeader } from "./PageVisualHeader";
@@ -11,10 +11,10 @@ import { pregnancyCopy, pregnancySources } from "@/data/pregnancy-copy";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
-import { localDate, pregnancyProgress, validPregnancyDates } from "@/lib/pregnancy";
-import type { PregnancyTracking } from "@/types/medical";
+import { localDate, pregnancyProgress } from "@/lib/pregnancy";
 import pregnancyImage from "@/assets/pregnancy-care.jpg";
 import { PregnancyEducation } from "./PregnancyEducation";
+import { PregnancyDateSettings, type PregnancyDateValues } from "./PregnancyDateSettings";
 
 const moods = ["good", "okay", "tired"] as const;
 const symptoms = ["nausea", "fatigue", "backache", "heartburn"] as const;
@@ -25,19 +25,18 @@ export function PregnancyTracker() {
   const c = pregnancyCopy[lang];
   const cache = useQueryClient();
   const [today, setToday] = useState("");
-  const [lastPeriod, setLastPeriod] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [appointment, setAppointment] = useState("");
   const [editing, setEditing] = useState(false);
-  const [temporary, setTemporary] = useState<Pick<PregnancyTracking, "last_period" | "clinician_due_date" | "next_appointment"> | null>(null);
-  const [validationError, setValidationError] = useState(false);
+  const [temporary, setTemporary] = useState<PregnancyDateValues | null>(null);
   const [mood, setMood] = useState<string>("okay");
   const [selected, setSelected] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   useEffect(() => {
-    setToday(localDate());
-    const timer = window.setInterval(() => setToday(localDate()), 60000);
-    return () => window.clearInterval(timer);
+    const refresh = () => setToday(localDate());
+    refresh();
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
   }, []);
   const tracking = useQuery({
     queryKey: ["pregnancy-tracking", user?.id], enabled: Boolean(user),
@@ -59,18 +58,15 @@ export function PregnancyTracker() {
   });
   const profile = user ? tracking.data : temporary;
   useEffect(() => {
-    if (profile) {
-      setLastPeriod(profile.last_period); setDueDate(profile.clinician_due_date || ""); setAppointment(profile.next_appointment || "");
-    } else { setLastPeriod(""); setDueDate(""); setAppointment(""); }
     setEditing(false);
-  }, [profile, user?.id]);
+    setTemporary(null);
+  }, [user?.id]);
   const todayEntry = entries.data?.find((e) => e.entry_date === today);
   useEffect(() => {
     setMood(todayEntry?.mood || "okay"); setSelected(todayEntry?.symptoms || []); setNotes(todayEntry?.notes || "");
   }, [todayEntry, user?.id, today]);
   const saveProfile = useMutation({
-    mutationFn: async () => {
-      const value = { last_period: lastPeriod, clinician_due_date: dueDate || null, next_appointment: appointment || null };
+    mutationFn: async (value: PregnancyDateValues) => {
       if (!user) { setTemporary(value); return; }
       const { error } = await supabase.from("pregnancy_tracking").upsert({ ...value, user_id: user.id }, { onConflict: "user_id" });
       if (error) throw error;
@@ -109,19 +105,20 @@ export function PregnancyTracker() {
       <Button asChild variant="destructive" className="mt-3"><Link to="/emergency">{c.emergency}</Link></Button>
     </section>
     {busy ? <p role="status">{c.loading}</p> : tracking.isError ? <div role="alert"><p>{c.error}</p><Button onClick={() => tracking.refetch()} className="mt-3">{c.retry}</Button></div> : <>
-      {(!profile || editing) && <section className="border-y border-border py-6">
-        <h2 className="text-xl font-extrabold">{c.start}</h2><p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">{c.intro}</p>
-        <form className="mt-5 grid gap-5 sm:grid-cols-3" onSubmit={(event) => { event.preventDefault(); const valid = validPregnancyDates(lastPeriod, dueDate, today); setValidationError(!valid); if (valid) saveProfile.mutate(); }}>
-          <label className="space-y-2 text-sm font-medium" htmlFor="pregnancy-period"><span className="block">{c.period}</span><Input id="pregnancy-period" required type="date" max={today} value={lastPeriod} onChange={(e) => setLastPeriod(e.target.value)} /></label>
-          <label className="space-y-2 text-sm font-medium" htmlFor="pregnancy-due"><span className="block">{c.clinician}</span><Input id="pregnancy-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></label>
-          <label className="space-y-2 text-sm font-medium" htmlFor="pregnancy-appointment"><span className="block">{c.appointment}</span><Input id="pregnancy-appointment" type="date" value={appointment} onChange={(e) => setAppointment(e.target.value)} /></label>
-          <div className="flex flex-wrap gap-3 sm:col-span-3"><Button type="submit" disabled={saveProfile.isPending}><Heart />{profile ? c.save : c.begin}</Button>{profile && <Button type="button" variant="outline" onClick={() => { setEditing(false); setLastPeriod(profile.last_period); setDueDate(profile.clinician_due_date || ""); setAppointment(profile.next_appointment || ""); }}>{c.cancel}</Button>}</div>
-          {(validationError || saveProfile.isError) && <p role="alert" className="text-sm text-destructive sm:col-span-3">{validationError ? c.dateError : c.error}</p>}
-        </form>
+      {!profile && <section className="border-y border-border py-6">
+        <h2 className="text-xl font-extrabold">{c.personalize}</h2><p className="mb-5 mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">{c.personalizeHelp}</p>
+        <PregnancyDateSettings profile={null} today={today} pending={saveProfile.isPending} saveError={saveProfile.isError} onSave={(values) => saveProfile.mutate(values)} />
       </section>}
+      <Dialog open={editing} onOpenChange={(open) => { if (!saveProfile.isPending) setEditing(open); }}>
+        <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className="max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-lg">
+          <DialogTitle className="pe-6 text-start">{c.personalize}</DialogTitle>
+          <DialogDescription className="text-start leading-7">{c.personalizeHelp}</DialogDescription>
+          {editing && <PregnancyDateSettings profile={profile} today={today} pending={saveProfile.isPending} saveError={saveProfile.isError} onSave={(values) => saveProfile.mutate(values)} onCancel={() => setEditing(false)} />}
+        </DialogContent>
+      </Dialog>
       {p && <>
         <section className="border-y border-border py-6">
-          <div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-bold"><Baby className="size-6 text-primary" />{c.title}</h2><Button variant="outline" size="icon" title={c.edit} aria-label={c.edit} onClick={() => setEditing(true)}><Pencil /></Button></div>
+          <div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-bold"><Baby className="size-6 text-primary" />{c.title}</h2><Button variant="outline" size="icon" title={c.personalize} aria-label={c.personalize} onClick={() => { saveProfile.reset(); setEditing(true); }}><Pencil /></Button></div>
           <div className="mt-6 grid grid-cols-2 gap-6 lg:grid-cols-4">
             <div><p className="text-sm text-muted-foreground">{c.week}</p><p className="mt-2 text-4xl font-extrabold text-primary" dir="ltr">{p.weeks}<span className="ms-2 text-base font-medium text-muted-foreground">+ {p.days} {c.days}</span></p></div>
             <div><p className="text-sm text-muted-foreground">{c.trimester}</p><p className="mt-3 text-lg font-bold">{c.trimesters[p.trimester]}</p></div>
@@ -129,6 +126,7 @@ export function PregnancyTracker() {
             <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p><p className="mt-3 font-bold">{profile?.next_appointment ? dateLabel(profile.next_appointment) : c.noAppointment}</p>{profile?.next_appointment && profile.next_appointment < today && <p className="mt-2 text-xs text-muted-foreground">{c.appointmentPast}</p>}</div>
           </div>
           <p className="mt-6 text-xs leading-6 text-muted-foreground">{profile?.clinician_due_date ? c.clinicalEstimate : c.estimate}</p>
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-primary"><RefreshCw className="size-3.5" />{c.autoUpdate} · {c.asOf} {dateLabel(today)}</p>
           {p.remaining <= 0 && <p role="status" className="mt-3 border-s-2 border-warning bg-warning-soft p-3 text-sm leading-7">{c.overdue}</p>}
         </section>
         <Tabs defaultValue="care" dir={lang === "ar" ? "rtl" : "ltr"}>

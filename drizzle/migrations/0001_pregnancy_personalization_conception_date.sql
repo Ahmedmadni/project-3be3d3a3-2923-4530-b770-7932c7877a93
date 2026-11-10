@@ -1,0 +1,3 @@
+ALTER TABLE public.pregnancy_tracking ADD COLUMN estimated_conception_date date;
+COMMENT ON COLUMN public.pregnancy_tracking.estimated_conception_date IS 'Optional user-reported estimated conception date; informational only, never overrides menstrual or clinician dating.';
+ALTER TABLE public.pregnancy_tracking ADD CONSTRAINT pregnancy_conception_date_range CHECK (estimated_conception_date IS NULL OR (estimated_conception_date >= last_period AND estimated_conception_date <= last_period + 301));

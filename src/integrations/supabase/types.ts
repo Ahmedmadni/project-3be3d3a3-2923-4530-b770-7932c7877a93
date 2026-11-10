@@ -1674,6 +1674,7 @@ export type Database = {
         Row: {
           clinician_due_date: string | null
           created_at: string
+          estimated_conception_date: string | null
           id: string
           last_period: string
           next_appointment: string | null
@@ -1683,6 +1684,7 @@ export type Database = {
         Insert: {
           clinician_due_date?: string | null
           created_at?: string
+          estimated_conception_date?: string | null
           id?: string
           last_period: string
           next_appointment?: string | null
@@ -1692,6 +1694,7 @@ export type Database = {
         Update: {
           clinician_due_date?: string | null
           created_at?: string
+          estimated_conception_date?: string | null
           id?: string
           last_period?: string
           next_appointment?: string | null

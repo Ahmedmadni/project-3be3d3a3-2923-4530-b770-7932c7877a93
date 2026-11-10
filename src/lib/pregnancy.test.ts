@@ -24,4 +24,17 @@ describe("pregnancy dating", () => {
   it("identifies due date reached without implying a diagnosis", () => {
     expect(pregnancyProgress("2026-01-01", null, "2026-10-08").remaining).toBe(0);
   });
+  it("updates completed weeks automatically as the calendar day changes", () => {
+    expect(pregnancyProgress("2026-09-01", null, "2026-11-09")).toMatchObject({ weeks: 9, days: 6 });
+    expect(pregnancyProgress("2026-09-01", null, "2026-11-10")).toMatchObject({ weeks: 10, days: 0 });
+  });
+  it("accepts an optional conception date without changing medical dating", () => {
+    expect(validPregnancyDates("2026-09-01", "", "2026-11-10", "2026-09-15")).toBe(true);
+    expect(pregnancyProgress("2026-09-01", null, "2026-11-10")).toMatchObject({ weeks: 10, days: 0, due: "2027-06-08" });
+  });
+  it("rejects a conception date before the period or in the future", () => {
+    expect(validPregnancyDates("2026-09-01", "", "2026-11-10", "2026-08-31")).toBe(false);
+    expect(validPregnancyDates("2026-09-01", "", "2026-11-10", "2026-11-11")).toBe(false);
+    expect(validPregnancyDates("2026-09-01", "", "2026-11-10", "2026-09-31")).toBe(false);
+  });
 });

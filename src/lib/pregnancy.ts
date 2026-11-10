@@ -2,11 +2,12 @@ import { addDays, differenceInCalendarDays, format, isValid, parseISO } from "da
 
 export function localDate(date = new Date()): string { return format(date, "yyyy-MM-dd"); }
 
-export function validPregnancyDates(lastPeriod: string, clinicianDueDate: string, today: string): boolean {
-  const dates = [lastPeriod, today, ...(clinicianDueDate ? [clinicianDueDate] : [])];
+export function validPregnancyDates(lastPeriod: string, clinicianDueDate: string, today: string, conceptionDate = ""): boolean {
+  const dates = [lastPeriod, today, ...(clinicianDueDate ? [clinicianDueDate] : []), ...(conceptionDate ? [conceptionDate] : [])];
   if (dates.some((s) => !/^\d{4}-\d{2}-\d{2}$/.test(s) || !isValid(parseISO(s)) || format(parseISO(s), "yyyy-MM-dd") !== s)) return false;
   const age = differenceInCalendarDays(parseISO(today), parseISO(lastPeriod));
   if (age < 0 || age > 301) return false;
+  if (conceptionDate && (conceptionDate < lastPeriod || conceptionDate > today)) return false;
   if (clinicianDueDate) {
     const remaining = differenceInCalendarDays(parseISO(clinicianDueDate), parseISO(today));
     if (remaining < -21 || remaining > 280) return false;
