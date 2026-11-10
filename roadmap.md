@@ -1,5 +1,7 @@
 # Roadmap — مؤشر صحي
 
+- [ ] Add opt-in pregnancy examination/vaccination reminder appointments, owner-scoped Cloud storage, shared Web Push subscriptions and deduplicated dispatch from the existing managed reminder route/job; safe dry-run and authentication tests, no key changes or duplicate jobs.
+
 - [x] Add pregnancy date personalization with last-period date, optional informational conception date, clinician due date, live weeks/day preview and daily/app-resume refresh. Additive Cloud field preserves owner-scoped persistence; 33 pregnancy tests and guest edit/read-back, clinician precedence, next-day refresh and mobile no-overflow checks pass without page errors. Signed-in persistence remains unverified: Cloud has no auth users, requiring the user's signup/sign-in before checking personal records.
 
 - [x] Expand pregnancy education with six source-linked specialist follow-up topics, clearer medicine review classifications, searchable guidance, additional nausea/reflux/constipation/food/vaccine precautions and sourced clinical windows. All 30 pregnancy tests pass; Arabic search, specialist tables, ongoing stage advice, English and mobile layout verified without page errors. No diagnosis, prescription or private-record changes. Local medical review remains blocked on an authorized reviewer.
