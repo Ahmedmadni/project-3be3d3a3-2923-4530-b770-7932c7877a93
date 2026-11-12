@@ -24,14 +24,21 @@ export function PregnancyVisits({ items, questions, sourceUrls, currentStage }: 
     </div>
     {currentStage !== undefined && currentStage !== stage && <Button variant="link" className="px-0" onClick={() => setStage(currentStage)}>{c.returnCurrent}</Button>}
     <div className="min-w-0">
-      {!visible.length ? <p className="text-sm text-muted-foreground">{c.empty}</p> : <Table className="min-w-[560px] table-fixed" aria-label={c.title}><TableHeader className="bg-muted/50"><TableRow><TableHead className="w-[17%] text-start" scope="col">{c.weeksLabel}</TableHead><TableHead className="w-[30%] text-start" scope="col">{c.visit} / {c.test}</TableHead><TableHead className="text-start" scope="col">{c.details}</TableHead></TableRow></TableHeader><TableBody>{visible.map((item) => {
+      {!visible.length ? <p className="text-sm text-muted-foreground">{c.empty}</p> : <><div className="grid gap-3 sm:hidden">
+        {visible.map((item) => { const Icon = item.kind === "test" ? FlaskConical : CalendarCheck; return <article key={item.id} className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-4">
+          <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-primary"><Icon className="size-4" />{item.kind === "test" ? c.test : c.visit}<span dir="ltr">{item.weeks[0]}–{item.weeks[1]}</span></p>
+          <h3 className="font-bold leading-7">{item.title[lang]}</h3>
+          <p className="text-sm leading-7 text-muted-foreground">{item.body[lang]}</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-2">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline"><ExternalLink className="size-3" />{source.title}</a> : null; })}</div>
+        </article>; })}
+      </div><div className="hidden max-w-full overflow-x-auto sm:block"><Table className="min-w-[560px] table-fixed" aria-label={c.title}><TableHeader className="bg-muted/50"><TableRow><TableHead className="w-[17%] text-start" scope="col">{c.weeksLabel}</TableHead><TableHead className="w-[30%] text-start" scope="col">{c.visit} / {c.test}</TableHead><TableHead className="text-start" scope="col">{c.details}</TableHead></TableRow></TableHeader><TableBody>{visible.map((item) => {
         const Icon = item.kind === "test" ? FlaskConical : CalendarCheck;
         return <TableRow key={item.id}><TableCell className="align-top py-4"><p className="text-sm font-semibold" dir="ltr">{item.weeks[0]}–{item.weeks[1]}</p></TableCell><TableCell className="align-top py-4">
           <p className="inline-flex items-center gap-2 text-xs text-primary"><Icon className="size-4" />{item.kind === "test" ? c.test : c.visit}</p>
           <h3 className="mt-2 text-sm font-bold leading-6">{item.title[lang]}</h3></TableCell><TableCell className="align-top py-4"><p className="text-sm leading-7 text-muted-foreground">{item.body[lang]}</p>
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-medium text-primary underline" aria-label={`${c.source}: ${source.title}`}><ExternalLink className="size-3" />{source.title}</a> : null; })}</div>
         </TableCell></TableRow>;
-      })}</TableBody></Table>}
+      })}</TableBody></Table></div></>}
     </div>
     {questions[stage]?.length ? <div className="border-s-2 border-accent ps-4">
       <h3 className="flex items-center gap-2 text-sm font-bold"><HelpCircle className="size-4 text-accent" />{c.questionsTitle}</h3>
