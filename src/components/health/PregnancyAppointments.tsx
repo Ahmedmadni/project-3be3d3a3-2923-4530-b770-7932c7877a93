@@ -9,7 +9,7 @@ import { useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { pregnancyAppointmentLabels } from "@/data/pregnancy-appointment-labels";
 import {
-  appointmentCalendarIcs, appointmentsByTimeline, validAppointment,
+  appointmentCalendarIcs, appointmentsByTimeline, collectAppointmentPages, validAppointment,
   validAppointmentStatus,
   type PregnancyAppointmentKind, type PregnancyAppointmentRecord, type PregnancyAppointmentStatus,
 } from "@/lib/pregnancy-appointments";
@@ -37,6 +37,8 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
   const c = pregnancyAppointmentLabels[lang];
   const qc = useQueryClient();
   const [guest, setGuest] = useState<PregnancyAppointmentRecord[]>([]);
+  const [showUpcoming, setShowUpcoming] = useState(12);
+  const [showHistory, setShowHistory] = useState(12);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [day, setDay] = useState(today);
@@ -48,6 +50,8 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
 
   useEffect(() => {
     setGuest([]);
+    setShowUpcoming(12);
+    setShowHistory(12);
     setEditingId(null);
     setTitle("");
     setDay(today);
@@ -63,14 +67,19 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     enabled: Boolean(userId),
     queryFn: async () => {
       if (!userId) return [];
-      const { data, error } = await supabase
-        .from("pregnancy_appointments")
-        .select("id,title,appointment_date,appointment_time,kind,notes,status")
-        .eq("user_id", userId)
-        .order("appointment_date", { ascending: true })
-        .limit(200);
-      if (error) throw error;
-      return (data || []).map((row) => ({
+      const rows = await collectAppointmentPages(async (start, end) => {
+        const { data, error } = await supabase
+          .from("pregnancy_appointments")
+          .select("id,title,appointment_date,appointment_time,kind,notes,status")
+          .eq("user_id", userId)
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true })
+          .order("id", { ascending: true })
+          .range(start, end);
+        if (error) throw error;
+        return data ?? [];
+      });
+      return rows.map((row) => ({
         id: row.id,
         title: row.title,
         appointment_date: row.appointment_date,
@@ -279,10 +288,12 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       </section>}
 
       <section className="space-y-3"><h3 className="font-extrabold">{c.upcoming} ({upcoming.length})</h3>
-        {upcoming.length ? <Cards list={upcoming} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
+        {upcoming.length ? <Cards list={upcoming.slice(0, showUpcoming)} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
+        {upcoming.length > showUpcoming && <Button type="button" variant="outline" onClick={() => setShowUpcoming((n) => n + 12)}>{c.showMore} ({upcoming.length - showUpcoming})</Button>}
       </section>
       <section className="space-y-3"><h3 className="font-extrabold">{c.past} ({history.length})</h3>
-        {history.length ? <Cards list={history} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
+        {history.length ? <Cards list={history.slice(0, showHistory)} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
+        {history.length > showHistory && <Button type="button" variant="outline" onClick={() => setShowHistory((n) => n + 12)}>{c.showMore} ({history.length - showHistory})</Button>}
       </section>
       {!!items.length && <div className="space-y-2 border-t border-border pt-4">
         <Button type="button" variant="outline" onClick={exportBackup}><FileDown className="size-4" />{c.backup}</Button>
