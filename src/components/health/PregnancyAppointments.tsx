@@ -78,6 +78,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
   const formRef = useRef<HTMLFormElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
   const userScopeRef = useRef(userId);
+  const importEpochRef = useRef(0);
   userScopeRef.current = userId;
   const [importBusy, setImportBusy] = useState(false);
   const [importError, setImportError] = useState("");
@@ -95,6 +96,9 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
   const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
+    // Abort any import whose file read completes after the account changes.
+    importEpochRef.current += 1;
+    setImportBusy(false);
     setGuest([]);
     setShowUpcoming(12);
     setShowHistory(12);
@@ -202,6 +206,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (importBusy) return;
     setFeedback("");
     mutation.reset();
     const fields: AppointmentFields = {
@@ -252,7 +257,8 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
 
   async function importGuestBackup(file: File) {
     // Guest-only explicit import. Never upload, cache, or persist the file.
-    if (userScopeRef.current !== null) return;
+    if (userScopeRef.current !== null || importBusy) return;
+    const currentEpoch = ++importEpochRef.current;
     setImportBusy(true);
     setImportError("");
     setImportMessage("");
@@ -261,16 +267,18 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
         throw new Error("Backup too large");
       }
       const parsed = parseAppointmentBackup(await file.text());
-      if (userScopeRef.current !== null) return;
+      if (userScopeRef.current !== null || currentEpoch !== importEpochRef.current) return;
       const merged = mergeGuestAppointments(guest, parsed, () => crypto.randomUUID());
       setGuest(merged.records);
       setImportMessage(lang === "ar"
         ? "تم استعادة " + merged.added + " موعد في جلسة الضيف المؤقتة."
         : "Restored " + merged.added + " appointments into this temporary guest session.");
     } catch {
-      if (userScopeRef.current === null) setImportError(c.importError);
+      if (userScopeRef.current === null && currentEpoch === importEpochRef.current) {
+        setImportError(c.importError);
+      }
     } finally {
-      setImportBusy(false);
+      if (currentEpoch === importEpochRef.current) setImportBusy(false);
     }
   }
 
@@ -319,8 +327,8 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
           </label>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="submit" disabled={mutation.isPending}><CalendarPlus className="size-4" />{c.save}</Button>
-          {editingId && <Button type="button" variant="outline" onClick={resetForm} disabled={mutation.isPending}>{c.cancelEdit}</Button>}
+          <Button type="submit" disabled={mutation.isPending || importBusy}><CalendarPlus className="size-4" />{c.save}</Button>
+          {editingId && <Button type="button" variant="outline" onClick={resetForm} disabled={mutation.isPending || importBusy}>{c.cancelEdit}</Button>}
         </div>
         {formError && <p role="alert" className="text-sm text-destructive">{c.invalid}</p>}
         {mutation.isError && <p role="alert" className="text-sm text-destructive">{c.error}</p>}
@@ -329,7 +337,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
 
       <div className="space-y-3 border-t border-border pt-4">
         <div className="flex flex-wrap gap-2">
-          {!!items.length && <Button type="button" variant="outline" onClick={exportBackup}>
+          {!!items.length && <Button type="button" variant="outline" disabled={importBusy} onClick={exportBackup}>
             <FileDown className="size-4" />{c.backup}
           </Button>}
           {!userId && <>
@@ -363,11 +371,11 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       </section>}
 
       <section className="space-y-3"><h3 className="font-extrabold">{c.upcoming} ({upcoming.length})</h3>
-        {upcoming.length ? <AppointmentCards list={upcoming.slice(0, showUpcoming)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
+        {upcoming.length ? <AppointmentCards list={upcoming.slice(0, showUpcoming)} c={c} labelDate={labelDate} pending={mutation.isPending || importBusy} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
         {upcoming.length > showUpcoming && <Button type="button" variant="outline" onClick={() => setShowUpcoming((n) => n + 12)}>{c.showMore} ({upcoming.length - showUpcoming})</Button>}
       </section>
       <section className="space-y-3"><h3 className="font-extrabold">{c.past} ({history.length})</h3>
-        {history.length ? <AppointmentCards list={history.slice(0, showHistory)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
+        {history.length ? <AppointmentCards list={history.slice(0, showHistory)} c={c} labelDate={labelDate} pending={mutation.isPending || importBusy} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
         {history.length > showHistory && <Button type="button" variant="outline" onClick={() => setShowHistory((n) => n + 12)}>{c.showMore} ({history.length - showHistory})</Button>}
       </section>
       <p className="border-s-2 border-warning ps-3 text-xs leading-6 text-muted-foreground">{c.calendarHelp} {c.timeHint}</p>
