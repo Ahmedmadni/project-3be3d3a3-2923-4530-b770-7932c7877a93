@@ -15,6 +15,13 @@
 - An existing tracked .env includes public/publishable Supabase connection keys, not a detected service-role key; keep auditing any new credential.
 - PWA/web app and Cloud dependency are separate from a native Android build. This branch does not create an Android binary or confirm device-specific behavior.
 
+## Appointment planner extension (same development branch)
+- User-specific appointments are now modelled separately in additive SQL migration 0002 with RLS per owner and optional legacy next-date backfill.
+- Guest mode has a temporary in-memory appointment list; owner cloud mode supports multiple visits, tests, status history, edit and deletion.
+- Calendar reminder is only an explicitly downloaded, neutral .ics event (calendar import required). It does not piggyback on medication push or guarantee delivery.
+- Production deployment requires SQL migration, two-account RLS testing and real-device calendar checks; see PREGNANCY_APPOINTMENTS_DEPLOYMENT.md.
+- Explicit JSON export is an unencrypted private backup and its sensitivity is indicated in the UI.
+
 ## Required gates before treating as medically reviewed or shipping as a certified health feature
 1. Obstetrician/midwife review of Arabic and English wording, conditions and emergency urgency for Saudi use and other target locales.
 2. Verify emergency contact routing when outside Saudi Arabia; the quick dial explicitly applies to Saudi Arabia only.
