@@ -25,7 +25,7 @@ https://lovable.dev/projects/3be3d3a3-2923-4530-b770-7932c7877a93
 
 ## متطلبات النشر
 
-- يجب تطبيق هجرة drizzle/migrations/0002_pregnancy_appointments.sql والتحقق من RLS قبل إتاحة الحفظ الدائم.
+- تم تطبيق جدول pregnancy_appointments على قاعدة Lovable في 12 نوفمبر 2026 مع تفعيل RLS؛ لا تزال اختبارات صلاحيات مالك الحساب مع حسابات تجريبية مطلوبة قبل الإتاحة النهائية.
 - لا تجرِ ترحيلات عمياء: قاعدة Drizzle المحلية الحالية فارغة وقد تختلف عن تاريخ قاعدة الإنتاج.
 - راجع PREGNANCY_APPOINTMENTS_DEPLOYMENT.md و PREGNANCY_BIRTH_RELEASE_REVIEW.md.
 - يلزم تدقيق طبي محلي للمحتوى وتجربة فعلية على أجهزة الهاتف قبل النشر النهائي.
