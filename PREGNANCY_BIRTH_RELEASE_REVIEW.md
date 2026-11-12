@@ -19,7 +19,7 @@
 - User-specific appointments are now modelled separately in additive SQL migration 0002 with RLS per owner and optional legacy next-date backfill.
 - Guest mode has a temporary in-memory appointment list; owner cloud mode supports multiple visits, tests, status history, edit and deletion.
 - Calendar reminder is only an explicitly downloaded, neutral .ics event (calendar import required). It does not piggyback on medication push or guarantee delivery.
-- Connected Lovable production database now contains the newly applied appointments table with RLS enabled (confirmed 2026-11-12); two-account RLS testing and real-device calendar checks remain unverified. The migration is versioned in both drizzle/migrations/0002 and supabase/migrations/20261112094600; see PREGNANCY_APPOINTMENTS_DEPLOYMENT.md.
+- Connected Lovable production database now contains the newly applied appointments table with RLS enabled (confirmed 2026-11-12); the two-account cross-owner RLS matrix passed in isolated PostgreSQL 16 CI, while *production* account acceptance and real-device calendar checks remain unverified. The migration is versioned in both drizzle/migrations/0002 and supabase/migrations/20261112094600; see PREGNANCY_APPOINTMENTS_DEPLOYMENT.md.
 - Explicit JSON export is an unencrypted private backup and its sensitivity is indicated in the UI.
 
 ## Required gates before treating as medically reviewed or shipping as a certified health feature
