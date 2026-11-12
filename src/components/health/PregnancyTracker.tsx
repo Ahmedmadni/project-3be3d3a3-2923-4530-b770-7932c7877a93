@@ -57,6 +57,22 @@ export function PregnancyTracker() {
       return data;
     },
   });
+  const nextPlanned = useQuery({
+    queryKey: ["pregnancy-next-planned", user?.id, today],
+    enabled: Boolean(user && today),
+    queryFn: async () => {
+      if (!user || !today) return null;
+      const { data, error } = await supabase.from("pregnancy_appointments")
+        .select("appointment_date,appointment_time")
+        .eq("user_id", user.id).eq("status", "planned")
+        .gte("appointment_date", today)
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true })
+        .limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
   const profile = user ? tracking.data : temporary;
   useEffect(() => {
     setEditing(false);
@@ -93,6 +109,7 @@ export function PregnancyTracker() {
   const p = profile && today ? pregnancyProgress(profile.last_period, profile.clinician_due_date, today) : null;
   const dateLabel = (date: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${date}T12:00:00`));
   const busy = loading || Boolean(user && tracking.isPending) || !today;
+  const displayedNext = nextPlanned.data?.appointment_date ?? profile?.next_appointment ?? null;
 
   return <div className="space-y-6">
     <PageVisualHeader title={c.title} subtitle={c.subtitle} image={pregnancyImage} imageAlt={c.title} className="[&_img]:object-left-top" />
@@ -124,7 +141,7 @@ export function PregnancyTracker() {
             <div><p className="text-sm text-muted-foreground">{c.week}</p><p className="mt-2 text-4xl font-extrabold text-primary" dir="ltr">{p.weeks}<span className="ms-2 text-base font-medium text-muted-foreground">+ {p.days} {c.days}</span></p></div>
             <div><p className="text-sm text-muted-foreground">{c.trimester}</p><p className="mt-3 text-lg font-bold">{c.trimesters[p.trimester]}</p></div>
             <div><p className="text-sm text-muted-foreground">{c.due}</p><p className="mt-3 font-bold">{dateLabel(p.due)}</p></div>
-            <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p><p className="mt-3 font-bold">{profile?.next_appointment ? dateLabel(profile.next_appointment) : c.noAppointment}</p>{profile?.next_appointment && profile.next_appointment < today && <p className="mt-2 text-xs text-muted-foreground">{c.appointmentPast}</p>}</div>
+            <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p><p className="mt-3 font-bold">{displayedNext ? dateLabel(displayedNext) : c.noAppointment}</p>{displayedNext && displayedNext < today && <p className="mt-2 text-xs text-muted-foreground">{c.appointmentPast}</p>}</div>
           </div>
           <p className="mt-6 text-xs leading-6 text-muted-foreground">{profile?.clinician_due_date ? c.clinicalEstimate : c.estimate}</p>
           <p className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-primary"><RefreshCw className="size-3.5" />{c.autoUpdate} · {c.asOf} {dateLabel(today)}</p>
