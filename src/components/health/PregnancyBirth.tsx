@@ -11,6 +11,7 @@ import {
 import { pregnancyBirthLabels } from "@/data/pregnancy-birth-labels";
 import { contractionSeconds, formatElapsed, intervalSincePrevious, type ContractionRecord } from "@/lib/contraction-tracker";
 import { useI18n } from "@/i18n";
+import { PregnancyNewborn } from "./PregnancyNewborn";
 
 function Sources({ ids, lang }: { ids: BirthArticle["sources"]; lang: BirthLocale }) {
   const c = pregnancyBirthLabels[lang];
@@ -136,10 +137,11 @@ export function PregnancyBirth() {
       <p className="mt-2 text-xs leading-6 text-muted-foreground">{c.saOnly}</p>
     </section>
     <Tabs defaultValue="labour" dir={lang === "ar" ? "rtl" : "ltr"}>
-      <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1">
+      <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:grid-cols-4">
         <TabsTrigger value="preparation" className="min-h-12 whitespace-normal px-1 py-2 text-center text-xs sm:text-sm"><BookOpen className="me-1 size-4 shrink-0" />{c.preparation}</TabsTrigger>
         <TabsTrigger value="labour" className="min-h-12 whitespace-normal px-1 py-2 text-center text-xs sm:text-sm"><AlarmClock className="me-1 size-4 shrink-0" />{c.labour}</TabsTrigger>
         <TabsTrigger value="postpartum" className="min-h-12 whitespace-normal px-1 py-2 text-center text-xs sm:text-sm"><HeartHandshake className="me-1 size-4 shrink-0" />{c.postpartum}</TabsTrigger>
+        <TabsTrigger value="newborn" className="min-h-12 whitespace-normal px-1 py-2 text-center text-xs sm:text-sm"><Baby className="me-1 size-4 shrink-0" />{c.newborn}</TabsTrigger>
       </TabsList>
       <TabsContent value="preparation" className="space-y-4 pt-5">
         <h3 className="font-extrabold">{c.preparationTitle}</h3>
@@ -156,6 +158,7 @@ export function PregnancyBirth() {
         <WarningCards entries={postpartumWarnings} lang={lang} />
         <div><h3 className="mb-3 font-extrabold">{c.followup}</h3><InformationalCards entries={aftercare} lang={lang} /></div>
       </TabsContent>
+      <TabsContent value="newborn" className="space-y-5 pt-5"><PregnancyNewborn /></TabsContent>
     </Tabs>
     <p className="border-s-2 border-primary ps-3 text-xs leading-6 text-muted-foreground">{c.clinicalReview}</p>
   </section>;
