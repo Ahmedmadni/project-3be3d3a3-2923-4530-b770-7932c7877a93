@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 test.describe("Pregnancy guest mobile acceptance (synthetic data only)", () => {
   test.beforeEach(async ({ page }) => {
     // No real patient records and no production Supabase credentials.
-    await page.route("https://example.supabase.co/**", async (route) => {
+    await page.route("http://127.0.0.1:4173/_fake_supabase/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
     });
     await page.goto("/pregnancy");
@@ -100,7 +100,7 @@ test.describe("Pregnancy guest mobile acceptance (synthetic data only)", () => {
   });
 
   test("keeps emergency guidance reachable without login if cloud requests fail", async ({ page }) => {
-    await page.route("https://example.supabase.co/**", (route) => route.abort("failed"));
+    await page.route("http://127.0.0.1:4173/_fake_supabase/**", (route) => route.abort("failed"));
     await page.goto("/pregnancy");
     const link = page.locator('a[href="/emergency"]').first();
     await expect(link).toBeVisible();
@@ -127,7 +127,7 @@ test.describe("Mobile planner viewport checks", () => {
   for (const width of [320, 360, 390, 768]) {
     test("does not overflow horizontally at " + width + "px", async ({ browser }) => {
       const page = await browser.newPage({ viewport: { width, height: 800 } });
-      await page.route("https://example.supabase.co/**", route => route.fulfill({
+      await page.route("http://127.0.0.1:4173/_fake_supabase/**", route => route.fulfill({
         status: 200, contentType: "application/json", body: "{}",
       }));
       await page.goto("http://127.0.0.1:4173/pregnancy");
