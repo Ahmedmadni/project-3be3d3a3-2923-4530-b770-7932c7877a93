@@ -11,9 +11,9 @@ jobs:
     permissions:
       contents: read
     env:
-      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_URL: http://127.0.0.1:4173/_fake_supabase
       VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_guest_only
-      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_URL: http://127.0.0.1:4173/_fake_supabase
       SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_guest_only
     steps:
       - uses: actions/checkout@v4
