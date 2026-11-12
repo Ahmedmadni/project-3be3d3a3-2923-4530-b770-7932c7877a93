@@ -12,16 +12,17 @@
 
 ## Critical deployment dependency
 
-**This PR alone does not install the SQL table in Lovable Cloud / Supabase.**
-A database operator must first review actual migration history, then apply only:
+**Live database update on 2026-11-12:** the SQL statements were applied through the connected Lovable Cloud database action. Read-only verification confirmed `public.pregnancy_appointments` exists, RLS is enabled and it initially had zero records. Checks of individual policy metadata and impersonated account access were blocked by Lovable's temporary database-action quota; those checks remain mandatory before declaring production acceptance.
 
-`drizzle/migrations/0002_pregnancy_appointments.sql`
+For other project environments or disaster recovery, review actual migration history and apply only:
+
+`supabase/migrations/20261112094600_pregnancy_appointments.sql (same SQL as drizzle/migrations/0002_pregnancy_appointments.sql)`
 
 Use the authorized **SQL editor or the controlled migrations process** for the connected project. Do not run blind `drizzle-kit push` because the local Drizzle schema file is intentionally empty and other historic migration versions may not be reconciled.
 
-Do **not** expose the new signed-in planner in production until the table and RLS are confirmed. Before that, the interface shows an explicit error/retry rather than claiming records have been saved.
+Do **not** expose the new signed-in planner in production until RLS owner/non-owner testing is completed with synthetic accounts. The table exists and RLS is on; app-level access and schema permissions still require verification. When the network or table access fails, the interface shows an explicit error/retry rather than claiming records have been saved.
 
-### Read-only verification after deploying the SQL
+### Read-only verification after deploying the SQL (still pending the MCP action limit reset)
 
 ```sql
 SELECT to_regclass('public.pregnancy_appointments') AS appointments_table;
