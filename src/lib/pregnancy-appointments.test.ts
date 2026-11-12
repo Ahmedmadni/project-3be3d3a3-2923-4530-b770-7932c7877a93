@@ -4,6 +4,10 @@ import {
   appointmentCalendarIcs,
   appointmentsByTimeline,
   collectAppointmentPages,
+  mergeGuestAppointments,
+  parseAppointmentBackup,
+  APPOINTMENT_BACKUP_FORMAT,
+  MAX_APPOINTMENT_BACKUP_RECORDS,
   validAppointment,
   validAppointmentDate,
   validAppointmentTime,
@@ -93,6 +97,66 @@ describe("pregnancy appointment planner", () => {
   it("rejects an invalid calendar export", () => {
     expect(() => appointmentCalendarIcs(item("a", "2026-02-30"))).toThrow();
     expect(() => appointmentCalendarIcs(item("a", "2026-12-03", "24:30"))).toThrow();
+  });
+
+
+  it("restores current and legacy JSON backups to safe guest-only data", () => {
+    const source = { ...item("owner-private-id", "2026-11-25", "08:30"), kind: "test" as const };
+    const current = JSON.stringify({
+      format: APPOINTMENT_BACKUP_FORMAT, exported_on: "2026-11-12", records: [source],
+    });
+    const imported = parseAppointmentBackup(current);
+    expect(imported).toEqual([{ ...source, id: "import-0" }]);
+    expect(imported[0]?.id).not.toBe("owner-private-id");
+
+    const legacy = JSON.stringify({ exported_on: "2026-11-12", records: [source] });
+    expect(parseAppointmentBackup(legacy)).toEqual(imported);
+  });
+
+  it("rejects corrupted or malicious backup rows without partial restoration", () => {
+    expect(() => parseAppointmentBackup("{")).toThrow();
+    expect(() => parseAppointmentBackup("null")).toThrow();
+    expect(() => parseAppointmentBackup(JSON.stringify({ format: "other-format", records: [] }))).toThrow();
+    expect(() => parseAppointmentBackup(JSON.stringify({ records: {}, exported_on: "2026-11-12" }))).toThrow();
+    expect(() => parseAppointmentBackup(JSON.stringify({ records: [], exported_on: "2026-02-30" }))).toThrow();
+    expect(() => parseAppointmentBackup(JSON.stringify({ records: [item("a", "2026-11-20"), { ...item("b", "2026-11-21"), status: "sensitive" }] }))).toThrow(/row 2/);
+    expect(() => parseAppointmentBackup(JSON.stringify({ records: [{ ...item("a", "2026-11-20"), title: " " }] }))).toThrow();
+    expect(() => parseAppointmentBackup(JSON.stringify({ records: [{ ...item("a", "2026-11-20"), notes: "n".repeat(1001) }] }))).toThrow();
+    expect(() => parseAppointmentBackup(JSON.stringify({ records: Array.from({ length: MAX_APPOINTMENT_BACKUP_RECORDS + 1 }, () => item("a", "2026-11-20")) }))).toThrow();
+  });
+
+  it("deduplicates restored appointments and uses new identities, never private original IDs", () => {
+    const source = parseAppointmentBackup(JSON.stringify({ records: [item("owner-a", "2026-11-23")] }));
+    let counter = 0;
+    const createId = () => "guest-" + ++counter;
+    const first = mergeGuestAppointments([], source, createId);
+    expect(first.added).toBe(1);
+    expect(first.records[0]?.id).toBe("guest-1");
+    const second = mergeGuestAppointments(first.records, source, createId);
+    expect(second.added).toBe(0);
+    expect(second.records).toEqual(first.records);
+    expect(counter).toBe(1);
+
+    const distinct = { ...source[0]!, appointment_date: "2026-12-02" };
+    const third = mergeGuestAppointments(first.records, [distinct], createId);
+    expect(third.added).toBe(1);
+    expect(third.records[1]?.id).toBe("guest-2");
+  });
+
+  it("allows duplicate-only imports at the guest cap, but rejects overflowing unique records", () => {
+    const originals = Array.from({ length: MAX_APPOINTMENT_BACKUP_RECORDS }, (_, i) =>
+      item(String(i), "2026-12-01", null, "planned"));
+    const full = mergeGuestAppointments([], originals, (() => {
+      let i = 0;
+      return () => String(++i);
+    })());
+    expect(full.records.length).toBe(1); // identical appointments collapse to one
+    const atLimit = Array.from({ length: MAX_APPOINTMENT_BACKUP_RECORDS }, (_, i) =>
+      ({ ...item(String(i), "2026-12-01"), title: "Visit " + i }));
+    const guest = mergeGuestAppointments([], atLimit, () => crypto.randomUUID());
+    expect(guest.records).toHaveLength(MAX_APPOINTMENT_BACKUP_RECORDS);
+    expect(mergeGuestAppointments(guest.records, atLimit, () => crypto.randomUUID()).added).toBe(0);
+    expect(() => mergeGuestAppointments(guest.records, [item("extra", "2026-12-02")], () => crypto.randomUUID())).toThrow(/Too many/);
   });
 
   it("has all four owner-scoped policies, no public access and no background job", () => {
