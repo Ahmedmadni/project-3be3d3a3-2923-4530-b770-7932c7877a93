@@ -110,7 +110,9 @@ export function PregnancyTracker() {
   const dateLabel = (date: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${date}T12:00:00`));
   const busy = loading || Boolean(user && tracking.isPending) || !today;
   const legacyUpcoming = profile?.next_appointment && profile.next_appointment >= today ? profile.next_appointment : null;
-  const displayedNext = nextPlanned.data?.appointment_date ?? legacyUpcoming;
+  const displayedNext = user && !nextPlanned.isPending && !nextPlanned.isError
+    ? (nextPlanned.data?.appointment_date ?? null)
+    : legacyUpcoming;
 
   return <div className="space-y-6">
     <PageVisualHeader title={c.title} subtitle={c.subtitle} image={pregnancyImage} imageAlt={c.title} className="[&_img]:object-left-top" />
