@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, CalendarPlus, CheckCircle2, Download, FileDown, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { CalendarClock, CalendarPlus, CheckCircle2, FileDown, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { pregnancyAppointmentLabels } from "@/data/pregnancy-appointment-labels";
-import { localDate } from "@/lib/pregnancy";
 import {
   appointmentCalendarIcs, appointmentsByTimeline, validAppointment,
   validAppointmentStatus,
@@ -111,17 +110,17 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
           notes: entry.notes,
         };
         const result = operation.editing
-          ? await supabase.from("pregnancy_appointments").update(fields).eq("id", entry.id).eq("user_id", userId)
-          : await supabase.from("pregnancy_appointments").insert({ ...fields, user_id: userId });
-        if (result.error) throw result.error;
+          ? await supabase.from("pregnancy_appointments").update(fields).eq("id", entry.id).eq("user_id", userId).select("id").single()
+          : await supabase.from("pregnancy_appointments").insert({ ...fields, user_id: userId }).select("id").single();
+        if (result.error || !result.data) throw result.error || new Error("Appointment not saved");
       } else if (operation.action === "status") {
-        const { error } = await supabase.from("pregnancy_appointments")
-          .update({ status: operation.status }).eq("id", operation.id).eq("user_id", userId);
-        if (error) throw error;
+        const { error, data } = await supabase.from("pregnancy_appointments")
+          .update({ status: operation.status }).eq("id", operation.id).eq("user_id", userId).select("id").single();
+        if (error || !data) throw error || new Error("Appointment not updated");
       } else {
-        const { error } = await supabase.from("pregnancy_appointments")
-          .delete().eq("id", operation.id).eq("user_id", userId);
-        if (error) throw error;
+        const { error, data } = await supabase.from("pregnancy_appointments")
+          .delete().eq("id", operation.id).eq("user_id", userId).select("id").single();
+        if (error || !data) throw error || new Error("Appointment not deleted");
       }
     },
     onSuccess: async (_data, operation) => {
@@ -141,7 +140,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     setFormError(false);
   }
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedback("");
     mutation.reset();
@@ -238,7 +237,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     {userId && query.isError ? <div role="alert" className="space-y-3 border-s-4 border-destructive p-4">
       <p className="text-sm leading-7">{c.error}</p>
       <Button type="button" variant="outline" onClick={() => query.refetch()}>{c.retry}</Button>
-    </div> : <>
+    </div> : userId && query.isPending ? null : <>
       <form onSubmit={submit} className="space-y-4 rounded-xl border border-border bg-muted/30 p-4 sm:p-6">
         <h3 className="flex items-center gap-2 font-bold"><CalendarPlus className="size-5 text-primary" />{editingId ? c.edit : c.add}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
