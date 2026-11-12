@@ -15,6 +15,12 @@
 - An existing tracked .env includes public/publishable Supabase connection keys, not a detected service-role key; keep auditing any new credential.
 - PWA/web app and Cloud dependency are separate from a native Android build. This branch does not create an Android binary or confirm device-specific behavior.
 
+## Guest-only backup restore extension
+- A valid JSON backup can be restored manually during the current guest session, with versioned and legacy format support.
+- Import does not upload to Supabase, save to browser storage, or alter a signed-in account.
+- All rows validate before merge; original row IDs are discarded and duplicates are suppressed. Invalid, oversized or incompatible data is rejected.
+- This is temporary guest data; users must export before leaving the tab, and manual import is not a substitute for verified persistent storage.
+
 ## Planner reliability extension
 - Supabase paged retrieval replaces a silent `limit(200)`, preventing incomplete backups from being presented as complete.
 - History and upcoming lists progressively render 12 cards per batch; card identity remains stable during edits, with form focus returned to the editing field.
