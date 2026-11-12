@@ -17,6 +17,9 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:4173",
     viewport: { width: 390, height: 844 },
     acceptDownloads: true,
+    // The production push-only service worker bypasses Playwright route mocks in WebKit.
+    // Disable it only in these synthetic network tests; never in production.
+    serviceWorkers: "block",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },
