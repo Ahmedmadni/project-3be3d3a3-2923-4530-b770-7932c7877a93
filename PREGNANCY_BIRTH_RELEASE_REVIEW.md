@@ -15,6 +15,12 @@
 - An existing tracked .env includes public/publishable Supabase connection keys, not a detected service-role key; keep auditing any new credential.
 - PWA/web app and Cloud dependency are separate from a native Android build. This branch does not create an Android binary or confirm device-specific behavior.
 
+## Planner reliability extension
+- Supabase paged retrieval replaces a silent `limit(200)`, preventing incomplete backups from being presented as complete.
+- History and upcoming lists progressively render 12 cards per batch; card identity remains stable during edits, with form focus returned to the editing field.
+- Account changes clear old owner-scoped pregnancy query caches; network failures in the next-appointment overview are explicit and retryable.
+- Three regression tests added for multi-page export completeness, limit rejection, and partial-failure rejection.
+
 ## Appointment planner extension (same development branch)
 - User-specific appointments are now modelled separately in additive SQL migration 0002 with RLS per owner and optional legacy next-date backfill.
 - Guest mode has a temporary in-memory appointment list; owner cloud mode supports multiple visits, tests, status history, edit and deletion.
