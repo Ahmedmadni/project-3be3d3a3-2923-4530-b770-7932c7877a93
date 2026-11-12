@@ -85,3 +85,30 @@ export function appointmentCalendarIcs(
     "TRIGGER:-P1D", "END:VALARM", "END:VEVENT", "END:VCALENDAR", "",
   ].join("\r\n");
 }
+
+
+/**
+ * Supabase can cap result sets; fetch sequential stable pages so an explicit
+ * backup never silently contains only the first 200 appointments.
+ * Fail explicitly beyond the safety limit instead of claiming a full export.
+ */
+export async function collectAppointmentPages<T>(
+  fetchPage: (start: number, endInclusive: number) => Promise<readonly T[]>,
+  pageSize = 200,
+  maxRecords = 5000,
+): Promise<T[]> {
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 1000 ||
+      !Number.isSafeInteger(maxRecords) || maxRecords < 1) {
+    throw new Error("Invalid appointment pagination limits");
+  }
+  const all: T[] = [];
+  for (let start = 0; start <= maxRecords; start += pageSize) {
+    const page = await fetchPage(start, start + pageSize - 1);
+    if (page.length > pageSize || all.length + page.length > maxRecords) {
+      throw new Error("Appointment record limit exceeded; no partial backup available");
+    }
+    all.push(...page);
+    if (page.length < pageSize) return all;
+  }
+  throw new Error("Appointment record limit exceeded; no partial backup available");
+}
