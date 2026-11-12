@@ -40,17 +40,17 @@ function sessionFor(userId: string) {
 
 /** Test-only session, loaded through the same browser localStorage adapter used by Supabase Auth. */
 export async function installSyntheticSession(page: Page, userId: string) {
-  await page.addInitScript(({ session }) => {
-    if (!localStorage.getItem(AUTH_STORAGE_KEY)) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  await page.addInitScript(({ session, key }) => {
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, JSON.stringify(session));
     }
-  }, { session: sessionFor(userId) });
+  }, { session: sessionFor(userId), key: AUTH_STORAGE_KEY });
 }
 
 export async function swapSyntheticSession(page: Page, userId: string) {
-  await page.evaluate(({ session }) => {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  }, { session: sessionFor(userId) });
+  await page.evaluate(({ session, key }) => {
+    localStorage.setItem(key, JSON.stringify(session));
+  }, { session: sessionFor(userId), key: AUTH_STORAGE_KEY });
   await page.reload();
 }
 
