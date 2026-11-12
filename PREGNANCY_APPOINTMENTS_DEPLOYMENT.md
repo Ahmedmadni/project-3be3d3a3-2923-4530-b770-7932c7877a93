@@ -51,11 +51,12 @@ The expected policy set has separate SELECT/INSERT/UPDATE/DELETE policies for ro
 2. Signed-in user adds two appointments on one day with different times; reload shows both, earliest first. Editing, completion, cancellation, restoration and deletion survive a reload.
 3. Another account must not read, mutate, or remove the first account's records.
 4. Losing the network must produce an honest save/load error, never a false success banner.
-5. Prior `next_appointment` dates are backfilled once; the old date field remains in profile settings until a separate verified cleanup.
+5. Prior `next_appointment` dates are backfilled once; the legacy column remains in the database for compatibility but its old edit field has been removed from the profile form. All new scheduling uses My appointments.
 6. Calendar export uses the **neutral** event name and does not expose the appointment title or notes, including in metadata. Verify the date/time, alert behavior and local time zone on iOS/Android calendar applications.
-7. The backup is generated only after explicit user action and is visibly marked unencrypted.
-8. Check RTL/LTR tab layouts and zoom at 320/360/390/768/1024 px; verify keyboard navigation and touch targets.
-9. Emergency content remains accessible without login, even if the appointment database is offline.
+7. The backup is generated only after explicit user action and is visibly marked unencrypted. Verify >200 appointments are fetched in stable pages and exported completely; backend errors or a >5,000-record limit must prevent a falsely complete backup.
+8. Check RTL/LTR tab layouts and zoom at 320/360/390/768/1024 px; verify keyboard navigation and touch targets. Verify edit focuses the top form and the list expands 12 cards at a time without remounting cards after each keystroke.
+9. Emergency content remains accessible without login, even if the appointment database is offline. Do not show an empty next-appointment summary after a failed fetch; show a retry instead.
+10. On sign-out or switching to another account, remove previous-owner appointment, daily-note and pregnancy-profile query caches from in-memory React Query state.
 
 ## Deliberately not yet activated
 
