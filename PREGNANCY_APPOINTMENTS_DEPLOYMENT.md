@@ -14,7 +14,7 @@
 
 ## Critical deployment dependency
 
-**Live database update on 2026-11-12:** the SQL statements were applied through the connected Lovable Cloud database action. Read-only verification confirmed `public.pregnancy_appointments` exists, RLS is enabled and it initially had zero records. Checks of individual policy metadata and impersonated account access were blocked by Lovable's temporary database-action quota; those checks remain mandatory before declaring production acceptance.
+**Live database update on 2026-11-12:** the SQL statements were applied through the connected Lovable Cloud database action. Read-only verification confirmed `public.pregnancy_appointments` exists, RLS is enabled and it initially had zero records. A later read-only verification confirmed all four owner-scoped policies (SELECT/INSERT/UPDATE/DELETE), no SELECT/INSERT privileges for the anonymous role, and authenticated-role privileges governed by RLS. Cross-owner CRUD with real signed-in application accounts still requires acceptance testing before release.
 
 For other project environments or disaster recovery, review actual migration history and apply only:
 
@@ -24,7 +24,7 @@ Use the authorized **SQL editor or the controlled migrations process** for the c
 
 Do **not** expose the new signed-in planner in production until RLS owner/non-owner testing is completed with synthetic accounts. The table exists and RLS is on; app-level access and schema permissions still require verification. When the network or table access fails, the interface shows an explicit error/retry rather than claiming records have been saved.
 
-### Read-only verification after deploying the SQL (still pending the MCP action limit reset)
+### Read-only verification after deploying the SQL (passed in connected Lovable DB on 2026-11-12)
 
 ```sql
 SELECT to_regclass('public.pregnancy_appointments') AS appointments_table;
