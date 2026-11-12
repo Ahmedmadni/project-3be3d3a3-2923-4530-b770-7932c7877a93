@@ -12,7 +12,7 @@ const selector = 'section[aria-label="مواعيدي وفحوص الحمل"]';
 test.describe("Pregnancy signed-in appointment acceptance (fake Supabase; no real credentials)", () => {
   test("keeps two timed appointments in the owner account across reload, edits and status changes", async ({ page }) => {
     const backend = createSyntheticSupabaseApi();
-    await page.route("https://example.supabase.co/**", backend.serve);
+    await page.route("http://127.0.0.1:4173/_fake_supabase/**", backend.serve);
     await installSyntheticSession(page, TEST_USERS.a);
     await page.goto("/pregnancy");
     const area = page.locator(selector);
@@ -59,7 +59,7 @@ test.describe("Pregnancy signed-in appointment acceptance (fake Supabase; no rea
 
   test("switches between independent synthetic accounts without exposing prior account records", async ({ page }) => {
     const backend = createSyntheticSupabaseApi();
-    await page.route("https://example.supabase.co/**", backend.serve);
+    await page.route("http://127.0.0.1:4173/_fake_supabase/**", backend.serve);
     await installSyntheticSession(page, TEST_USERS.a);
     await page.goto("/pregnancy");
     const area = page.locator(selector);
@@ -88,7 +88,7 @@ test.describe("Pregnancy signed-in appointment acceptance (fake Supabase; no rea
 
   test("reports failed cloud saves without claiming success or storing a phantom appointment", async ({ page }) => {
     const backend = createSyntheticSupabaseApi();
-    await page.route("https://example.supabase.co/**", backend.serve);
+    await page.route("http://127.0.0.1:4173/_fake_supabase/**", backend.serve);
     await installSyntheticSession(page, TEST_USERS.a);
     await page.goto("/pregnancy");
     const area = page.locator(selector);
