@@ -1,5 +1,9 @@
 # Roadmap — مؤشر صحي
 
+- [x] Pregnancy birth/postpartum MVP (2026-11-12): bilingual labour warning signs, postnatal danger warnings, preparation guidance, session-only contraction recorder, Saudi-only emergency quick dial, and mobile cards for guidance/visits/specialist care; regression tests and PR CI.
+- [ ] Clinical reviewer sign-off, device acceptance, and localized emergency routing for pregnancy, birth and postpartum. Educational content cannot be described as medically approved yet.
+
+
 - [ ] Add opt-in pregnancy examination/vaccination reminder appointments, owner-scoped Cloud storage, shared Web Push subscriptions and deduplicated dispatch from the existing managed reminder route/job; safe dry-run and authentication tests, no key changes or duplicate jobs.
 
 - [x] Add pregnancy date personalization with last-period date, optional informational conception date, clinician due date, live weeks/day preview and daily/app-resume refresh. Additive Cloud field preserves owner-scoped persistence; 33 pregnancy tests and guest edit/read-back, clinician precedence, next-day refresh and mobile no-overflow checks pass without page errors. Signed-in persistence remains unverified: Cloud has no auth users, requiring the user's signup/sign-in before checking personal records.
