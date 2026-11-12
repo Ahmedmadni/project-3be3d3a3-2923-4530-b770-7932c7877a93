@@ -77,6 +77,38 @@ test.describe("Pregnancy guest mobile acceptance (synthetic data only)", () => {
     await expect(area.locator("article").filter({ hasText: marker })).toHaveCount(0);
   });
 
+
+  test("switches between Arabic RTL and English LTR without losing temporary appointments", async ({ page }) => {
+    const area = page.locator('section[aria-label="مواعيدي وفحوص الحمل"]');
+    const form = area.locator("form");
+    await form.getByPlaceholder("مثال: زيارة متابعة").fill("Guest language switch test");
+    await form.locator('input[type="date"]').fill("2026-12-20");
+    await form.getByRole("button", { name: "حفظ الموعد" }).click();
+    await expect(area.locator("article").filter({ hasText: "Guest language switch test" })).toHaveCount(1);
+
+    await page.locator('header button[title="English"]').click();
+    const english = page.locator('section[aria-label="My maternity appointments"]');
+    await expect(english).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+    await expect(english.locator("article").filter({ hasText: "Guest language switch test" })).toHaveCount(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+
+    await page.locator('header button[title="العربية"]').click();
+    await expect(area).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(area.locator("article").filter({ hasText: "Guest language switch test" })).toHaveCount(1);
+  });
+
+  test("keeps emergency guidance reachable without login if cloud requests fail", async ({ page }) => {
+    await page.route("https://example.supabase.co/**", (route) => route.abort("failed"));
+    await page.goto("/pregnancy");
+    const link = page.locator('a[href="/emergency"]').first();
+    await expect(link).toBeVisible();
+    await link.click();
+    await expect(page).toHaveURL(/\/emergency$/);
+    await expect(page.locator("main")).toBeVisible();
+  });
+
   test("rejects malformed import with no partial guest record", async ({ page }) => {
     const area = page.locator('section[aria-label="مواعيدي وفحوص الحمل"]');
     await area.locator('input[type="file"]').setInputFiles({
