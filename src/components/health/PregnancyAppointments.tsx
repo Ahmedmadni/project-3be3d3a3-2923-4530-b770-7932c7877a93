@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, CalendarPlus, CheckCircle2, FileDown, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
@@ -31,11 +31,50 @@ function downloadFile(name: string, content: string, mime: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function AppointmentCards({ list, c, labelDate, pending, onEdit, onAction, onCalendar }: {
+  list: PregnancyAppointmentRecord[];
+  c: (typeof pregnancyAppointmentLabels)[keyof typeof pregnancyAppointmentLabels];
+  labelDate: (date: string) => string;
+  pending: boolean;
+  onEdit: (entry: PregnancyAppointmentRecord) => void;
+  onAction: (operation: Operation) => void;
+  onCalendar: (entry: PregnancyAppointmentRecord) => void;
+}) {
+    return <div className="grid gap-3 md:grid-cols-2">
+      {list.map((entry) => <article key={entry.id} className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-primary">{c[entry.kind]}</span>
+          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">{c[entry.status]}</span>
+        </div>
+        <h4 className="mt-3 break-words font-bold leading-7">{entry.title}</h4>
+        <p className="mt-2 flex items-center gap-2 text-sm font-semibold"><CalendarClock className="size-4 shrink-0" />
+          {labelDate(entry.appointment_date)}{entry.appointment_time ? " · " + entry.appointment_time : ""}
+        </p>
+        {entry.notes && <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">{entry.notes}</p>}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => onEdit(entry)} disabled={pending}><Pencil className="size-4" />{c.edit}</Button>
+          {entry.status !== "completed" && <Button type="button" variant="outline" size="sm" disabled={pending}
+            onClick={() => onAction({ action: "status", id: entry.id, status: "completed" })}><CheckCircle2 className="size-4" />{c.done}</Button>}
+          {entry.status !== "planned" && <Button type="button" variant="outline" size="sm" disabled={pending}
+            onClick={() => onAction({ action: "status", id: entry.id, status: "planned" })}><RotateCcw className="size-4" />{c.restore}</Button>}
+          {entry.status === "planned" && <Button type="button" variant="outline" size="sm" disabled={pending}
+            onClick={() => onAction({ action: "status", id: entry.id, status: "cancelled" })}><XCircle className="size-4" />{c.cancel}</Button>}
+          <Button type="button" variant="outline" size="sm" onClick={() => onCalendar(entry)}><CalendarPlus className="size-4" />{c.calendar}</Button>
+          <Button type="button" variant="ghost" size="sm" className="text-destructive" disabled={pending}
+            onClick={() => { if (window.confirm(c.confirmDelete)) onAction({ action: "delete", id: entry.id }); }}>
+            <Trash2 className="size-4" />{c.remove}
+          </Button>
+        </div>
+      </article>)}
+    </div>;
+  }
+
 /** Owner-scoped cloud records; guest appointments exist only in React memory. */
 export function PregnancyAppointments({ userId, today }: { userId: string | null; today: string }) {
   const { lang } = useI18n();
   const c = pregnancyAppointmentLabels[lang];
   const qc = useQueryClient();
+  const formRef = useRef<HTMLFormElement>(null);
   const [guest, setGuest] = useState<PregnancyAppointmentRecord[]>([]);
   const [showUpcoming, setShowUpcoming] = useState(12);
   const [showHistory, setShowHistory] = useState(12);
@@ -186,6 +225,8 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     setTime(entry.appointment_time || "");
     setKind(entry.kind);
     setNotes(entry.notes);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    formRef.current?.querySelector<HTMLInputElement>("#pregnancy-appointment-title")?.focus({ preventScroll: true });
   }
 
   function exportCalendar(entry: PregnancyAppointmentRecord) {
@@ -204,35 +245,6 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     year: "numeric", month: "long", day: "numeric",
   }).format(new Date(date + "T12:00:00"));
 
-  function Cards({ list }: { list: PregnancyAppointmentRecord[] }) {
-    return <div className="grid gap-3 md:grid-cols-2">
-      {list.map((entry) => <article key={entry.id} className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs font-semibold text-primary">{c[entry.kind]}</span>
-          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">{c[entry.status]}</span>
-        </div>
-        <h4 className="mt-3 break-words font-bold leading-7">{entry.title}</h4>
-        <p className="mt-2 flex items-center gap-2 text-sm font-semibold"><CalendarClock className="size-4 shrink-0" />
-          {labelDate(entry.appointment_date)}{entry.appointment_time ? " · " + entry.appointment_time : ""}
-        </p>
-        {entry.notes && <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">{entry.notes}</p>}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => startEdit(entry)} disabled={mutation.isPending}><Pencil className="size-4" />{c.edit}</Button>
-          {entry.status !== "completed" && <Button type="button" variant="outline" size="sm" disabled={mutation.isPending}
-            onClick={() => mutation.mutate({ action: "status", id: entry.id, status: "completed" })}><CheckCircle2 className="size-4" />{c.done}</Button>}
-          {entry.status !== "planned" && <Button type="button" variant="outline" size="sm" disabled={mutation.isPending}
-            onClick={() => mutation.mutate({ action: "status", id: entry.id, status: "planned" })}><RotateCcw className="size-4" />{c.restore}</Button>}
-          {entry.status === "planned" && <Button type="button" variant="outline" size="sm" disabled={mutation.isPending}
-            onClick={() => mutation.mutate({ action: "status", id: entry.id, status: "cancelled" })}><XCircle className="size-4" />{c.cancel}</Button>}
-          <Button type="button" variant="outline" size="sm" onClick={() => exportCalendar(entry)}><CalendarPlus className="size-4" />{c.calendar}</Button>
-          <Button type="button" variant="ghost" size="sm" className="text-destructive" disabled={mutation.isPending}
-            onClick={() => { if (window.confirm(c.confirmDelete)) mutation.mutate({ action: "delete", id: entry.id }); }}>
-            <Trash2 className="size-4" />{c.remove}
-          </Button>
-        </div>
-      </article>)}
-    </div>;
-  }
 
   return <section className="min-w-0 space-y-6" aria-label={c.title}>
     <header className="space-y-2"><h2 className="flex items-center gap-2 text-xl font-extrabold">
@@ -250,11 +262,11 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       <p className="text-sm leading-7">{c.error}</p>
       <Button type="button" variant="outline" onClick={() => query.refetch()}>{c.retry}</Button>
     </div> : userId && query.isPending ? null : <>
-      <form onSubmit={submit} className="space-y-4 rounded-xl border border-border bg-muted/30 p-4 sm:p-6">
+      <form ref={formRef} onSubmit={submit} className="space-y-4 scroll-mt-8 rounded-xl border border-border bg-muted/30 p-4 sm:p-6">
         <h3 className="flex items-center gap-2 font-bold"><CalendarPlus className="size-5 text-primary" />{editingId ? c.edit : c.add}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2 text-sm font-medium sm:col-span-2"><span className="block">{c.titleLabel}</span>
-            <Input required maxLength={120} placeholder={c.titlePlaceholder} value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input id="pregnancy-appointment-title" required maxLength={120} placeholder={c.titlePlaceholder} value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
           <label className="space-y-2 text-sm font-medium"><span className="block">{c.date}</span>
             <Input required type="date" value={day} onChange={(e) => setDay(e.target.value)} />
@@ -288,11 +300,11 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       </section>}
 
       <section className="space-y-3"><h3 className="font-extrabold">{c.upcoming} ({upcoming.length})</h3>
-        {upcoming.length ? <Cards list={upcoming.slice(0, showUpcoming)} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
+        {upcoming.length ? <AppointmentCards list={upcoming.slice(0, showUpcoming)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
         {upcoming.length > showUpcoming && <Button type="button" variant="outline" onClick={() => setShowUpcoming((n) => n + 12)}>{c.showMore} ({upcoming.length - showUpcoming})</Button>}
       </section>
       <section className="space-y-3"><h3 className="font-extrabold">{c.past} ({history.length})</h3>
-        {history.length ? <Cards list={history.slice(0, showHistory)} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
+        {history.length ? <AppointmentCards list={history.slice(0, showHistory)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
         {history.length > showHistory && <Button type="button" variant="outline" onClick={() => setShowHistory((n) => n + 12)}>{c.showMore} ({history.length - showHistory})</Button>}
       </section>
       {!!items.length && <div className="space-y-2 border-t border-border pt-4">
