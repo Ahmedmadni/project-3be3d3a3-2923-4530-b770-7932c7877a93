@@ -1,6 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 
-const API_HOST = "https://example.supabase.co";
+const API_ROOT = "http://127.0.0.1:4173/_fake_supabase";
+const AUTH_STORAGE_KEY = "sb-127-auth-token";
 const USER_A = "11111111-1111-4111-8111-111111111111";
 const USER_B = "22222222-2222-4222-8222-222222222222";
 export const TEST_USERS = { a: USER_A, b: USER_B } as const;
@@ -40,15 +41,15 @@ function sessionFor(userId: string) {
 /** Test-only session, loaded through the same browser localStorage adapter used by Supabase Auth. */
 export async function installSyntheticSession(page: Page, userId: string) {
   await page.addInitScript(({ session }) => {
-    if (!localStorage.getItem("sb-example-auth-token")) {
-      localStorage.setItem("sb-example-auth-token", JSON.stringify(session));
+    if (!localStorage.getItem(AUTH_STORAGE_KEY)) {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
     }
   }, { session: sessionFor(userId) });
 }
 
 export async function swapSyntheticSession(page: Page, userId: string) {
   await page.evaluate(({ session }) => {
-    localStorage.setItem("sb-example-auth-token", JSON.stringify(session));
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
   }, { session: sessionFor(userId) });
   await page.reload();
 }
@@ -79,7 +80,7 @@ export function createSyntheticSupabaseApi() {
   async function serve(route: Route) {
     const request = route.request();
     const url = new URL(request.url());
-    if (!url.origin.startsWith(API_HOST)) return route.continue();
+    if (!url.href.startsWith(API_ROOT + "/")) return route.continue();
     const common = {
       "access-control-allow-origin": "*",
       "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
@@ -92,17 +93,17 @@ export function createSyntheticSupabaseApi() {
     if (method === "OPTIONS") return route.fulfill({ status: 204, headers: common, body: "" });
 
     const owner = ownerFromRequest(request.headers()["authorization"]);
-    if (url.pathname.startsWith("/auth/v1/user")) {
+    if (url.pathname.startsWith("/_fake_supabase/auth/v1/user")) {
       const user = owner ? sessionFor(owner).user : null;
       return fulfill(owner ? 200 : 401, user ?? { msg: "Not authenticated" });
     }
-    if (url.pathname.startsWith("/auth/v1/")) {
+    if (url.pathname.startsWith("/_fake_supabase/auth/v1/")) {
       return fulfill(401, { msg: "Unmocked auth request; no real auth is used" });
     }
-    if (!url.pathname.startsWith("/rest/v1/")) return fulfill(404, {});
+    if (!url.pathname.startsWith("/_fake_supabase/rest/v1/")) return fulfill(404, {});
     if (!owner) return fulfill(401, { code: "PGRST301", message: "No synthetic user" });
 
-    const name = url.pathname.slice("/rest/v1/".length);
+    const name = url.pathname.slice("/_fake_supabase/rest/v1/".length);
     if (name === "profiles" || name === "pregnancy_tracking" || name === "pregnancy_daily_entries") {
       return fulfill(200, []);
     }
