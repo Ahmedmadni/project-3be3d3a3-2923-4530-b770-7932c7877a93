@@ -1,11 +1,11 @@
-name: Pregnancy guest mobile browser acceptance
+name: Pregnancy mobile browser acceptance
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  pregnancy-guest-chromium:
+  pregnancy-mobile-browsers:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -24,9 +24,9 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Install Playwright test tools in ephemeral CI environment
         run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.56.1
-      - name: Install Chromium for browser acceptance
-        run: npx playwright install --with-deps chromium
-      - name: Test isolated guest-mode pregnancy page at mobile widths
+      - name: Install Chromium and WebKit browser engines
+        run: npx playwright install --with-deps chromium webkit
+      - name: Test isolated guest and synthetic signed-in flows on Android and iPhone browser engines
         shell: bash
         run: |
           set -euo pipefail
@@ -50,7 +50,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: pregnancy-guest-browser-failures
+          name: pregnancy-mobile-browser-failures
           path: |
             test-results/pregnancy-browser
             /tmp/pregnancy-guest-vite.log
