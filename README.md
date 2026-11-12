@@ -1,24 +1,34 @@
-# اسعاف
+# إسعاف — مؤشر صحي
 
-Implement exactly the screenshot and nothing else
+تطبيق عربي وإنجليزي للمعلومات الصحية والإسعافات الأولية والمتابعة الشخصية. المحتوى الطبي للتثقيف ولا يحل محل التقييم الطبي أو الاتصال بالإسعاف.
 
-This project was built with [Lovable](https://lovable.dev).
+## الخصائص
 
-## Build with Lovable
+- إسعافات أولية وعلامات خطر وصفحة طوارئ متاحة دون تسجيل دخول.
+- مكتبة صحية وتقييم أولي للأعراض.
+- متابعة الحمل: حساب الأسابيع، الفحوص، تطور الجنين، الطعام والأدوية وعلامات الخطر.
+- دليل الاستعداد للولادة والمخاض والنفاس ورعاية المولود في أول أربعة أسابيع.
+- تخطيط مواعيد حمل متعددة مع تعديل وحالات الإنجاز وسجل الزيارات.
+- تخزين المواعيد في جدول خاص بالحساب بعد تطبيق الهجرة؛ تجربة الضيف مؤقتة في ذاكرة الواجهة فقط.
+- تصدير يدوي للتقويم ونسخة JSON من المواعيد؛ لا توجد إشعارات تلقائية من هذه الوظيفة.
+- تبقى إرشادات الحمل والطوارئ متاحة حتى عند فشل اتصال سجل المتابعة الشخصي.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/3be3d3a3-2923-4530-b770-7932c7877a93).
+## التشغيل والتطوير
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+المشروع مرتبط بمحرر Lovable:
+https://lovable.dev/projects/3be3d3a3-2923-4530-b770-7932c7877a93
 
-## Development
+أوامر تطوير المشروع: bun install --frozen-lockfile، ثم bun run dev.
+التحقق: bunx vitest run، ثم bun run build، ثم bunx tsc --noEmit.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+المكونات الرئيسية: src/components/health/PregnancyTracker.tsx و PregnancyAppointments.tsx و PregnancyBirth.tsx و PregnancyNewborn.tsx.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## متطلبات النشر
+
+- يجب تطبيق هجرة drizzle/migrations/0002_pregnancy_appointments.sql والتحقق من RLS قبل إتاحة الحفظ الدائم.
+- لا تجرِ ترحيلات عمياء: قاعدة Drizzle المحلية الحالية فارغة وقد تختلف عن تاريخ قاعدة الإنتاج.
+- راجع PREGNANCY_APPOINTMENTS_DEPLOYMENT.md و PREGNANCY_BIRTH_RELEASE_REVIEW.md.
+- يلزم تدقيق طبي محلي للمحتوى وتجربة فعلية على أجهزة الهاتف قبل النشر النهائي.
+- لا تدمج تذكيرات المواعيد مع محرك تذكيرات الأدوية دون تصميم صلاحيات واختبارات مستقلة.
+
+التغييرات في فرع GitHub لا تظهر للمستخدمين على الموقع المنشور حتى يتم الدمج والنشر.
