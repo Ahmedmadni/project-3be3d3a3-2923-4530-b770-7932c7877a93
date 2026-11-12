@@ -16,6 +16,7 @@
 - Health UI components in src/components/health/; colors only via tokens in src/styles.css.
 - Curated page imagery lives in src/assets; use PageVisualHeader for consistent responsive page introductions.
 - Pregnancy dating is deterministic date-only logic; clinician dating takes precedence, personal records use owner-scoped Cloud tables, and guest tracking stays temporary without local health storage.
+- Multi-appointment prenatal planning uses owner-scoped pregnancy_appointments RLS and has no diagnostic/triage implications. Guest appointments remain in-memory; never store them in localStorage. Calendar .ics export is opt-in, uses neutral metadata and relies on user import; never describe it as app-delivered push. Do not enable maternity server reminders by modifying medication-reminder jobs.
 - Pregnancy date personalization uses a shared form with a live deterministic preview; optional reported conception dates are informational only, and gestational age refreshes on calendar-day changes and app resume without rewriting stored dates.
 - Pregnancy education uses sourced structured guidance with ongoing versus stage-specific scope; trimester filters never remove throughout-pregnancy precautions, and months are approximate labels rather than dating rules.
 - Pregnancy education uses a shared tabbed module with sourced developmental windows and distinct emergency/immediate/same-day warnings, so educational browsing never delays urgent care.

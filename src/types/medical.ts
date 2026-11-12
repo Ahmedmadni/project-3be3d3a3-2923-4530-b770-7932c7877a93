@@ -18,6 +18,18 @@ export type Profile = Tables<"profiles">;
 export type SymptomSessionRow = Tables<"symptom_sessions">;
 export type PregnancyTracking = Tables<"pregnancy_tracking">;
 export type PregnancyDailyEntry = Tables<"pregnancy_daily_entries">;
+export type PregnancyAppointment = Tables<"pregnancy_appointments">;
+export type PregnancyAppointmentKind = "visit" | "test" | "vaccination" | "other";
+export type PregnancyAppointmentStatus = "planned" | "completed" | "cancelled";
+export interface PregnancyAppointmentRecord {
+  id: string;
+  title: string;
+  appointment_date: string;
+  appointment_time: string | null;
+  kind: PregnancyAppointmentKind;
+  status: PregnancyAppointmentStatus;
+  notes: string;
+}
 export type PregnancyGuidanceCategory = "food" | "activity" | "care" | "medicine";
 export type PregnancyGuidanceStatus = "avoid" | "conditional" | "recommended";
 export interface PregnancyGuidanceItem {

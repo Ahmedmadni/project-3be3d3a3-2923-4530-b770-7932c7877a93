@@ -12,14 +12,22 @@ export function PregnancySpecialist() {
     <h2 className="flex items-center gap-2 text-xl font-extrabold"><HeartPulse className="size-6 shrink-0 text-primary" />{c.title}</h2>
     <p className="border-s-2 border-accent ps-3 text-sm leading-7 text-muted-foreground">{c.note}</p>
     <Button asChild variant="destructive"><Link to="/emergency"><PhoneCall />{lang === "ar" ? "الطوارئ" : "Emergency"}</Link></Button>
-    <Table className="min-w-[680px] table-fixed text-start" aria-label={c.title}>
+    <div className="grid gap-3 sm:hidden">
+      {pregnancySpecialistTopics.map((topic) => <article key={topic.id} className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="font-bold leading-7">{topic.title[lang]}</h3>
+        <p className="text-sm leading-7 text-muted-foreground">{topic.followUp[lang]}</p>
+        <p className="border-s-2 border-warning ps-3 text-sm leading-7">{topic.urgent[lang]}</p>
+        <div className="flex flex-wrap gap-3">{topic.sources.map((id) => { const source = pregnancySpecialistSources[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline"><ExternalLink className="size-3" />{source.title}</a> : null; })}</div>
+      </article>)}
+    </div>
+    <div className="hidden max-w-full overflow-x-auto sm:block"><Table className="min-w-[680px] table-fixed text-start" aria-label={c.title}>
       <TableHeader className="bg-muted/60"><TableRow><TableHead scope="col" className="w-[22%] text-start">{c.topic}</TableHead><TableHead scope="col" className="w-[44%] text-start">{c.followUp}</TableHead><TableHead scope="col" className="w-[34%] text-start">{c.urgent}</TableHead></TableRow></TableHeader>
       <TableBody>{pregnancySpecialistTopics.map((topic) => <TableRow key={topic.id}>
         <TableCell className="align-top py-4 font-bold leading-7">{topic.title[lang]}</TableCell>
         <TableCell className="align-top py-4"><p className="text-sm leading-7 text-muted-foreground">{topic.followUp[lang]}</p><div className="mt-3 flex flex-wrap gap-3">{topic.sources.map((id) => { const source = pregnancySpecialistSources[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline"><ExternalLink className="size-3" />{source.title}</a> : null; })}</div></TableCell>
         <TableCell className="align-top py-4"><p className="border-s-2 border-warning ps-3 text-sm leading-7">{topic.urgent[lang]}</p></TableCell>
       </TableRow>)}</TableBody>
-    </Table>
+    </Table></div>
     <p className="text-xs leading-6 text-muted-foreground">{c.review}</p>
   </section>;
 }

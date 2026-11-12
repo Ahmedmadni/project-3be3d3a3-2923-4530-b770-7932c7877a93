@@ -44,7 +44,17 @@ export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
         const CategoryIcon = categoryIcons[value];
         return <section key={value} className="min-w-0 space-y-3" aria-label={c[value]}>
           <h3 className="flex items-center gap-2 font-bold"><CategoryIcon className="size-5 text-primary" />{c[value]} <span className="text-xs text-muted-foreground">({list.length})</span></h3>
-          {!list.length ? <p className="text-sm text-muted-foreground">{c.empty}</p> : <Table className="min-w-[620px] table-fixed text-start" aria-label={c[value]}>
+          {!list.length ? <p className="text-sm text-muted-foreground">{c.empty}</p> : <><div className="grid gap-3 sm:hidden">
+            {list.map((item) => { const Icon = statusIcons[item.status]; return <article key={item.id} className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-4">
+              <h4 className="font-bold leading-7">{item.title[lang]}</h4>
+              <div className={"inline-flex items-start gap-1.5 border-s-2 px-2 py-1 text-xs font-bold leading-5 " + statusStyles[item.status] + " " + statusHeading[item.status]}>
+                <Icon className="mt-0.5 size-4 shrink-0" />{item.category === "medicine" && item.status === "conditional" ? c.medicineConditional : c[item.status]}
+              </div>
+              <p className="text-sm leading-7 text-muted-foreground">{item.body[lang]}</p>
+              <p className="text-xs leading-6 text-muted-foreground">{item.scope === "throughout" ? c.throughout : c.stageOnly}{item.fromWeek !== undefined && <span> · {c.fromWeek} {item.fromWeek}</span>}</p>
+              <div className="flex flex-wrap gap-3">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline"><ExternalLink className="size-3" />{source.title}</a> : null; })}</div>
+            </article>; })}
+          </div><div className="hidden max-w-full overflow-x-auto sm:block"><Table className="min-w-[620px] table-fixed text-start" aria-label={c[value]}>
             <TableHeader className="bg-muted/60"><TableRow><TableHead scope="col" className="w-[23%] text-start">{c.subject}</TableHead><TableHead scope="col" className="w-[19%] text-start">{c.status}</TableHead><TableHead scope="col" className="w-[42%] text-start">{c.advice}</TableHead><TableHead scope="col" className="w-[16%] text-start">{c.period}</TableHead></TableRow></TableHeader>
             <TableBody>{list.map((item) => { const Icon = statusIcons[item.status]; return <TableRow key={item.id}>
               <TableCell className="align-top py-4 font-bold leading-7">{item.title[lang]}</TableCell>
@@ -52,7 +62,7 @@ export function PregnancyGuidance({ currentStage, items, sourceUrls }: Props) {
               <TableCell className="align-top py-4"><p className="text-sm leading-7 text-muted-foreground">{item.body[lang]}</p><div className="mt-2 flex flex-wrap gap-3">{item.sources.map((id) => { const source = sourceUrls[id]; return source ? <a key={id} href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline" aria-label={`${c.source}: ${source.title}`}><ExternalLink className="size-3" />{source.title}</a> : null; })}</div></TableCell>
               <TableCell className="align-top py-4 text-xs leading-6 text-muted-foreground">{item.scope === "throughout" ? c.throughout : c.stageOnly}{item.fromWeek !== undefined && <p>{c.fromWeek} {item.fromWeek}</p>}</TableCell>
             </TableRow>; })}</TableBody>
-          </Table>}
+          </Table></div></>}
         </section>;
       })}
     </div>

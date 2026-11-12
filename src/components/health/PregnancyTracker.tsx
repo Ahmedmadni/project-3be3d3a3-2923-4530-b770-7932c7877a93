@@ -15,6 +15,7 @@ import { localDate, pregnancyProgress } from "@/lib/pregnancy";
 import pregnancyImage from "@/assets/pregnancy-care.jpg";
 import { PregnancyEducation } from "./PregnancyEducation";
 import { PregnancyDateSettings, type PregnancyDateValues } from "./PregnancyDateSettings";
+import { PregnancyAppointments } from "./PregnancyAppointments";
 
 const moods = ["good", "okay", "tired"] as const;
 const symptoms = ["nausea", "fatigue", "backache", "heartburn"] as const;
@@ -56,11 +57,35 @@ export function PregnancyTracker() {
       return data;
     },
   });
+  const nextPlanned = useQuery({
+    queryKey: ["pregnancy-next-planned", user?.id, today],
+    enabled: Boolean(user && today),
+    queryFn: async () => {
+      if (!user || !today) return null;
+      const { data, error } = await supabase.from("pregnancy_appointments")
+        .select("appointment_date,appointment_time")
+        .eq("user_id", user.id).eq("status", "planned")
+        .gte("appointment_date", today)
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true })
+        .limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
   const profile = user ? tracking.data : temporary;
   useEffect(() => {
     setEditing(false);
     setTemporary(null);
-  }, [user?.id]);
+    // Discard in-memory owner-specific pregnancy caches after sign-out/account changes.
+    // Never expose another account's previous notes, appointments or dating results.
+    const accountId = user?.id;
+    cache.removeQueries({
+      predicate: (query) =>
+        ["pregnancy-tracking", "pregnancy-entries", "pregnancy-appointments", "pregnancy-next-planned"]
+          .includes(String(query.queryKey[0])) && query.queryKey[1] !== accountId,
+    });
+  }, [user?.id, cache]);
   const todayEntry = entries.data?.find((e) => e.entry_date === today);
   useEffect(() => {
     setMood(todayEntry?.mood || "okay"); setSelected(todayEntry?.symptoms || []); setNotes(todayEntry?.notes || "");
@@ -92,6 +117,10 @@ export function PregnancyTracker() {
   const p = profile && today ? pregnancyProgress(profile.last_period, profile.clinician_due_date, today) : null;
   const dateLabel = (date: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${date}T12:00:00`));
   const busy = loading || Boolean(user && tracking.isPending) || !today;
+  const legacyUpcoming = profile?.next_appointment && profile.next_appointment >= today ? profile.next_appointment : null;
+  const displayedNext = user && !nextPlanned.isPending && !nextPlanned.isError
+    ? (nextPlanned.data?.appointment_date ?? null)
+    : legacyUpcoming;
 
   return <div className="space-y-6">
     <PageVisualHeader title={c.title} subtitle={c.subtitle} image={pregnancyImage} imageAlt={c.title} className="[&_img]:object-left-top" />
@@ -123,18 +152,21 @@ export function PregnancyTracker() {
             <div><p className="text-sm text-muted-foreground">{c.week}</p><p className="mt-2 text-4xl font-extrabold text-primary" dir="ltr">{p.weeks}<span className="ms-2 text-base font-medium text-muted-foreground">+ {p.days} {c.days}</span></p></div>
             <div><p className="text-sm text-muted-foreground">{c.trimester}</p><p className="mt-3 text-lg font-bold">{c.trimesters[p.trimester]}</p></div>
             <div><p className="text-sm text-muted-foreground">{c.due}</p><p className="mt-3 font-bold">{dateLabel(p.due)}</p></div>
-            <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p><p className="mt-3 font-bold">{profile?.next_appointment ? dateLabel(profile.next_appointment) : c.noAppointment}</p>{profile?.next_appointment && profile.next_appointment < today && <p className="mt-2 text-xs text-muted-foreground">{c.appointmentPast}</p>}</div>
+            <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p>{user && nextPlanned.isError
+              ? <div role="alert" className="mt-3 space-y-2"><p className="text-xs leading-6 text-destructive">{lang === "ar" ? "تعذر تحميل الموعد القادم. لا يمكن تأكيد عدم وجود مواعيد." : "Could not load the next appointment. An empty schedule cannot be confirmed."}</p><Button type="button" size="sm" variant="outline" onClick={() => nextPlanned.refetch()}>{c.retry}</Button></div>
+              : <p className="mt-3 font-bold">{user && nextPlanned.isPending ? c.loading : displayedNext ? dateLabel(displayedNext) : c.noAppointment}</p>}</div>
           </div>
           <p className="mt-6 text-xs leading-6 text-muted-foreground">{profile?.clinician_due_date ? c.clinicalEstimate : c.estimate}</p>
           <p className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-primary"><RefreshCw className="size-3.5" />{c.autoUpdate} · {c.asOf} {dateLabel(today)}</p>
           {p.remaining <= 0 && <p role="status" className="mt-3 border-s-2 border-warning bg-warning-soft p-3 text-sm leading-7">{c.overdue}</p>}
         </section>
         <Tabs defaultValue="care" dir={lang === "ar" ? "rtl" : "ltr"}>
-          <TabsList className="mb-5"><TabsTrigger value="care">{c.journey}</TabsTrigger><TabsTrigger value="daily">{c.daily}</TabsTrigger></TabsList>
+          <TabsList className="mb-5 grid h-auto w-full grid-cols-3 gap-1"><TabsTrigger className="h-auto min-h-12 whitespace-normal text-center text-xs sm:text-sm" value="care">{c.journey}</TabsTrigger><TabsTrigger className="h-auto min-h-12 whitespace-normal text-center text-xs sm:text-sm" value="appointments">{lang === "ar" ? "مواعيدي" : "My appointments"}</TabsTrigger><TabsTrigger className="h-auto min-h-12 whitespace-normal text-center text-xs sm:text-sm" value="daily">{c.daily}</TabsTrigger></TabsList>
           <TabsContent value="care" className="space-y-6">
             <div className="border-s-4 border-primary ps-4"><h2 className="font-bold">{c.firstDays}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{c.firstDaysBody}</p></div>
             <PregnancyEducation currentStage={p.trimester} completedWeeks={p.weeks} />
           </TabsContent>
+          <TabsContent value="appointments" className="space-y-6"><PregnancyAppointments userId={user?.id ?? null} today={today} /></TabsContent>
           <TabsContent value="daily" className="space-y-6">
             {!user ? <p>{c.guestDaily} <Link to="/auth" className="font-bold text-primary underline">{c.signIn}</Link></p> : <>
               {entries.isPending ? <p role="status">{c.loading}</p> : entries.isError ? <div role="alert"><p>{c.error}</p><Button onClick={() => entries.refetch()}>{c.retry}</Button></div> : <>
@@ -153,6 +185,7 @@ export function PregnancyTracker() {
       </>}
     </>}
     {!p && <PregnancyEducation />}
+    {!p && !busy && today && <PregnancyAppointments userId={user?.id ?? null} today={today} />}
     <p className="border-t border-border pt-4 text-xs leading-6 text-muted-foreground">{c.safety}</p>
     <details className="text-xs text-muted-foreground"><summary className="cursor-pointer font-bold">{c.sources}</summary><ul className="mt-3 space-y-2" dir="ltr">{pregnancySources.map((s) => <li key={s.url}><a className="text-primary underline" href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul></details>
   </div>;

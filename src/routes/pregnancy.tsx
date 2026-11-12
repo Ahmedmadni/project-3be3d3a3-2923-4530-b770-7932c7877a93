@@ -4,10 +4,10 @@ import { PregnancyTracker } from "@/components/health/PregnancyTracker";
 export const Route = createFileRoute("/pregnancy")({
   staticData: { sitemap: true },
   head: () => ({ meta: [
-    { title: "متابعة الحمل من البداية — مؤشر صحي" },
-    { name: "description", content: "متابعة الحمل وجداول الطعام والأدوية، مع إرشادات متخصصة لسكري الحمل والضغط وفقر الدم وعامل Rh والتوأم، والفحوص وعلامات الخطر." },
-    { property: "og:title", content: "رحلة الحمل — مؤشر صحي" },
-    { property: "og:description", content: "جداول الحمل بحسب المراحل، ومتابعة متخصصة للسكري والضغط وفقر الدم والتوأم، مع علامات الخطر والفحوص." },
+    { title: "الحمل والولادة والنفاس — مؤشر صحي" },
+    { name: "description", content: "متابعة الحمل أسبوعًا بأسبوع، والاستعداد للولادة والمخاض والنفاس، مع علامات الخطر والفحوص والتوجيهات الموثقة." },
+    { property: "og:title", content: "الحمل والولادة — مؤشر صحي" },
+    { property: "og:description", content: "دليل الحمل والولادة والنفاس، وإرشادات عاجلة ومتابعة الرعاية والفحوص." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),

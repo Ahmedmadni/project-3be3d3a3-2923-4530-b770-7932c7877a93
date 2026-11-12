@@ -22,7 +22,6 @@ export function PregnancyDateSettings({ profile, today, pending, saveError, onSa
   const [period, setPeriod] = useState(profile?.last_period || "");
   const [conception, setConception] = useState(profile?.estimated_conception_date || "");
   const [due, setDue] = useState(profile?.clinician_due_date || "");
-  const [appointment, setAppointment] = useState(profile?.next_appointment || "");
   const [submitted, setSubmitted] = useState(false);
   const validDating = validPregnancyDates(period, due, today);
   const valid = validPregnancyDates(period, due, today, conception);
@@ -31,14 +30,13 @@ export function PregnancyDateSettings({ profile, today, pending, saveError, onSa
 
   return <form className="space-y-5" onSubmit={(event) => {
     event.preventDefault(); setSubmitted(true);
-    if (valid) onSave({ last_period: period, estimated_conception_date: conception || null, clinician_due_date: due || null, next_appointment: appointment || null });
+    if (valid) onSave({ last_period: period, estimated_conception_date: conception || null, clinician_due_date: due || null, next_appointment: profile?.next_appointment || null });
   }}>
     <p className="text-xs text-muted-foreground">{c.dateOnly}</p>
     <div className="grid min-w-0 gap-5 sm:grid-cols-2">
       <label className="min-w-0 space-y-2 text-sm font-medium" htmlFor="pregnancy-period"><span className="block">{c.period}</span><Input className="min-w-0 max-w-full" id="pregnancy-period" required type="date" max={today} value={period} onChange={(e) => setPeriod(e.target.value)} /></label>
       <label className="min-w-0 space-y-2 text-sm font-medium" htmlFor="pregnancy-conception"><span className="block">{c.conception}</span><Input className="min-w-0 max-w-full" id="pregnancy-conception" type="date" min={period || undefined} max={today} value={conception} aria-describedby="pregnancy-conception-help" onChange={(e) => setConception(e.target.value)} /><span id="pregnancy-conception-help" className="block text-xs font-normal leading-6 text-muted-foreground">{c.conceptionHelp}</span></label>
       <label className="min-w-0 space-y-2 text-sm font-medium" htmlFor="pregnancy-due"><span className="block">{c.clinician}</span><Input className="min-w-0 max-w-full" id="pregnancy-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} /></label>
-      <label className="min-w-0 space-y-2 text-sm font-medium" htmlFor="pregnancy-appointment"><span className="block">{c.appointment}</span><Input className="min-w-0 max-w-full" id="pregnancy-appointment" type="date" value={appointment} onChange={(e) => setAppointment(e.target.value)} /></label>
     </div>
     <section className="border-y border-border bg-primary-soft/40 px-4 py-5" aria-label={c.preview} aria-live="polite">
       <h3 className="flex items-center gap-2 font-bold"><Baby className="size-5 text-primary" />{c.preview}</h3>

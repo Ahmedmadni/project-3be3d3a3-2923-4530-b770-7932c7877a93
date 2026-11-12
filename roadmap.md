@@ -1,5 +1,14 @@
 # Roadmap — مؤشر صحي
 
+- [x] Pregnancy birth/postpartum MVP (2026-11-12): bilingual labour warning signs, postnatal danger warnings, preparation guidance, session-only contraction recorder, Saudi-only emergency quick dial, and mobile cards for guidance/visits/specialist care; regression tests and PR CI.
+- [x] First-month newborn education (2026-11-12): newborn emergency versus immediate-assessment cards, sourced Saudi Ministry of Health/NICE/NHS/WHO guidance, safer sleep, feeding, jaundice, mobile-first bilingual screen and regression tests; exposed from Birth & aftercare.
+- [x] Guest-only manual maternity backup restore: versioned and legacy JSON format support, full row validation, fresh guest IDs, duplicate-safe merge, size/row limits, and no implicit network upload or local storage (2026-11-12).
+- [x] Appointment reliability follow-up: stable paginated retrieval and complete explicit backups instead of silent 200-record truncation, progressive 12-card list display, focus on edit, account-switch cache purge and visible next-appointment retry on failure (2026-11-12).
+- [x] Multi-appointment pregnancy planner implemented in PR #72: user-scoped private SQL table + RLS, guest session-only trial, create/edit/status/delete, chronological timeline, explicit private JSON backup, and opt-in neutral .ics calendar event with calendar-managed alert. SQL table has been applied to the connected project and RLS enabled; isolated CI owner/non-owner RLS test passes, and live Lovable policy metadata/anonymous grants were verified; live authenticated smoke tests remain release blockers; no automated push enabled.
+- [ ] Pregnancy reminders: verify Lovable Cloud deployment migration, user-initiated calendar import on Android/iOS, then design independently authorized, deduplicated server pushes. Emergency guidance must never depend on notifications.
+- [ ] Clinical reviewer sign-off, device acceptance, and localized emergency routing for pregnancy, birth, newborn and postpartum. Educational content cannot be described as medically approved yet.
+
+
 - [ ] Add opt-in pregnancy examination/vaccination reminder appointments, owner-scoped Cloud storage, shared Web Push subscriptions and deduplicated dispatch from the existing managed reminder route/job; safe dry-run and authentication tests, no key changes or duplicate jobs.
 
 - [x] Add pregnancy date personalization with last-period date, optional informational conception date, clinician due date, live weeks/day preview and daily/app-resume refresh. Additive Cloud field preserves owner-scoped persistence; 33 pregnancy tests and guest edit/read-back, clinician precedence, next-day refresh and mobile no-overflow checks pass without page errors. Signed-in persistence remains unverified: Cloud has no auth users, requiring the user's signup/sign-in before checking personal records.

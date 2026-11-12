@@ -1640,6 +1640,42 @@ export type Database = {
           },
         ]
       }
+      pregnancy_appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string | null
+          created_at: string
+          id: string
+          kind: string
+          notes: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          notes?: string
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          notes?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pregnancy_daily_entries: {
         Row: {
           created_at: string
