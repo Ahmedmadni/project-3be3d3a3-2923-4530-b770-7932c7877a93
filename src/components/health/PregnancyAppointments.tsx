@@ -186,7 +186,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
 
   function exportBackup() {
     // Explicit user action only; never background-sync these private records.
-    downloadFile("private-maternity-appointments-" + today + ".json",
+    downloadFile("health-appointments-backup-" + today + ".json",
       JSON.stringify({ exported_on: today, records: items }, null, 2), "application/json;charset=utf-8");
   }
 
