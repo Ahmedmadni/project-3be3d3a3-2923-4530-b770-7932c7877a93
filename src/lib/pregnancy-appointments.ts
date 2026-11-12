@@ -75,9 +75,9 @@ export function appointmentCalendarIcs(
   const uid = entry.id.replace(/[^a-zA-Z0-9-]/g, "") || "appointment";
   const utcStamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
   return [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Moshir Sehy//Pregnancy Appointments//EN",
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Health App//Appointments//EN",
     "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
-    "BEGIN:VEVENT", "UID:" + uid + "@pregnancy-care",
+    "BEGIN:VEVENT", "UID:" + uid + "@health-appointments",
     "DTSTAMP:" + utcStamp, start, endLine,
     "SUMMARY:Health appointment",
     "DESCRIPTION:Please check your private appointment notes in the health app.",
