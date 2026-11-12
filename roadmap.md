@@ -1,7 +1,9 @@
 # Roadmap — مؤشر صحي
 
 - [x] Pregnancy birth/postpartum MVP (2026-11-12): bilingual labour warning signs, postnatal danger warnings, preparation guidance, session-only contraction recorder, Saudi-only emergency quick dial, and mobile cards for guidance/visits/specialist care; regression tests and PR CI.
-- [ ] Clinical reviewer sign-off, device acceptance, and localized emergency routing for pregnancy, birth and postpartum. Educational content cannot be described as medically approved yet.
+- [x] First-month newborn education (2026-11-12): newborn emergency versus immediate-assessment cards, sourced Saudi Ministry of Health/NICE/NHS/WHO guidance, safer sleep, feeding, jaundice, mobile-first bilingual screen and regression tests; exposed from Birth & aftercare.
+- [ ] Pregnancy/maternity care personalization: multi-appointment planning, user-controlled medical data backup and opt-in reminders. Only ship after auth/RLS/push delivery verification; emergency guidance must never depend on notifications.
+- [ ] Clinical reviewer sign-off, device acceptance, and localized emergency routing for pregnancy, birth, newborn and postpartum. Educational content cannot be described as medically approved yet.
 
 
 - [ ] Add opt-in pregnancy examination/vaccination reminder appointments, owner-scoped Cloud storage, shared Web Push subscriptions and deduplicated dispatch from the existing managed reminder route/job; safe dry-run and authentication tests, no key changes or duplicate jobs.
