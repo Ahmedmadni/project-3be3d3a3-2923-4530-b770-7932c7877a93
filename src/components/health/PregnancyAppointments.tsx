@@ -185,10 +185,14 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       }
     },
     onSuccess: async (_data, operation) => {
+      // The mutation may finish after sign-out or a switch to a different user.
+      // Invalidate only the original user's records and never show a success
+      // banner or reset a different account's current form.
       if (userId) await Promise.all([
         qc.invalidateQueries({ queryKey: ["pregnancy-appointments", userId] }),
         qc.invalidateQueries({ queryKey: ["pregnancy-next-planned", userId] }),
       ]);
+      if (userScopeRef.current !== userId) return;
       setFeedback(operation.action === "delete" ? c.removed : c.saved);
       if (operation.action === "save") resetForm();
     },
