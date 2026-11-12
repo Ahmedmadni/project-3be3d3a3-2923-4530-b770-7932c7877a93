@@ -6,7 +6,7 @@
 - Specific labour and postpartum dangers linked to NHS, NICE, CDC and the Saudi National Portal. Severity is descriptive; there is **no auto-triage** or reassurance algorithm.
 - Session-only contraction recorder: length and start-to-start intervals, never a decision threshold or advice to stay home.
 - Existing pregnancy stage, red flags, gestational dating and saved health history remain unchanged.
-- Pregnancy guidance and visit schedules render cards on small devices and tables on larger devices.
+- Pregnancy guidance, visit schedules and specialist-care content render cards on small devices and tables on larger devices.
 
 ## Existing implementation reviewed
 - Deterministic 280-day last-menstrual-period calculation, clinician-assigned due-date precedence, pregnancy-week education, food/medication reference tables, stage-independent danger signs, planned visits, daily entries (owner-scoped Cloud for signed-in users).
