@@ -124,7 +124,10 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       }
     },
     onSuccess: async (_data, operation) => {
-      if (userId) await qc.invalidateQueries({ queryKey: ["pregnancy-appointments", userId] });
+      if (userId) await Promise.all([
+        qc.invalidateQueries({ queryKey: ["pregnancy-appointments", userId] }),
+        qc.invalidateQueries({ queryKey: ["pregnancy-next-planned", userId] }),
+      ]);
       setFeedback(operation.action === "delete" ? c.removed : c.saved);
       if (operation.action === "save") resetForm();
     },
