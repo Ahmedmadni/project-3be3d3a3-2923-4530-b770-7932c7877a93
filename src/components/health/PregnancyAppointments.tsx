@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, CalendarPlus, CheckCircle2, FileDown, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { CalendarClock, CalendarPlus, CheckCircle2, FileDown, FileUp, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,8 @@ import { useI18n } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { pregnancyAppointmentLabels } from "@/data/pregnancy-appointment-labels";
 import {
-  appointmentCalendarIcs, appointmentsByTimeline, collectAppointmentPages, validAppointment,
+  appointmentCalendarIcs, appointmentsByTimeline, collectAppointmentPages, mergeGuestAppointments, parseAppointmentBackup,
+  APPOINTMENT_BACKUP_FORMAT, MAX_APPOINTMENT_BACKUP_BYTES, validAppointment,
   validAppointmentStatus,
   type PregnancyAppointmentKind, type PregnancyAppointmentRecord, type PregnancyAppointmentStatus,
 } from "@/lib/pregnancy-appointments";
@@ -75,6 +76,11 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
   const c = pregnancyAppointmentLabels[lang];
   const qc = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
+  const importRef = useRef<HTMLInputElement>(null);
+  const userScopeRef = useRef(userId);
+  userScopeRef.current = userId;
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState("");
   const [guest, setGuest] = useState<PregnancyAppointmentRecord[]>([]);
   const [showUpcoming, setShowUpcoming] = useState(12);
   const [showHistory, setShowHistory] = useState(12);
@@ -99,6 +105,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     setNotes("");
     setFormError(false);
     setFeedback("");
+    setImportError("");
   }, [userId]); // Never carry guest information into a different account.
 
   const query = useQuery({
@@ -237,7 +244,32 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
   function exportBackup() {
     // Explicit user action only; never background-sync these private records.
     downloadFile("health-appointments-backup-" + today + ".json",
-      JSON.stringify({ exported_on: today, records: items }, null, 2), "application/json;charset=utf-8");
+      JSON.stringify({ format: APPOINTMENT_BACKUP_FORMAT, exported_on: today, records: items }, null, 2), "application/json;charset=utf-8");
+  }
+
+
+  async function importGuestBackup(file: File) {
+    // Guest-only explicit import. Never upload, cache, or persist the file.
+    if (userScopeRef.current !== null) return;
+    setImportBusy(true);
+    setImportError("");
+    setFeedback("");
+    try {
+      if (file.size > MAX_APPOINTMENT_BACKUP_BYTES) {
+        throw new Error("Backup too large");
+      }
+      const parsed = parseAppointmentBackup(await file.text());
+      if (userScopeRef.current !== null) return;
+      const merged = mergeGuestAppointments(guest, parsed, () => crypto.randomUUID());
+      setGuest(merged.records);
+      setFeedback(lang === "ar"
+        ? "تم استعادة " + merged.added + " موعد في جلسة الضيف المؤقتة."
+        : "Restored " + merged.added + " appointments into this temporary guest session.");
+    } catch {
+      if (userScopeRef.current === null) setImportError(c.importError);
+    } finally {
+      setImportBusy(false);
+    }
   }
 
   const kinds: PregnancyAppointmentKind[] = ["visit", "test", "vaccination", "other"];
@@ -307,10 +339,33 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
         {history.length ? <AppointmentCards list={history.slice(0, showHistory)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
         {history.length > showHistory && <Button type="button" variant="outline" onClick={() => setShowHistory((n) => n + 12)}>{c.showMore} ({history.length - showHistory})</Button>}
       </section>
-      {!!items.length && <div className="space-y-2 border-t border-border pt-4">
-        <Button type="button" variant="outline" onClick={exportBackup}><FileDown className="size-4" />{c.backup}</Button>
-        <p className="text-xs leading-6 text-muted-foreground">{c.backupHelp}</p>
-      </div>}
+      <div className="space-y-3 border-t border-border pt-4">
+        <div className="flex flex-wrap gap-2">
+          {!!items.length && <Button type="button" variant="outline" onClick={exportBackup}>
+            <FileDown className="size-4" />{c.backup}
+          </Button>}
+          {!userId && <>
+            <input
+              ref={importRef}
+              type="file"
+              accept=".json,application/json"
+              className="sr-only"
+              aria-label={c.importBackup}
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (file) void importGuestBackup(file);
+              }}
+            />
+            <Button type="button" variant="outline" disabled={importBusy} onClick={() => importRef.current?.click()}>
+              <FileUp className="size-4" />{importBusy ? c.importBusy : c.importBackup}
+            </Button>
+          </>}
+        </div>
+        {!!items.length && <p className="text-xs leading-6 text-muted-foreground">{c.backupHelp}</p>}
+        {!userId && <p className="text-xs leading-6 text-muted-foreground">{c.importHelp}</p>}
+        {importError && <p role="alert" className="text-sm leading-7 text-destructive">{importError}</p>}
+      </div>
       <p className="border-s-2 border-warning ps-3 text-xs leading-6 text-muted-foreground">{c.calendarHelp} {c.timeHint}</p>
     </>}
     <p className="border-s-2 border-destructive ps-3 text-xs leading-6 text-muted-foreground">{c.safety}</p>
