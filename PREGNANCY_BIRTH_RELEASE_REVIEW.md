@@ -1,12 +1,13 @@
 # Pregnancy, labour and postpartum — priority review (2026-11-12)
 
 ## Scope delivered in this branch
-- New bilingual, mobile-first tab for birth preparation, labour signs and postnatal care.
+- New bilingual, mobile-first tab for birth preparation, labour signs, maternal postnatal care, and first-month newborn care, with clinically urgent newborn signs separated from emergency ambulance signs.
 - High-risk presentation **always above the inner tabs**, with explicit Saudi-only 997 quick dial using the central app configuration plus an alternative emergency page.
 - Specific labour and postpartum dangers linked to NHS, NICE, CDC and the Saudi National Portal. Severity is descriptive; there is **no auto-triage** or reassurance algorithm.
 - Session-only contraction recorder: length and start-to-start intervals, never a decision threshold or advice to stay home.
 - Existing pregnancy stage, red flags, gestational dating and saved health history remain unchanged.
 - Pregnancy guidance, visit schedules and specialist-care content render cards on small devices and tables on larger devices.
+- The newborn section has no newborn health storage, automatic diagnosis or risk scoring; it includes sourced guidance for feeding changes, breathing, neurological signs, fever or hypothermia, bilious vomiting and early jaundice.
 
 ## Existing implementation reviewed
 - Deterministic 280-day last-menstrual-period calculation, clinician-assigned due-date precedence, pregnancy-week education, food/medication reference tables, stage-independent danger signs, planned visits, daily entries (owner-scoped Cloud for signed-in users).
@@ -23,7 +24,7 @@
 6. Confirm production migrations, authentication and emergency fallback behavior separately; no migrations or patient data changed here.
 
 ## Follow-up priorities
-- Add a clinically reviewed newborn danger-sign module.
+- Obtain clinician review and approval for the new newborn danger-sign module; verify the advice and urgency labels on actual devices.
 - Add appointment and birth-preparation checklists where each user explicitly opts into saving (never store pregnancy medical data in public local storage).
 - Standardize review dates and source metadata for all pregnancy, postnatal and first-aid articles.
 - Audit application-wide emergency routing, accessibility, reminder reliability and responsiveness.
