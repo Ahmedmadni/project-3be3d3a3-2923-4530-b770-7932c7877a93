@@ -2,7 +2,7 @@ export const pregnancyAppointmentLabels = {
   ar: {
     title: "مواعيدي وفحوص الحمل",
     intro: "سجلي زيارات الطبيب والفحوص المقررة لكِ. هذه قائمة تنظيمية يحدد مواعيدها فريق الرعاية، وليست جدول فحوص مفروضا من التطبيق.",
-    login: "يمكنك تجربة تسجيل المواعيد دون حساب، لكن البيانات مؤقتة وتختفي عند مغادرة الصفحة. سجلي الدخول لحفظها في حساب خاص.",
+    login: "يمكنك تجربة تسجيل المواعيد دون حساب، لكن البيانات مؤقتة وتختفي عند مغادرة التبويب. سجلي الدخول لحفظها في حساب خاص.",
     signed: "المواعيد محفوظة لحسابك فقط عند نجاح عملية الحفظ. لا يتم إرسال إشعارات تلقائية من هذا القسم.",
     add: "إضافة موعد", edit: "تعديل موعد", save: "حفظ الموعد", cancelEdit: "إلغاء التعديل",
     titleLabel: "عنوان الموعد", titlePlaceholder: "مثال: زيارة متابعة", date: "التاريخ", time: "الساعة (اختياري)",
@@ -24,7 +24,7 @@ export const pregnancyAppointmentLabels = {
   en: {
     title: "My maternity appointments",
     intro: "Organise your clinician visits and tests. Your maternity team decides which appointments you need; this is not a prescribed screening schedule.",
-    login: "You can try this without signing in, but temporary appointments disappear when you leave the page. Sign in to save them privately.",
+    login: "You can try this without signing in, but temporary appointments disappear when you leave the tab. Sign in to save them privately.",
     signed: "Appointments are private to your account when a save succeeds. This module does not send automated notifications.",
     add: "Add appointment", edit: "Edit appointment", save: "Save appointment", cancelEdit: "Cancel edit",
     titleLabel: "Appointment title", titlePlaceholder: "e.g. Follow-up appointment", date: "Date", time: "Time (optional)",
