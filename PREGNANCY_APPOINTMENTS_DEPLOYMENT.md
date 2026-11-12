@@ -41,6 +41,8 @@ SELECT has_table_privilege('anon', 'public.pregnancy_appointments', 'SELECT') AS
        has_table_privilege('authenticated', 'public.pregnancy_appointments', 'SELECT') AS authenticated_can_select;
 ```
 
+CI now also executes the exact Supabase migration against a fresh PostgreSQL 16 service with two synthetic account IDs, checking anonymous denial, account-isolated SELECT/INSERT/UPDATE/DELETE, and the legacy-date backfill; this job passed on 2026-11-12. This does **not** substitute for real owner tests in the connected Lovable project.
+
 The expected policy set has separate SELECT/INSERT/UPDATE/DELETE policies for role authenticated and owner checks. Run real owner/non-owner CRUD attempts with two authorized **synthetic test accounts**; static SQL checks are not a substitute for access-control testing. No real patient data should be used during smoke tests.
 
 ## Acceptance checks
