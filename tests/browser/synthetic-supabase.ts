@@ -40,7 +40,9 @@ function sessionFor(userId: string) {
 /** Test-only session, loaded through the same browser localStorage adapter used by Supabase Auth. */
 export async function installSyntheticSession(page: Page, userId: string) {
   await page.addInitScript(({ session }) => {
-    localStorage.setItem("sb-example-auth-token", JSON.stringify(session));
+    if (!localStorage.getItem("sb-example-auth-token")) {
+      localStorage.setItem("sb-example-auth-token", JSON.stringify(session));
+    }
   }, { session: sessionFor(userId) });
 }
 
