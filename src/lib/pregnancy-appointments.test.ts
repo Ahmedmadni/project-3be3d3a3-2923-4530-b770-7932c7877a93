@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   appointmentCalendarIcs,
   appointmentsByTimeline,
+  collectAppointmentPages,
   validAppointment,
   validAppointmentDate,
   validAppointmentTime,
@@ -55,6 +56,38 @@ describe("pregnancy appointment planner", () => {
     expect(timed).toContain("DTSTART:20261203T233000");
     expect(timed).toContain("DTEND:20261204T003000");
     expect(timed).not.toContain("Private antenatal note");
+  });
+
+
+  it("fetches every stable page without silently truncating a full backup", async () => {
+    const records = Array.from({ length: 451 }, (_, id) => ({ id }));
+    const calls: Array<[number, number]> = [];
+    const fetchPage = async (start: number, end: number) => {
+      calls.push([start, end]);
+      return records.slice(start, end + 1);
+    };
+    const full = await collectAppointmentPages(fetchPage, 200);
+    expect(full).toEqual(records);
+    expect(calls).toEqual([[0, 199], [200, 399], [400, 599]]);
+  });
+
+  it("handles an exact full page and empty result without extra data loss", async () => {
+    const records = Array.from({ length: 400 }, (_, id) => id);
+    const full = await collectAppointmentPages(async (start, end) => records.slice(start, end + 1), 200);
+    expect(full).toEqual(records);
+    expect(await collectAppointmentPages(async () => [], 200)).toEqual([]);
+  });
+
+  it("refuses oversized, invalid, and failed page loads instead of claiming a partial backup", async () => {
+    const records = Array.from({ length: 5 }, (_, id) => id);
+    await expect(collectAppointmentPages(async (start, end) => records.slice(start, end + 1), 2, 4))
+      .rejects.toThrow(/limit exceeded/);
+    await expect(collectAppointmentPages(async () => [1, 2, 3], 2)).rejects.toThrow(/limit exceeded/);
+    await expect(collectAppointmentPages(async (start) => {
+      if (start > 0) throw new Error("database unavailable");
+      return [1, 2];
+    }, 2)).rejects.toThrow("database unavailable");
+    await expect(collectAppointmentPages(async () => [], 0)).rejects.toThrow(/Invalid/);
   });
 
   it("rejects an invalid calendar export", () => {
