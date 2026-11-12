@@ -15,6 +15,7 @@ import { localDate, pregnancyProgress } from "@/lib/pregnancy";
 import pregnancyImage from "@/assets/pregnancy-care.jpg";
 import { PregnancyEducation } from "./PregnancyEducation";
 import { PregnancyDateSettings, type PregnancyDateValues } from "./PregnancyDateSettings";
+import { PregnancyAppointments } from "./PregnancyAppointments";
 
 const moods = ["good", "okay", "tired"] as const;
 const symptoms = ["nausea", "fatigue", "backache", "heartburn"] as const;
@@ -130,11 +131,12 @@ export function PregnancyTracker() {
           {p.remaining <= 0 && <p role="status" className="mt-3 border-s-2 border-warning bg-warning-soft p-3 text-sm leading-7">{c.overdue}</p>}
         </section>
         <Tabs defaultValue="care" dir={lang === "ar" ? "rtl" : "ltr"}>
-          <TabsList className="mb-5"><TabsTrigger value="care">{c.journey}</TabsTrigger><TabsTrigger value="daily">{c.daily}</TabsTrigger></TabsList>
+          <TabsList className="mb-5 grid h-auto w-full grid-cols-3 gap-1"><TabsTrigger className="h-auto min-h-12 whitespace-normal text-center text-xs sm:text-sm" value="care">{c.journey}</TabsTrigger><TabsTrigger className="h-auto min-h-12 whitespace-normal text-center text-xs sm:text-sm" value="appointments">{lang === "ar" ? "مواعيدي" : "My appointments"}</TabsTrigger><TabsTrigger className="h-auto min-h-12 whitespace-normal text-center text-xs sm:text-sm" value="daily">{c.daily}</TabsTrigger></TabsList>
           <TabsContent value="care" className="space-y-6">
             <div className="border-s-4 border-primary ps-4"><h2 className="font-bold">{c.firstDays}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{c.firstDaysBody}</p></div>
             <PregnancyEducation currentStage={p.trimester} completedWeeks={p.weeks} />
           </TabsContent>
+          <TabsContent value="appointments" className="space-y-6"><PregnancyAppointments userId={user?.id ?? null} today={today} /></TabsContent>
           <TabsContent value="daily" className="space-y-6">
             {!user ? <p>{c.guestDaily} <Link to="/auth" className="font-bold text-primary underline">{c.signIn}</Link></p> : <>
               {entries.isPending ? <p role="status">{c.loading}</p> : entries.isError ? <div role="alert"><p>{c.error}</p><Button onClick={() => entries.refetch()}>{c.retry}</Button></div> : <>
@@ -153,6 +155,7 @@ export function PregnancyTracker() {
       </>}
     </>}
     {!p && <PregnancyEducation />}
+    {!p && today && <PregnancyAppointments userId={user?.id ?? null} today={today} />}
     <p className="border-t border-border pt-4 text-xs leading-6 text-muted-foreground">{c.safety}</p>
     <details className="text-xs text-muted-foreground"><summary className="cursor-pointer font-bold">{c.sources}</summary><ul className="mt-3 space-y-2" dir="ltr">{pregnancySources.map((s) => <li key={s.url}><a className="text-primary underline" href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul></details>
   </div>;
