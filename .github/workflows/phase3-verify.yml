@@ -23,3 +23,5 @@ jobs:
         run: bunx vitest run
       - name: Build
         run: bun run build
+      - name: TypeScript typecheck
+        run: bunx tsc --noEmit
