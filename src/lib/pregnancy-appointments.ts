@@ -185,7 +185,8 @@ export function mergeGuestAppointments(
   const fingerprints = new Set(existing.map(fingerprint));
   const result = [...existing];
   let added = 0;
-  if (existing.length + incoming.length > MAX_APPOINTMENT_BACKUP_RECORDS) {
+  if (existing.length > MAX_APPOINTMENT_BACKUP_RECORDS ||
+      incoming.length > MAX_APPOINTMENT_BACKUP_RECORDS) {
     throw new Error("Too many appointments to import");
   }
   for (const candidate of incoming) {
@@ -194,6 +195,9 @@ export function mergeGuestAppointments(
     }
     const key = fingerprint(candidate);
     if (fingerprints.has(key)) continue;
+    if (result.length >= MAX_APPOINTMENT_BACKUP_RECORDS) {
+      throw new Error("Too many appointments to import");
+    }
     fingerprints.add(key);
     result.push({ ...candidate, id: newId() });
     added++;
