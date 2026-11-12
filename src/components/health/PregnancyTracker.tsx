@@ -77,7 +77,15 @@ export function PregnancyTracker() {
   useEffect(() => {
     setEditing(false);
     setTemporary(null);
-  }, [user?.id]);
+    // Discard in-memory owner-specific pregnancy caches after sign-out/account changes.
+    // Never expose another account's previous notes, appointments or dating results.
+    const accountId = user?.id;
+    cache.removeQueries({
+      predicate: (query) =>
+        ["pregnancy-tracking", "pregnancy-entries", "pregnancy-appointments", "pregnancy-next-planned"]
+          .includes(String(query.queryKey[0])) && query.queryKey[1] !== accountId,
+    });
+  }, [user?.id, cache]);
   const todayEntry = entries.data?.find((e) => e.entry_date === today);
   useEffect(() => {
     setMood(todayEntry?.mood || "okay"); setSelected(todayEntry?.symptoms || []); setNotes(todayEntry?.notes || "");
