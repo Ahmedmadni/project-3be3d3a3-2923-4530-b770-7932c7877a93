@@ -1,18 +1,8 @@
 import { addDays, format, isValid, parseISO } from "date-fns";
 
 /** This is appointment organisation only; no medical or risk decisions. */
-export type PregnancyAppointmentKind = "visit" | "test" | "vaccination" | "other";
-export type PregnancyAppointmentStatus = "planned" | "completed" | "cancelled";
-
-export interface PregnancyAppointmentRecord {
-  id: string;
-  title: string;
-  appointment_date: string;
-  appointment_time: string | null;
-  kind: PregnancyAppointmentKind;
-  status: PregnancyAppointmentStatus;
-  notes: string;
-}
+import type { PregnancyAppointmentKind, PregnancyAppointmentRecord, PregnancyAppointmentStatus } from "@/types/medical";
+export type { PregnancyAppointmentKind, PregnancyAppointmentRecord, PregnancyAppointmentStatus } from "@/types/medical";
 
 const kinds = new Set<PregnancyAppointmentKind>(["visit", "test", "vaccination", "other"]);
 const statuses = new Set<PregnancyAppointmentStatus>(["planned", "completed", "cancelled"]);
