@@ -81,6 +81,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
   userScopeRef.current = userId;
   const [importBusy, setImportBusy] = useState(false);
   const [importError, setImportError] = useState("");
+  const [importMessage, setImportMessage] = useState("");
   const [guest, setGuest] = useState<PregnancyAppointmentRecord[]>([]);
   const [showUpcoming, setShowUpcoming] = useState(12);
   const [showHistory, setShowHistory] = useState(12);
@@ -106,6 +107,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     setFormError(false);
     setFeedback("");
     setImportError("");
+    setImportMessage("");
   }, [userId]); // Never carry guest information into a different account.
 
   const query = useQuery({
@@ -253,7 +255,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
     if (userScopeRef.current !== null) return;
     setImportBusy(true);
     setImportError("");
-    setFeedback("");
+    setImportMessage("");
     try {
       if (file.size > MAX_APPOINTMENT_BACKUP_BYTES) {
         throw new Error("Backup too large");
@@ -262,7 +264,7 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
       if (userScopeRef.current !== null) return;
       const merged = mergeGuestAppointments(guest, parsed, () => crypto.randomUUID());
       setGuest(merged.records);
-      setFeedback(lang === "ar"
+      setImportMessage(lang === "ar"
         ? "تم استعادة " + merged.added + " موعد في جلسة الضيف المؤقتة."
         : "Restored " + merged.added + " appointments into this temporary guest session.");
     } catch {
@@ -325,20 +327,6 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
         {feedback && <p role="status" className="text-sm text-success">{feedback}</p>}
       </form>
 
-      {upcoming[0] && <section className="rounded-xl border-s-4 border-primary bg-primary-soft/30 p-4">
-        <p className="text-xs font-bold text-primary">{c.next}</p>
-        <p className="mt-2 font-bold">{upcoming[0].title} · {labelDate(upcoming[0].appointment_date)}
-          {upcoming[0].appointment_time ? " · " + upcoming[0].appointment_time : ""}</p>
-      </section>}
-
-      <section className="space-y-3"><h3 className="font-extrabold">{c.upcoming} ({upcoming.length})</h3>
-        {upcoming.length ? <AppointmentCards list={upcoming.slice(0, showUpcoming)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
-        {upcoming.length > showUpcoming && <Button type="button" variant="outline" onClick={() => setShowUpcoming((n) => n + 12)}>{c.showMore} ({upcoming.length - showUpcoming})</Button>}
-      </section>
-      <section className="space-y-3"><h3 className="font-extrabold">{c.past} ({history.length})</h3>
-        {history.length ? <AppointmentCards list={history.slice(0, showHistory)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
-        {history.length > showHistory && <Button type="button" variant="outline" onClick={() => setShowHistory((n) => n + 12)}>{c.showMore} ({history.length - showHistory})</Button>}
-      </section>
       <div className="space-y-3 border-t border-border pt-4">
         <div className="flex flex-wrap gap-2">
           {!!items.length && <Button type="button" variant="outline" onClick={exportBackup}>
@@ -365,7 +353,23 @@ export function PregnancyAppointments({ userId, today }: { userId: string | null
         {!!items.length && <p className="text-xs leading-6 text-muted-foreground">{c.backupHelp}</p>}
         {!userId && <p className="text-xs leading-6 text-muted-foreground">{c.importHelp}</p>}
         {importError && <p role="alert" className="text-sm leading-7 text-destructive">{importError}</p>}
+        {importMessage && <p role="status" className="text-sm leading-7 text-success">{importMessage}</p>}
       </div>
+
+      {upcoming[0] && <section className="rounded-xl border-s-4 border-primary bg-primary-soft/30 p-4">
+        <p className="text-xs font-bold text-primary">{c.next}</p>
+        <p className="mt-2 font-bold">{upcoming[0].title} · {labelDate(upcoming[0].appointment_date)}
+          {upcoming[0].appointment_time ? " · " + upcoming[0].appointment_time : ""}</p>
+      </section>}
+
+      <section className="space-y-3"><h3 className="font-extrabold">{c.upcoming} ({upcoming.length})</h3>
+        {upcoming.length ? <AppointmentCards list={upcoming.slice(0, showUpcoming)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyUpcoming}</p>}
+        {upcoming.length > showUpcoming && <Button type="button" variant="outline" onClick={() => setShowUpcoming((n) => n + 12)}>{c.showMore} ({upcoming.length - showUpcoming})</Button>}
+      </section>
+      <section className="space-y-3"><h3 className="font-extrabold">{c.past} ({history.length})</h3>
+        {history.length ? <AppointmentCards list={history.slice(0, showHistory)} c={c} labelDate={labelDate} pending={mutation.isPending} onEdit={startEdit} onAction={(operation) => mutation.mutate(operation)} onCalendar={exportCalendar} /> : <p className="text-sm text-muted-foreground">{c.emptyPast}</p>}
+        {history.length > showHistory && <Button type="button" variant="outline" onClick={() => setShowHistory((n) => n + 12)}>{c.showMore} ({history.length - showHistory})</Button>}
+      </section>
       <p className="border-s-2 border-warning ps-3 text-xs leading-6 text-muted-foreground">{c.calendarHelp} {c.timeHint}</p>
     </>}
     <p className="border-s-2 border-destructive ps-3 text-xs leading-6 text-muted-foreground">{c.safety}</p>
