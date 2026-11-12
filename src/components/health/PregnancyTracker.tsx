@@ -144,7 +144,9 @@ export function PregnancyTracker() {
             <div><p className="text-sm text-muted-foreground">{c.week}</p><p className="mt-2 text-4xl font-extrabold text-primary" dir="ltr">{p.weeks}<span className="ms-2 text-base font-medium text-muted-foreground">+ {p.days} {c.days}</span></p></div>
             <div><p className="text-sm text-muted-foreground">{c.trimester}</p><p className="mt-3 text-lg font-bold">{c.trimesters[p.trimester]}</p></div>
             <div><p className="text-sm text-muted-foreground">{c.due}</p><p className="mt-3 font-bold">{dateLabel(p.due)}</p></div>
-            <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p><p className="mt-3 font-bold">{displayedNext ? dateLabel(displayedNext) : c.noAppointment}</p>{displayedNext && displayedNext < today && <p className="mt-2 text-xs text-muted-foreground">{c.appointmentPast}</p>}</div>
+            <div><p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="size-4" />{c.next}</p>{user && nextPlanned.isError
+              ? <div role="alert" className="mt-3 space-y-2"><p className="text-xs leading-6 text-destructive">{lang === "ar" ? "تعذر تحميل الموعد القادم. لا يمكن تأكيد عدم وجود مواعيد." : "Could not load the next appointment. An empty schedule cannot be confirmed."}</p><Button type="button" size="sm" variant="outline" onClick={() => nextPlanned.refetch()}>{c.retry}</Button></div>
+              : <p className="mt-3 font-bold">{user && nextPlanned.isPending ? c.loading : displayedNext ? dateLabel(displayedNext) : c.noAppointment}</p>}}</div>
           </div>
           <p className="mt-6 text-xs leading-6 text-muted-foreground">{profile?.clinician_due_date ? c.clinicalEstimate : c.estimate}</p>
           <p className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-primary"><RefreshCw className="size-3.5" />{c.autoUpdate} · {c.asOf} {dateLabel(today)}</p>
