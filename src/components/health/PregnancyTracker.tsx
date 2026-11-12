@@ -175,8 +175,7 @@ export function PregnancyTracker() {
       </>}
     </>}
     {!p && <PregnancyEducation />}
-    {!p && today && <PregnancyAppointments userId={user?.id ?? null} today={today} />}
-    {(busy || tracking.isError) && <PregnancyEducation />}
+    {!p && !busy && today && <PregnancyAppointments userId={user?.id ?? null} today={today} />}
     <p className="border-t border-border pt-4 text-xs leading-6 text-muted-foreground">{c.safety}</p>
     <details className="text-xs text-muted-foreground"><summary className="cursor-pointer font-bold">{c.sources}</summary><ul className="mt-3 space-y-2" dir="ltr">{pregnancySources.map((s) => <li key={s.url}><a className="text-primary underline" href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul></details>
   </div>;
