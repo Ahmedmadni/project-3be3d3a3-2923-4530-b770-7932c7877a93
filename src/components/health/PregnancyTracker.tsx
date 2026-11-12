@@ -109,7 +109,8 @@ export function PregnancyTracker() {
   const p = profile && today ? pregnancyProgress(profile.last_period, profile.clinician_due_date, today) : null;
   const dateLabel = (date: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${date}T12:00:00`));
   const busy = loading || Boolean(user && tracking.isPending) || !today;
-  const displayedNext = nextPlanned.data?.appointment_date ?? profile?.next_appointment ?? null;
+  const legacyUpcoming = profile?.next_appointment && profile.next_appointment >= today ? profile.next_appointment : null;
+  const displayedNext = nextPlanned.data?.appointment_date ?? legacyUpcoming;
 
   return <div className="space-y-6">
     <PageVisualHeader title={c.title} subtitle={c.subtitle} image={pregnancyImage} imageAlt={c.title} className="[&_img]:object-left-top" />
